@@ -106,11 +106,10 @@ export default function Home() {
        <ScrollView contentContainerStyle={{ padding: 16 }}>
 
       <View>
-        <View style={{ alignItems: "center", marginBottom: 20, paddingHorizontal: 16 }}>
+        <View style={{ alignItems: "center", marginBottom: 20}}>
           <HeroBanner />
         </View>
       </View>
-
       
       <View>
         <View style={{ alignItems: "flex-end", marginBottom: 20, paddingHorizontal: 16 }}>
@@ -119,7 +118,7 @@ export default function Home() {
       </View>
 
       {markets.map((market) => (
-        <View key={market.id} style={{ marginBottom: 20 }}>
+        <View key={market.id} style={{ marginBottom: 5, }}>
           <View
             style={{
               flexDirection: "row",
