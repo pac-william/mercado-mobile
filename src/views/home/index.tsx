@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { FlatList, View, Image, SafeAreaView } from "react-native";
+import { FlatList, View, Image, SafeAreaView ,ScrollView} from "react-native";
 import { Text } from "react-native-paper";
 import ProductCard from "../../components/ui/ProductCard";
 import SearchItens from "../../components/ui/SearchItens";
+import FilterButton from "../../components/ui/FilterButton";
 
 const mockProducts = [
   {
@@ -61,6 +62,34 @@ const mockProducts = [
       },
     ],
   },
+  {
+    id: 3,
+    name: "EXTRA",
+    logo: "https://static.gpa.digital/images/ex/logo-ex-new.png",
+    products: [
+      {
+        id: 6,
+        title: "Açaí na Tigela",
+        subtitle: "500ml com granola",
+        price: "19,90",
+        imageUrl: "https://picsum.photos/200/304",
+      },
+      {
+        id: 7,
+        title: "Coxinha de Frango",
+        subtitle: "6 unidades",
+        price: "15,90",
+        imageUrl: "https://picsum.photos/200/305",
+      },
+      {
+        id: 8,
+        title: "Coxinha de Frango",
+        subtitle: "6 unidades",
+        price: "15,90",
+        imageUrl: "https://picsum.photos/200/306",
+      },
+    ],
+  },
 ];
 
 export default function Home() {
@@ -72,8 +101,13 @@ export default function Home() {
 
   return (
     <SafeAreaView className="flex-1 bg-white p-4">
-      <View style={{ marginBottom: 12 }}>
-        <SearchItens />
+
+       <ScrollView contentContainerStyle={{ padding: 16 }}>
+
+      <View>
+        <View style={{ alignItems: "flex-end", marginBottom: 20, paddingHorizontal: 16 }}>
+          <FilterButton title="Filtra por..." onPress={() => console.log("Botão de filtro pressionado")} />
+        </View>
       </View>
 
       {markets.map((market) => (
@@ -125,6 +159,9 @@ export default function Home() {
           />
         </View>
       ))}
+
+       </ScrollView>
+
     </SafeAreaView>
   );
 }

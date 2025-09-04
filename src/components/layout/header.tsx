@@ -1,22 +1,30 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu } from "lucide-react-native"; // hamburger icon
+import { View, Image, TouchableOpacity, StyleSheet,Text } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons"; // ícones
+
+import Logo from "../../assets/logo1.jpg";
 
 interface HeaderProps {
-  openDrawer: () => void;
+  onPressHistory?: () => void;
+  onPressCart?: () => void;
 }
-import Logo from "../../assets/logo-smart-marketing.png";
 
-export const Header: React.FC<HeaderProps> = ({ openDrawer }) => {
+export const Header: React.FC<HeaderProps> = ({ onPressHistory, onPressCart }) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={openDrawer} style={styles.hamburger}>
-        <Menu color="white" size={28} />
-      </TouchableOpacity>
-
-      <Text style={styles.title}>Smart Market</Text>
-
       <Image source={Logo} style={styles.logo} resizeMode="contain" />
+      <Text>Smart Marketing</Text>
+      <View style={{ flex: 1 }} />
+
+      {/* Botões à direita */}
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity style={styles.button} onPress={onPressHistory}>
+          <Ionicons name="time-outline" size={24} color="#0891B2" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={onPressCart}>
+          <Ionicons name="cart-outline" size={24} color="#0891B2" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -25,24 +33,22 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#0891B2",
     paddingHorizontal: 16,
     paddingVertical: 12,
-  },
-  hamburger: {
-    padding: 8,
-  },
-  title: {
-    flex: 1,
-    textAlign: "center",
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
+    backgroundColor: "#fff",
   },
   logo: {
-    width: 50,
-    height: 50,
-    borderRadius: 20,
+    width: 100,
+    height: 70,
+    borderRadius: 25,
+  },
+  buttonsContainer: {
+    flexDirection: "row",
+  },
+  button: {
+    backgroundColor: "#E5E7EB",
+    padding: 8,
+    borderRadius: 10,
+    marginLeft: 8,
   },
 });
