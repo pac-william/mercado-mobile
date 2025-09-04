@@ -4,6 +4,7 @@ import { Text } from "react-native-paper";
 import ProductCard from "../../components/ui/ProductCard";
 import SearchItens from "../../components/ui/SearchItens";
 import FilterButton from "../../components/ui/FilterButton";
+import HeroBanner from "../../components/ui/Hero";
 
 const mockProducts = [
   {
@@ -104,6 +105,13 @@ export default function Home() {
 
        <ScrollView contentContainerStyle={{ padding: 16 }}>
 
+      <View>
+        <View style={{ alignItems: "center", marginBottom: 20, paddingHorizontal: 16 }}>
+          <HeroBanner />
+        </View>
+      </View>
+
+      
       <View>
         <View style={{ alignItems: "flex-end", marginBottom: 20, paddingHorizontal: 16 }}>
           <FilterButton title="Filtra por..." onPress={() => console.log("Botão de filtro pressionado")} />

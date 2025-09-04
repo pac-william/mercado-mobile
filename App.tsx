@@ -4,10 +4,10 @@ import { View, Text, Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator, BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import Search from './src/views/search';
+import Search from './src/views/search/Index';
 
 import { Header } from './src/components/layout/header';
-import Home from './src/views/home';
+import Home from './src/views/home/Index';
 
 // Tipagem das telas
 type TabParamList = {
