@@ -9,7 +9,7 @@ const SearchItens: React.FC = () => {
   return (
     <View style={styles.container}>
       <Searchbar
-        placeholder="Search"
+        placeholder="Digite sua receita ou produto"
         onChangeText={setSearchQuery}
         value={searchQuery}
         style={styles.searchbar}

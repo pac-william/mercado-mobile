@@ -8,12 +8,15 @@ import Search from './src/views/search/Index';
 
 import { Header } from './src/components/layout/header';
 import Home from './src/views/home/Index';
+import ProductDetail from './src/views/product/ProductDetail';
+
 
 // Tipagem das telas
 type TabParamList = {
   Profile: undefined;
   Home: undefined;
   Settings: undefined;
+  ProductDetail: { product: any };
 };
 
 // Screens
@@ -30,6 +33,7 @@ const HomeScreen: React.FC<BottomTabScreenProps<TabParamList, 'Home'>> = () => {
 const SearchScreen: React.FC<BottomTabScreenProps<TabParamList, 'Search'>> = () => {
   return (
     <View style={{ flex: 1}}>
+      <Header />
       <Search />
     </View>
   );
@@ -85,6 +89,12 @@ const App: React.FC = () => {
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Search" component={SearchScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Screen name="ProductDetail" 
+component={ProductDetail} 
+          options={{
+            tabBarButton: () => null,
+          }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
