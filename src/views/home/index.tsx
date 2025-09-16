@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { FlatList, View, Image, SafeAreaView, ScrollView } from "react-native";
 import { Text } from "react-native-paper";
-import { useNavigation } from '@react-navigation/native'; // Importe o hook
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // Importe os tipos de App.tsx para usar com useNavigation
-import { TabParamList } from '../../../App'; 
+import { HomeStackParamList } from '../../../App'; 
 import ProductCard from "../../components/ui/ProductCard";
 import FilterButton from "../../components/ui/FilterButton";
 import HeroBanner from "../../components/ui/Hero";
+import { Header } from "../../components/layout/header";
 import { getProducts } from "../../services/productService";
 import { getMarkets } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain"
 
 // Defina o tipo de navegação
-type HomeScreenNavigationProp = BottomTabNavigationProp<TabParamList, 'Home'>;
+type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function Home() {
-  const navigation = useNavigation<HomeScreenNavigationProp>(); // Use o hook para obter a navegação
+  const navigation = useNavigation<HomeScreenNavigationProp>();
 
  const [markets, setMarkets] = useState<Market[]>([]);
 
@@ -48,7 +49,8 @@ export default function Home() {
  }, []);
 
  return (
-  <SafeAreaView className="flex-1 bg-white p-4">
+  <SafeAreaView className="flex-1 bg-white">
+   <Header />
    <ScrollView contentContainerStyle={{ padding: 16 }}>
     <View style={{ alignItems: "center", marginBottom: 20 }}>
      <HeroBanner />
