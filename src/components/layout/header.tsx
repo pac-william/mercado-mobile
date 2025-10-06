@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../../../App";
 import { useCart } from "../../contexts/CartContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Logo from "../../assets/logo1.jpg";
 
@@ -18,39 +19,56 @@ export const Header: React.FC<HeaderProps> = ({ onPressHistory }) => {
   const { state } = useCart();
 
   return (
-    <View style={styles.container}>
-      <Image source={Logo} style={styles.logo} resizeMode="contain" />
-      <Text>Smart Marketing</Text>
-      <View style={{ flex: 1 }} />
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <View style={styles.container}>
+        <Image source={Logo} style={styles.logo} resizeMode="contain" />
+        <Text style={styles.title}>Smart Marketing</Text>
+        <View style={{ flex: 1 }} />
 
-      {/* Botões à direita */}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={onPressHistory}>
-          <Ionicons name="time-outline" size={24} color="#0891B2" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={() => navigation.navigate("Cart")}
-        >
-          <Ionicons name="cart-outline" size={24} color="#0891B2" />
-          {state.itemCount > 0 && (
-            <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>
-                {state.itemCount > 99 ? '99+' : state.itemCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        {/* Botões à direita */}
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity style={styles.button} onPress={onPressHistory}>
+            <Ionicons name="time-outline" size={24} color="#0891B2" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.button} 
+            onPress={() => navigation.navigate("Cart")}
+          >
+            <Ionicons name="cart-outline" size={24} color="#0891B2" />
+            {state.itemCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>
+                  {state.itemCount > 99 ? '99+' : state.itemCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, backgroundColor: "#fff" },
+  safeArea: {
+    backgroundColor: "#fff",
+  },
+  container: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    paddingHorizontal: 16, 
+    paddingVertical: 12 
+  },
   logo: { width: 100, height: 70, borderRadius: 25 },
+  title: { fontSize: 18, fontWeight: "bold", marginLeft: 8 },
   buttonsContainer: { flexDirection: "row" },
-  button: { backgroundColor: "#E5E7EB", padding: 8, borderRadius: 10, marginLeft: 8, position: 'relative' },
+  button: { 
+    backgroundColor: "#E5E7EB", 
+    padding: 8, 
+    borderRadius: 10, 
+    marginLeft: 8, 
+    position: 'relative' 
+  },
   cartBadge: {
     position: 'absolute',
     top: -4,

@@ -5,29 +5,32 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator, BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
-import Search from './src/views/search/Index';
+import Search from './src/views/search/index';
 
 import { Header } from './src/components/layout/header';
-import Home from './src/views/home/Index';
+import Home from './src/views/home/index';
 import ProductDetail from './src/views/product/ProductDetail';
+import MarketDetailsScreen from './src/views/market/index';
 import CartScreen from './src/views/cart/CartScreen';
 import { CartProvider } from './src/contexts/CartContext';
 
 
-// Tipagem das telas
-type HomeStackParamList = {
+// Exporte os tipos para que possam ser importados em outros arquivos
+export type HomeStackParamList = {
   HomeMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
+  MarketDetails: { marketId: string }; 
 };
 
-type SearchStackParamList = {
+export type SearchStackParamList = {
   SearchMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
+  MarketDetails: { marketId: string }; 
 };
 
-type SettingsStackParamList = {
+export type SettingsStackParamList = {
   SettingsMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
@@ -55,6 +58,7 @@ const HomeScreen: React.FC<BottomTabScreenProps<TabParamList, 'HomeStack'>> = ()
       <HomeStack.Screen name="HomeMain" component={Home} />
       <HomeStack.Screen name="ProductDetail" component={ProductDetail} />
       <HomeStack.Screen name="Cart" component={CartScreen} />
+      <HomeStack.Screen name="MarketDetails" component={MarketDetailsScreen} />
     </HomeStack.Navigator>
   );
 };
@@ -65,6 +69,7 @@ const SearchScreen: React.FC<BottomTabScreenProps<TabParamList, 'SearchStack'>> 
       <SearchStack.Screen name="SearchMain" component={Search} />
       <SearchStack.Screen name="ProductDetail" component={ProductDetail} />
       <SearchStack.Screen name="Cart" component={CartScreen} />
+      <SearchStack.Screen name="MarketDetails" component={MarketDetailsScreen} />
     </SearchStack.Navigator>
   );
 };
@@ -105,20 +110,22 @@ const TabNavigator = () => {
           shadowOffset: { width: 0, height: 10 },
           shadowRadius: 10,
         },
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string = "";
-          let iconSize = size;
+        tabBarIcon: ({ focused, size }) => {
+            let iconName: string;
+            let iconSize = size;
 
-          if (route.name === "HomeStack") {
-            iconName = focused ? "home" : "home-outline";
-            iconSize = focused ? 35 : 25;
-          } else if (route.name === "SearchStack") {
-            iconName = focused ? "search" : "search-outline";
-          } else if (route.name === "SettingsStack") {
-            iconName = focused ? "settings" : "settings-outline";
-          }
+            if (route.name === "HomeStack") {
+                iconName = focused ? "home" : "home-outline";
+                iconSize = focused ? 35 : 25;
+            } else if (route.name === "SearchStack") {
+                iconName = focused ? "search" : "search-outline";
+            } else if (route.name === "SettingsStack") {
+                iconName = focused ? "settings" : "settings-outline";
+            } else {
+                iconName = "home-outline";
+            }
 
-          return <Ionicons name={iconName} size={iconSize} color={focused ? "#FF4500" : "gray"} />;
+            return <Ionicons name={iconName as any} size={iconSize} color={focused ? "#FF4500" : "gray"} />;
         },
       })}
     >

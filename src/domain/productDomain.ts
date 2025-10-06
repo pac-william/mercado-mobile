@@ -1,4 +1,5 @@
 import { Meta } from "./metaDomain";
+import { Category } from "./categoryDomain";
 
 export class Product {
     constructor(
@@ -6,7 +7,10 @@ export class Product {
         public name: string,
         public price: number,
         public marketId: string,
+        public unit?: string,
         public image?: string,
+        public categoryId?: string,
+        public category?: Category,
     ) { }
 }
 

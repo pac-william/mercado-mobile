@@ -1,11 +1,33 @@
 import React from "react";
-import { View, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import { View, Image, TouchableOpacity, StyleSheet, Dimensions,ViewStyle  } from "react-native";
 import { Text } from "react-native-paper";
 
 const { width } = Dimensions.get("window"); // pega largura da tela
 const CARD_WIDTH = width * 0.45;
 
-export default function ProductCard({ marketLogo, marketName, marketAddress, title, subtitle, price, imageUrl, onPress }) {
+interface ProductCardProps {
+  marketLogo: string;
+  marketName: string;
+  marketAddress: string;
+  title: string;
+  subtitle: string;
+  price: number;
+  imageUrl?: string;
+  onPress: () => void;
+  style?: ViewStyle; 
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({
+  marketLogo,
+  marketName,
+  marketAddress,
+  title,
+  subtitle,
+  price,
+  imageUrl,
+  onPress,
+  style 
+}) => {
   return (
     <TouchableOpacity style={[styles.card, { width: CARD_WIDTH }]} onPress={onPress}>
       <View style={styles.header}>
@@ -38,6 +60,8 @@ export default function ProductCard({ marketLogo, marketName, marketAddress, tit
     </TouchableOpacity>
   );
 }
+
+export default ProductCard;
 
 const styles = StyleSheet.create({
   card: {

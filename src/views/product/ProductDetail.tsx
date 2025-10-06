@@ -56,12 +56,12 @@ export default function ProductDetail({ route }: Props) {
       <ScrollView 
         style={{ flex: 1 }}
         contentContainerStyle={{ 
-          paddingBottom: 100, // Espaço para a barra de navegação
+          paddingBottom: 100, 
           paddingTop: 10 
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Imagem do produto com gradiente */}
+        
         <View style={{
           height: 320,
           backgroundColor: '#fff',
@@ -84,7 +84,6 @@ export default function ProductDetail({ route }: Props) {
             }}
           />
           
-          {/* Badge de desconto (opcional) */}
           <View style={{
             position: 'absolute',
             top: 16,
@@ -100,7 +99,6 @@ export default function ProductDetail({ route }: Props) {
           </View>
         </View>
 
-        {/* Informações do produto */}
         <View style={{ 
           backgroundColor: 'white', 
           marginHorizontal: 16,
@@ -113,7 +111,6 @@ export default function ProductDetail({ route }: Props) {
           elevation: 6,
           padding: 24,
         }}>
-          {/* Nome do produto */}
           <Text
             variant="headlineSmall"
             style={{ 
@@ -126,7 +123,6 @@ export default function ProductDetail({ route }: Props) {
             {product.name}
           </Text>
 
-          {/* Preço */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <Text
               variant="headlineMedium"
@@ -152,7 +148,6 @@ export default function ProductDetail({ route }: Props) {
 
           <Divider style={{ marginVertical: 16, backgroundColor: '#e0e0e0' }} />
 
-          {/* Informações do mercado */}
           <View style={{ 
             flexDirection: 'row', 
             alignItems: 'center', 
@@ -172,7 +167,6 @@ export default function ProductDetail({ route }: Props) {
             </View>
           </View>
 
-          {/* Avaliação (placeholder) */}
           <View style={{ 
             flexDirection: 'row', 
             alignItems: 'center', 
@@ -193,7 +187,6 @@ export default function ProductDetail({ route }: Props) {
             </Text>
           </View>
 
-          {/* Botão de adicionar ao carrinho */}
           <Button
             mode="contained"
             onPress={handleAddToCart}
@@ -214,7 +207,6 @@ export default function ProductDetail({ route }: Props) {
           </Button>
         </View>
 
-        {/* Seção de detalhes adicionais */}
         <View style={{ 
           backgroundColor: 'white', 
           marginHorizontal: 16,
@@ -265,7 +257,6 @@ export default function ProductDetail({ route }: Props) {
         </View>
       </ScrollView>
 
-      {/* Modal customizado */}
       <CustomModal
         visible={modalState.visible}
         onClose={hideModal}

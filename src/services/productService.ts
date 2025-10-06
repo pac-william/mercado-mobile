@@ -16,7 +16,7 @@ interface ProductResponse {
 export const getProducts = async (
   page: number = 1,
   size: number = 20,
-  marketId?: string,     // <-- agora aceita opcional
+  marketId?: string,    
   name?: string,
   minPrice?: number,
   maxPrice?: number
