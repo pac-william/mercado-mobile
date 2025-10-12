@@ -1,0 +1,341 @@
+import React, { useState } from "react";
+import { 
+    View, 
+    Text, 
+    SafeAreaView, 
+    StyleSheet, 
+    Image,
+    TouchableOpacity,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    Alert
+} from "react-native";
+import { TextInput, Button } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
+
+import Logo from "../../assets/logo1.jpg";
+import { RegisterDTO } from "../../dtos/authDTO";
+import { register } from "../../services/authService";
+
+export default function RegisterScreen() {
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [errors, setErrors] = useState<{ 
+        name?: string; 
+        email?: string; 
+        password?: string;
+        confirmPassword?: string;
+    }>({});
+    const [loading, setLoading] = useState(false);
+
+    const validateForm = () => {
+        try {
+            RegisterDTO.parse({ name, email, password, confirmPassword });
+            setErrors({});
+            return true;
+        } catch (error: any) {
+            const fieldErrors: { 
+                name?: string; 
+                email?: string; 
+                password?: string;
+                confirmPassword?: string;
+            } = {};
+            
+            if (error.errors) {
+                error.errors.forEach((err: any) => {
+                    const field = err.path[0];
+                    fieldErrors[field as keyof typeof fieldErrors] = err.message;
+                });
+            }
+            
+            setErrors(fieldErrors);
+            return false;
+        }
+    };
+
+    const handleRegister = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await register({ name, email, password });
+            
+            Alert.alert(
+                "Conta criada com sucesso!",
+                `Bem-vindo, ${response.user.name}! Sua conta foi criada.`,
+                [{ text: "OK" }]
+            );
+            
+            console.log("Token:", response.token);
+            console.log("Usuário:", response.user);
+        } catch (error: any) {
+            let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
+            
+            if (error.response) {
+                if (error.response.status === 409) {
+                    errorMessage = "Este email já está cadastrado.";
+                } else if (error.response.status === 400) {
+                    errorMessage = "Dados inválidos. Verifique os campos.";
+                } else if (error.response.data?.message) {
+                    errorMessage = error.response.data.message;
+                }
+            } else if (error.message === "Network Error") {
+                errorMessage = "Erro de conexão. Verifique sua internet.";
+            }
+            
+            Alert.alert("Erro ao criar conta", errorMessage, [{ text: "OK" }]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+            >
+                <ScrollView 
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={styles.logoContainer}>
+                        <Image source={Logo} style={styles.logo} resizeMode="contain" />
+                        <Text style={styles.appName}>Smart Marketing</Text>
+                        <Text style={styles.subtitle}>Crie sua conta</Text>
+                    </View>
+
+                    <View style={styles.formContainer}>
+                        <TextInput
+                            label="Nome completo"
+                            value={name}
+                            onChangeText={(text) => {
+                                setName(text);
+                                if (errors.name) {
+                                    setErrors({ ...errors, name: undefined });
+                                }
+                            }}
+                            mode="outlined"
+                            autoCapitalize="words"
+                            style={styles.input}
+                            outlineColor="#e0e0e0"
+                            activeOutlineColor="#FF4500"
+                            error={!!errors.name}
+                            disabled={loading}
+                            left={<TextInput.Icon icon={() => <Ionicons name="person-outline" size={20} color="#666" />} />}
+                        />
+                        {errors.name && (
+                            <Text style={styles.errorText}>{errors.name}</Text>
+                        )}
+
+                        <TextInput
+                            label="Email"
+                            value={email}
+                            onChangeText={(text) => {
+                                setEmail(text);
+                                if (errors.email) {
+                                    setErrors({ ...errors, email: undefined });
+                                }
+                            }}
+                            mode="outlined"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            style={styles.input}
+                            outlineColor="#e0e0e0"
+                            activeOutlineColor="#FF4500"
+                            error={!!errors.email}
+                            disabled={loading}
+                            left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
+                        />
+                        {errors.email && (
+                            <Text style={styles.errorText}>{errors.email}</Text>
+                        )}
+
+                        <TextInput
+                            label="Senha"
+                            value={password}
+                            onChangeText={(text) => {
+                                setPassword(text);
+                                if (errors.password) {
+                                    setErrors({ ...errors, password: undefined });
+                                }
+                            }}
+                            mode="outlined"
+                            secureTextEntry={!showPassword}
+                            style={styles.input}
+                            outlineColor="#e0e0e0"
+                            activeOutlineColor="#FF4500"
+                            error={!!errors.password}
+                            disabled={loading}
+                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
+                            right={
+                                <TextInput.Icon 
+                                    icon={() => <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />}
+                                    onPress={() => setShowPassword(!showPassword)}
+                                    disabled={loading}
+                                />
+                            }
+                        />
+                        {errors.password && (
+                            <Text style={styles.errorText}>{errors.password}</Text>
+                        )}
+
+                        <TextInput
+                            label="Confirmar senha"
+                            value={confirmPassword}
+                            onChangeText={(text) => {
+                                setConfirmPassword(text);
+                                if (errors.confirmPassword) {
+                                    setErrors({ ...errors, confirmPassword: undefined });
+                                }
+                            }}
+                            mode="outlined"
+                            secureTextEntry={!showConfirmPassword}
+                            style={styles.input}
+                            outlineColor="#e0e0e0"
+                            activeOutlineColor="#FF4500"
+                            error={!!errors.confirmPassword}
+                            disabled={loading}
+                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
+                            right={
+                                <TextInput.Icon 
+                                    icon={() => <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />}
+                                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    disabled={loading}
+                                />
+                            }
+                        />
+                        {errors.confirmPassword && (
+                            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                        )}
+
+                        <Button
+                            mode="contained"
+                            onPress={handleRegister}
+                            style={styles.registerButton}
+                            labelStyle={styles.registerButtonLabel}
+                            disabled={loading}
+                            loading={loading}
+                            icon={!loading ? () => <Ionicons name="person-add-outline" size={20} color="white" /> : undefined}
+                        >
+                            {loading ? "Criando conta..." : "Criar conta"}
+                        </Button>
+
+                        <View style={styles.divider}>
+                            <View style={styles.dividerLine} />
+                            <Text style={styles.dividerText}>ou</Text>
+                            <View style={styles.dividerLine} />
+                        </View>
+
+                        <View style={styles.loginContainer}>
+                            <Text style={styles.loginText}>Já tem uma conta? </Text>
+                            <TouchableOpacity>
+                                <Text style={styles.loginLink}>Entrar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#f8f9fa",
+    },
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: "center",
+        paddingHorizontal: 24,
+        paddingVertical: 40,
+    },
+    logoContainer: {
+        alignItems: "center",
+        marginBottom: 40,
+    },
+    logo: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 12,
+    },
+    appName: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#1a1a1a",
+        marginBottom: 6,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: "#666",
+    },
+    formContainer: {
+        width: "100%",
+    },
+    input: {
+        marginBottom: 4,
+        backgroundColor: "white",
+    },
+    errorText: {
+        color: "#d32f2f",
+        fontSize: 12,
+        marginBottom: 12,
+        marginLeft: 12,
+    },
+    registerButton: {
+        backgroundColor: "#FF4500",
+        paddingVertical: 8,
+        borderRadius: 12,
+        marginTop: 8,
+        shadowColor: "#FF4500",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    registerButtonLabel: {
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    divider: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginVertical: 32,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: "#e0e0e0",
+    },
+    dividerText: {
+        marginHorizontal: 16,
+        color: "#999",
+        fontSize: 14,
+    },
+    loginContainer: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    loginText: {
+        color: "#666",
+        fontSize: 14,
+    },
+    loginLink: {
+        color: "#FF4500",
+        fontSize: 14,
+        fontWeight: "bold",
+    },
+});
+
