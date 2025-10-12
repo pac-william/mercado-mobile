@@ -14,11 +14,39 @@ import { TextInput, Button } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 
 import Logo from "../../assets/logo1.jpg";
+import { LoginDTO } from "../../dtos/authDTO";
 
 export default function LoginScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+    const validateForm = () => {
+        try {
+            LoginDTO.parse({ email, password });
+            setErrors({});
+            return true;
+        } catch (error: any) {
+            const fieldErrors: { email?: string; password?: string } = {};
+            
+            if (error.errors) {
+                error.errors.forEach((err: any) => {
+                    const field = err.path[0];
+                    fieldErrors[field as keyof typeof fieldErrors] = err.message;
+                });
+            }
+            
+            setErrors(fieldErrors);
+            return false;
+        }
+    };
+
+    const handleLogin = () => {
+        if (validateForm()) {
+            console.log("Login válido:", { email, password });
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -41,25 +69,40 @@ export default function LoginScreen() {
                         <TextInput
                             label="Email"
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={(text) => {
+                                setEmail(text);
+                                if (errors.email) {
+                                    setErrors({ ...errors, email: undefined });
+                                }
+                            }}
                             mode="outlined"
                             keyboardType="email-address"
                             autoCapitalize="none"
                             style={styles.input}
                             outlineColor="#e0e0e0"
                             activeOutlineColor="#FF4500"
+                            error={!!errors.email}
                             left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
                         />
+                        {errors.email && (
+                            <Text style={styles.errorText}>{errors.email}</Text>
+                        )}
 
                         <TextInput
                             label="Senha"
                             value={password}
-                            onChangeText={setPassword}
+                            onChangeText={(text) => {
+                                setPassword(text);
+                                if (errors.password) {
+                                    setErrors({ ...errors, password: undefined });
+                                }
+                            }}
                             mode="outlined"
                             secureTextEntry={!showPassword}
                             style={styles.input}
                             outlineColor="#e0e0e0"
                             activeOutlineColor="#FF4500"
+                            error={!!errors.password}
                             left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
                             right={
                                 <TextInput.Icon 
@@ -68,6 +111,9 @@ export default function LoginScreen() {
                                 />
                             }
                         />
+                        {errors.password && (
+                            <Text style={styles.errorText}>{errors.password}</Text>
+                        )}
 
                         <TouchableOpacity style={styles.forgotPasswordContainer}>
                             <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
@@ -75,6 +121,7 @@ export default function LoginScreen() {
 
                         <Button
                             mode="contained"
+                            onPress={handleLogin}
                             style={styles.loginButton}
                             labelStyle={styles.loginButtonLabel}
                             icon={() => <Ionicons name="log-in-outline" size={20} color="white" />}
@@ -136,8 +183,14 @@ const styles = StyleSheet.create({
         width: "100%",
     },
     input: {
-        marginBottom: 16,
+        marginBottom: 4,
         backgroundColor: "white",
+    },
+    errorText: {
+        color: "#d32f2f",
+        fontSize: 12,
+        marginBottom: 12,
+        marginLeft: 12,
     },
     forgotPasswordContainer: {
         alignItems: "flex-end",
@@ -192,4 +245,5 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
+
 
