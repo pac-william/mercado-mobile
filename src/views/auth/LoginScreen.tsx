@@ -8,19 +8,22 @@ import {
     TouchableOpacity,
     ScrollView,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    Alert
 } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 
 import Logo from "../../assets/logo1.jpg";
 import { LoginDTO } from "../../dtos/authDTO";
+import { login } from "../../services/authService";
 
 export default function LoginScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+    const [loading, setLoading] = useState(false);
 
     const validateForm = () => {
         try {
@@ -42,9 +45,42 @@ export default function LoginScreen() {
         }
     };
 
-    const handleLogin = () => {
-        if (validateForm()) {
-            console.log("Login válido:", { email, password });
+    const handleLogin = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await login({ email, password });
+            
+            Alert.alert(
+                "Login realizado!",
+                `Bem-vindo, ${response.user.name}!`,
+                [{ text: "OK" }]
+            );
+            
+            console.log("Token:", response.token);
+            console.log("Usuário:", response.user);
+        } catch (error: any) {
+            let errorMessage = "Não foi possível fazer login. Tente novamente.";
+            
+            if (error.response) {
+                if (error.response.status === 401) {
+                    errorMessage = "Email ou senha incorretos.";
+                } else if (error.response.status === 404) {
+                    errorMessage = "Usuário não encontrado.";
+                } else if (error.response.data?.message) {
+                    errorMessage = error.response.data.message;
+                }
+            } else if (error.message === "Network Error") {
+                errorMessage = "Erro de conexão. Verifique sua internet.";
+            }
+            
+            Alert.alert("Erro ao fazer login", errorMessage, [{ text: "OK" }]);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -82,6 +118,7 @@ export default function LoginScreen() {
                             outlineColor="#e0e0e0"
                             activeOutlineColor="#FF4500"
                             error={!!errors.email}
+                            disabled={loading}
                             left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
                         />
                         {errors.email && (
@@ -103,11 +140,13 @@ export default function LoginScreen() {
                             outlineColor="#e0e0e0"
                             activeOutlineColor="#FF4500"
                             error={!!errors.password}
+                            disabled={loading}
                             left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
                             right={
                                 <TextInput.Icon 
                                     icon={() => <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />}
                                     onPress={() => setShowPassword(!showPassword)}
+                                    disabled={loading}
                                 />
                             }
                         />
@@ -124,9 +163,11 @@ export default function LoginScreen() {
                             onPress={handleLogin}
                             style={styles.loginButton}
                             labelStyle={styles.loginButtonLabel}
-                            icon={() => <Ionicons name="log-in-outline" size={20} color="white" />}
+                            disabled={loading}
+                            loading={loading}
+                            icon={!loading ? () => <Ionicons name="log-in-outline" size={20} color="white" /> : undefined}
                         >
-                            Entrar
+                            {loading ? "Entrando..." : "Entrar"}
                         </Button>
 
                         <View style={styles.divider}>
