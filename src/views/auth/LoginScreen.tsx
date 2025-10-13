@@ -13,12 +13,18 @@ import {
 } from "react-native";
 import { TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import Logo from "../../assets/logo1.jpg";
 import { LoginDTO } from "../../dtos/authDTO";
 import { login } from "../../services/authService";
+import { HomeStackParamList } from "../../../App";
+
+type LoginScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Login'>;
 
 export default function LoginScreen() {
+    const navigation = useNavigation<LoginScreenNavigationProp>();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -178,7 +184,7 @@ export default function LoginScreen() {
 
                         <View style={styles.registerContainer}>
                             <Text style={styles.registerText}>Não tem uma conta? </Text>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
                                 <Text style={styles.registerLink}>Cadastre-se</Text>
                             </TouchableOpacity>
                         </View>

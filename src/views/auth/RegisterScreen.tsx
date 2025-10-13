@@ -13,12 +13,18 @@ import {
 } from "react-native";
 import { TextInput, Button } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import Logo from "../../assets/logo1.jpg";
 import { RegisterDTO } from "../../dtos/authDTO";
 import { register } from "../../services/authService";
+import { HomeStackParamList } from "../../../App";
+
+type RegisterScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Register'>;
 
 export default function RegisterScreen() {
+    const navigation = useNavigation<RegisterScreenNavigationProp>();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -238,7 +244,7 @@ export default function RegisterScreen() {
 
                         <View style={styles.loginContainer}>
                             <Text style={styles.loginText}>Já tem uma conta? </Text>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                                 <Text style={styles.loginLink}>Entrar</Text>
                             </TouchableOpacity>
                         </View>
@@ -338,4 +344,5 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
+
 

@@ -7,12 +7,14 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
 import Search from './src/views/search/index';
 
-import { Header } from './src/components/layout/header';
 import Home from './src/views/home/index';
 import ProductDetail from './src/views/product/ProductDetail';
 import MarketDetailsScreen from './src/views/market/index';
 import CartScreen from './src/views/cart/CartScreen';
+import LoginScreen from './src/views/auth/LoginScreen';
+import RegisterScreen from './src/views/auth/RegisterScreen';
 import { CartProvider } from './src/contexts/CartContext';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 
 // Exporte os tipos para que possam ser importados em outros arquivos
@@ -20,20 +22,31 @@ export type HomeStackParamList = {
   HomeMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
-  MarketDetails: { marketId: string }; 
+  MarketDetails: { marketId: string };
+  Login: undefined;
+  Register: undefined;
 };
 
 export type SearchStackParamList = {
   SearchMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
-  MarketDetails: { marketId: string }; 
+  MarketDetails: { marketId: string };
+  Login: undefined;
+  Register: undefined;
 };
 
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
+  Login: undefined;
+  Register: undefined;
+};
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
 };
 
 type TabParamList = {
@@ -46,12 +59,12 @@ type RootStackParamList = {
   MainTabs: undefined;
 };
 
-// Stack Navigators
 const HomeStack = createStackNavigator<HomeStackParamList>();
 const SearchStack = createStackNavigator<SearchStackParamList>();
 const SettingsStack = createStackNavigator<SettingsStackParamList>();
+const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
 
-// Screens
 const HomeScreen: React.FC<BottomTabScreenProps<TabParamList, 'HomeStack'>> = () => {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -59,6 +72,8 @@ const HomeScreen: React.FC<BottomTabScreenProps<TabParamList, 'HomeStack'>> = ()
       <HomeStack.Screen name="ProductDetail" component={ProductDetail} />
       <HomeStack.Screen name="Cart" component={CartScreen} />
       <HomeStack.Screen name="MarketDetails" component={MarketDetailsScreen} />
+      <HomeStack.Screen name="Login" component={LoginScreen} />
+      <HomeStack.Screen name="Register" component={RegisterScreen} />
     </HomeStack.Navigator>
   );
 };
@@ -70,6 +85,8 @@ const SearchScreen: React.FC<BottomTabScreenProps<TabParamList, 'SearchStack'>> 
       <SearchStack.Screen name="ProductDetail" component={ProductDetail} />
       <SearchStack.Screen name="Cart" component={CartScreen} />
       <SearchStack.Screen name="MarketDetails" component={MarketDetailsScreen} />
+      <SearchStack.Screen name="Login" component={LoginScreen} />
+      <SearchStack.Screen name="Register" component={RegisterScreen} />
     </SearchStack.Navigator>
   );
 };
@@ -84,12 +101,11 @@ const SettingsScreen: React.FC<BottomTabScreenProps<TabParamList, 'SettingsStack
       )} />
       <SettingsStack.Screen name="ProductDetail" component={ProductDetail} />
       <SettingsStack.Screen name="Cart" component={CartScreen} />
+      <SettingsStack.Screen name="Login" component={LoginScreen} />
+      <SettingsStack.Screen name="Register" component={RegisterScreen} />
     </SettingsStack.Navigator>
   );
 };
-
-const Tab = createBottomTabNavigator<TabParamList>();
-const Stack = createStackNavigator<RootStackParamList>();
 
 const TabNavigator = () => {
   return (
@@ -138,13 +154,15 @@ const TabNavigator = () => {
 
 const App: React.FC = () => {
   return (
-    <CartProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="MainTabs" component={TabNavigator} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </CartProvider>
+    </AuthProvider>
   );
 };
 
