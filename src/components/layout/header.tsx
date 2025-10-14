@@ -79,14 +79,16 @@ const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: "#fff",
   },
-  container: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    paddingHorizontal: 16, 
-    paddingVertical: 12 
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minHeight: 60
   },
-  logo: { width: 100, height: 70, borderRadius: 25 },
-  title: { fontSize: 18, fontWeight: "bold", marginLeft: 8 },
+  logo: { width: 80, height: 50, borderRadius: 20 },
+  title: { fontSize: 16, fontWeight: "bold", marginLeft: 8, flexShrink: 1 },
   buttonsContainer: { flexDirection: "row" },
   button: { 
     backgroundColor: "#E5E7EB", 
