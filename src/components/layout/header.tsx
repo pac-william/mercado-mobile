@@ -48,7 +48,16 @@ export const Header: React.FC<HeaderProps> = ({ onPressHistory }) => {
 
           <TouchableOpacity 
             style={styles.button} 
-            onPress={() => navigation.navigate("Login")}
+            onPress={() => {
+              if (authState.isAuthenticated) {
+                const parentNav = navigation.getParent();
+                if (parentNav) {
+                  parentNav.navigate('SettingsStack' as never);
+                }
+              } else {
+                navigation.navigate("Login");
+              }
+            }}
           >
             {authState.isAuthenticated && authState.user ? (
               <View style={styles.userAvatar}>
