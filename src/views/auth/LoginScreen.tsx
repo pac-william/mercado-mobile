@@ -63,7 +63,7 @@ export default function LoginScreen() {
         try {
             const response = await login({ email, password });
             await authLogin(response.user, response.token);
-            navigation.navigate("HomeMain");
+            navigation.goBack();
         } catch (error: any) {
             let errorMessage = "Não foi possível fazer login. Tente novamente.";
             

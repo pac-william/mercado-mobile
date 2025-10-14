@@ -76,7 +76,7 @@ export default function RegisterScreen() {
         try {
             const response = await register({ name, email, password });
             await authLogin(response.user, response.token);
-            navigation.navigate("HomeMain");
+            navigation.goBack();
         } catch (error: any) {
             let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
             
@@ -339,4 +339,5 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
+
 
