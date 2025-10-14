@@ -19,12 +19,14 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Logo from "../../assets/logo1.jpg";
 import { RegisterDTO } from "../../dtos/authDTO";
 import { register } from "../../services/authService";
+import { useAuth } from "../../contexts/AuthContext";
 import { HomeStackParamList } from "../../../App";
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Register'>;
 
 export default function RegisterScreen() {
     const navigation = useNavigation<RegisterScreenNavigationProp>();
+    const { login: authLogin } = useAuth();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -73,15 +75,8 @@ export default function RegisterScreen() {
 
         try {
             const response = await register({ name, email, password });
-            
-            Alert.alert(
-                "Conta criada com sucesso!",
-                `Bem-vindo, ${response.user.name}! Sua conta foi criada.`,
-                [{ text: "OK" }]
-            );
-            
-            console.log("Token:", response.token);
-            console.log("Usuário:", response.user);
+            await authLogin(response.user, response.token);
+            navigation.navigate("HomeMain");
         } catch (error: any) {
             let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
             
@@ -344,5 +339,4 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
-
 

@@ -19,12 +19,14 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Logo from "../../assets/logo1.jpg";
 import { LoginDTO } from "../../dtos/authDTO";
 import { login } from "../../services/authService";
+import { useAuth } from "../../contexts/AuthContext";
 import { HomeStackParamList } from "../../../App";
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Login'>;
 
 export default function LoginScreen() {
     const navigation = useNavigation<LoginScreenNavigationProp>();
+    const { login: authLogin } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -60,15 +62,8 @@ export default function LoginScreen() {
 
         try {
             const response = await login({ email, password });
-            
-            Alert.alert(
-                "Login realizado!",
-                `Bem-vindo, ${response.user.name}!`,
-                [{ text: "OK" }]
-            );
-            
-            console.log("Token:", response.token);
-            console.log("Usuário:", response.user);
+            await authLogin(response.user, response.token);
+            navigation.navigate("HomeMain");
         } catch (error: any) {
             let errorMessage = "Não foi possível fazer login. Tente novamente.";
             

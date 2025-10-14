@@ -22,10 +22,36 @@ export interface AuthResponse {
     user: User;
 }
 
+interface BackendLoginResponse {
+    message: string;
+    role: string;
+    id: string;
+    marketId: string | null;
+    market: any;
+    accessToken: string;
+    refreshToken: string;
+}
+
+interface BackendRegisterResponse {
+    message: string;
+    userId: string;
+    role: string;
+    marketId: string | null;
+}
+
 export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
-        const response = await api.post<AuthResponse>("/auth/login", credentials);
-        return response.data;
+        const response = await api.post<BackendLoginResponse>("/auth/login", credentials);
+        const data = response.data;
+        
+        return {
+            token: data.accessToken,
+            user: {
+                id: data.id,
+                name: credentials.email.split('@')[0],
+                email: credentials.email
+            }
+        };
     } catch (error) {
         console.error("Erro ao fazer login:", error);
         throw error;
@@ -34,8 +60,20 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
 
 export const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
     try {
-        const response = await api.post<AuthResponse>("/auth/register", userData);
-        return response.data;
+        await api.post<BackendRegisterResponse>("/auth/register/user", userData);
+        
+        const loginResponse = await login({
+            email: userData.email,
+            password: userData.password
+        });
+        
+        return {
+            token: loginResponse.token,
+            user: {
+                ...loginResponse.user,
+                name: userData.name
+            }
+        };
     } catch (error) {
         console.error("Erro ao registrar usuário:", error);
         throw error;
@@ -55,4 +93,5 @@ export const verifyToken = async (token: string): Promise<User> => {
         throw error;
     }
 };
+
 

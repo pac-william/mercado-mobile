@@ -13,6 +13,7 @@ import MarketDetailsScreen from './src/views/market/index';
 import CartScreen from './src/views/cart/CartScreen';
 import LoginScreen from './src/views/auth/LoginScreen';
 import RegisterScreen from './src/views/auth/RegisterScreen';
+import SettingsScreen from './src/views/settings/SettingsScreen';
 import { CartProvider } from './src/contexts/CartContext';
 import { AuthProvider } from './src/contexts/AuthContext';
 
@@ -91,14 +92,10 @@ const SearchScreen: React.FC<BottomTabScreenProps<TabParamList, 'SearchStack'>> 
   );
 };
 
-const SettingsScreen: React.FC<BottomTabScreenProps<TabParamList, 'SettingsStack'>> = () => {
+const SettingsStackScreen: React.FC<BottomTabScreenProps<TabParamList, 'SettingsStack'>> = () => {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
-      <SettingsStack.Screen name="SettingsMain" component={() => (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Text>Settings Screen</Text>
-        </View>
-      )} />
+      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
       <SettingsStack.Screen name="ProductDetail" component={ProductDetail} />
       <SettingsStack.Screen name="Cart" component={CartScreen} />
       <SettingsStack.Screen name="Login" component={LoginScreen} />
@@ -147,7 +144,7 @@ const TabNavigator = () => {
     >
       <Tab.Screen name="HomeStack" component={HomeScreen} />
       <Tab.Screen name="SearchStack" component={SearchScreen} />
-      <Tab.Screen name="SettingsStack" component={SettingsScreen} />
+      <Tab.Screen name="SettingsStack" component={SettingsStackScreen} />
     </Tab.Navigator>
   );
 };
