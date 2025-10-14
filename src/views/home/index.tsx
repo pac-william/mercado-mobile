@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FlatList, View, Image, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import { Text,ActivityIndicator } from "react-native-paper";
+import { FlatList, View, Image, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import { Text, ActivityIndicator } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -19,9 +19,9 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 export default function Home() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const [markets, setMarkets] = useState<Market[]>([]);
-
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchMarketsWithProducts = async () => {
     try {
@@ -57,6 +57,12 @@ export default function Home() {
     fetchMarketsWithProducts();
   }, []);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchMarketsWithProducts();
+    setRefreshing(false);
+  };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -72,6 +78,14 @@ export default function Home() {
       <ScrollView
         style={styles.scrollViewFlex}
         contentContainerStyle={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={["#FF4500"]}
+            tintColor="#FF4500"
+          />
+        }
       >
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <HeroBanner />

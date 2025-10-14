@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
     View, 
     Text, 
@@ -9,7 +9,8 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Platform,
-    Alert
+    Alert,
+    Animated
 } from "react-native";
 import { TextInput, Button, ActivityIndicator } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,6 +34,34 @@ export default function LoginScreen() {
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
     const [loading, setLoading] = useState(false);
 
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+    const shakeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 500,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    const triggerShake = () => {
+        Animated.sequence([
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+        ]).start();
+    };
+
     const validateForm = () => {
         try {
             LoginDTO.parse({ email, password });
@@ -49,6 +78,7 @@ export default function LoginScreen() {
             }
             
             setErrors(fieldErrors);
+            triggerShake();
             return false;
         }
     };
@@ -79,7 +109,10 @@ export default function LoginScreen() {
                 errorMessage = "Erro de conexão. Verifique sua internet.";
             }
             
-            Alert.alert("Erro ao fazer login", errorMessage, [{ text: "OK" }]);
+            triggerShake();
+            setTimeout(() => {
+                Alert.alert("Erro ao fazer login", errorMessage, [{ text: "OK" }]);
+            }, 250);
         } finally {
             setLoading(false);
         }
@@ -96,13 +129,24 @@ export default function LoginScreen() {
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
-                    <View style={styles.logoContainer}>
-                        <Image source={Logo} style={styles.logo} resizeMode="contain" />
-                        <Text style={styles.appName}>Smart Marketing</Text>
-                        <Text style={styles.subtitle}>Bem-vindo de volta</Text>
-                    </View>
+                    <Animated.View 
+                        style={{
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }]
+                        }}
+                    >
+                        <View style={styles.logoContainer}>
+                            <Image source={Logo} style={styles.logo} resizeMode="contain" />
+                            <Text style={styles.appName}>Smart Marketing</Text>
+                            <Text style={styles.subtitle}>Bem-vindo de volta</Text>
+                        </View>
 
-                    <View style={styles.formContainer}>
+                        <Animated.View 
+                            style={[
+                                styles.formContainer,
+                                { transform: [{ translateX: shakeAnim }] }
+                            ]}
+                        >
                         <TextInput
                             label="Email"
                             value={email}
@@ -183,7 +227,8 @@ export default function LoginScreen() {
                                 <Text style={styles.registerLink}>Cadastre-se</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
+                        </Animated.View>
+                    </Animated.View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>

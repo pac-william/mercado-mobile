@@ -1,11 +1,18 @@
-import React from "react";
-import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Alert, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Alert, ScrollView, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { Header } from "../../components/layout/header";
 
 export default function SettingsScreen() {
-    const { state, logout } = useAuth();
+    const { state, logout, restoreToken } = useAuth();
+    const [refreshing, setRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await restoreToken();
+        setRefreshing(false);
+    };
 
     const handleLogout = () => {
         Alert.alert(
@@ -39,6 +46,14 @@ export default function SettingsScreen() {
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={["#FF4500"]}
+                        tintColor="#FF4500"
+                    />
+                }
             >
                 {state.isAuthenticated && state.user ? (
                     <>
