@@ -11,6 +11,10 @@ export interface RegisterRequest {
     password: string;
 }
 
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
 export interface User {
     id: string;
     name: string;
@@ -94,4 +98,12 @@ export const verifyToken = async (token: string): Promise<User> => {
     }
 };
 
-
+export const forgotPassword = async (data: ForgotPasswordRequest): Promise<{ message: string }> => {
+    try {
+        const response = await api.post<{ message: string }>("/auth/forgot-password", data);
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao solicitar recuperação de senha:", error);
+        throw error;
+    }
+};

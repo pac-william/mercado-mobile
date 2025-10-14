@@ -199,7 +199,10 @@ export default function LoginScreen() {
                             <Text style={styles.errorText}>{errors.password}</Text>
                         )}
 
-                        <TouchableOpacity style={styles.forgotPasswordContainer}>
+                        <TouchableOpacity
+                            style={styles.forgotPasswordContainer}
+                            onPress={() => navigation.navigate('ForgotPassword')}
+                        >
                             <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
                         </TouchableOpacity>
 
@@ -332,5 +335,3 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
-
-

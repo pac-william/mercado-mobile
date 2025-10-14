@@ -30,4 +30,8 @@ export const LoginResponseDTO = z.object({
 
 export type LoginResponseDTO = z.infer<typeof LoginResponseDTO>;
 
+export const ForgotPasswordDTO = z.object({
+    email: z.string().email({ message: "Email deve ter um formato válido" }),
+});
 
+export type ForgotPasswordDTO = z.infer<typeof ForgotPasswordDTO>;

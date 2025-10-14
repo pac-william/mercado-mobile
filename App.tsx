@@ -13,6 +13,7 @@ import MarketDetailsScreen from './src/views/market/index';
 import CartScreen from './src/views/cart/CartScreen';
 import LoginScreen from './src/views/auth/LoginScreen';
 import RegisterScreen from './src/views/auth/RegisterScreen';
+import ForgotPasswordScreen from './src/views/auth/ForgotPasswordScreen';
 import SettingsScreen from './src/views/settings/SettingsScreen';
 import { CartProvider } from './src/contexts/CartContext';
 import { AuthProvider } from './src/contexts/AuthContext';
@@ -26,6 +27,7 @@ export type HomeStackParamList = {
   MarketDetails: { marketId: string };
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
 };
 
 export type SearchStackParamList = {
@@ -35,6 +37,7 @@ export type SearchStackParamList = {
   MarketDetails: { marketId: string };
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
 };
 
 export type SettingsStackParamList = {
@@ -43,6 +46,7 @@ export type SettingsStackParamList = {
   Cart: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
 };
 
 export type AuthStackParamList = {
@@ -75,6 +79,7 @@ const HomeScreen: React.FC<BottomTabScreenProps<TabParamList, 'HomeStack'>> = ()
       <HomeStack.Screen name="MarketDetails" component={MarketDetailsScreen} />
       <HomeStack.Screen name="Login" component={LoginScreen} />
       <HomeStack.Screen name="Register" component={RegisterScreen} />
+      <HomeStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </HomeStack.Navigator>
   );
 };
@@ -88,6 +93,7 @@ const SearchScreen: React.FC<BottomTabScreenProps<TabParamList, 'SearchStack'>> 
       <SearchStack.Screen name="MarketDetails" component={MarketDetailsScreen} />
       <SearchStack.Screen name="Login" component={LoginScreen} />
       <SearchStack.Screen name="Register" component={RegisterScreen} />
+      <SearchStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </SearchStack.Navigator>
   );
 };
@@ -100,6 +106,7 @@ const SettingsStackScreen: React.FC<BottomTabScreenProps<TabParamList, 'Settings
       <SettingsStack.Screen name="Cart" component={CartScreen} />
       <SettingsStack.Screen name="Login" component={LoginScreen} />
       <SettingsStack.Screen name="Register" component={RegisterScreen} />
+      <SettingsStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </SettingsStack.Navigator>
   );
 };
