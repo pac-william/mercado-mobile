@@ -161,7 +161,7 @@ export default function LoginScreen() {
                             autoCapitalize="none"
                             style={styles.input}
                             outlineColor="#e0e0e0"
-                            activeOutlineColor="#FF4500"
+                            activeOutlineColor="#2E7D32"
                             error={!!errors.email}
                             disabled={loading}
                             left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
@@ -183,7 +183,7 @@ export default function LoginScreen() {
                             secureTextEntry={!showPassword}
                             style={styles.input}
                             outlineColor="#e0e0e0"
-                            activeOutlineColor="#FF4500"
+                            activeOutlineColor="#2E7D32"
                             error={!!errors.password}
                             disabled={loading}
                             left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
@@ -292,10 +292,10 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     loginButton: {
-        backgroundColor: "#FF4500",
+        backgroundColor: "#2E7D32",
         paddingVertical: 8,
         borderRadius: 12,
-        shadowColor: "#FF4500",
+        shadowColor: "#2E7D32",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     registerLink: {
-        color: "#FF4500",
+        color: "#2E7D32",
         fontSize: 14,
         fontWeight: "bold",
     },

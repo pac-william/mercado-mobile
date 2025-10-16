@@ -30,7 +30,7 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult }) => {
         onChangeText={setSearchQuery}
         value={searchQuery}
         style={styles.searchbar}
-        icon={() => <Ionicons name="rocket-outline" size={24} color="#FF4500" />}
+        icon={() => <Ionicons name="rocket-outline" size={24} color="#2E7D32" />}
         clearIcon={() => <Ionicons name="search" size={24} color="gray" />}
         onSubmitEditing={handleSearch} 
         onIconPress={handleSearch} 

@@ -160,7 +160,7 @@ export default function ForgotPasswordScreen() {
                                 autoCapitalize="none"
                                 style={styles.input}
                                 outlineColor="#e0e0e0"
-                                activeOutlineColor="#FF4500"
+                                activeOutlineColor="#2E7D32"
                                 error={!!errors.email}
                                 disabled={loading}
                                 left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
@@ -246,11 +246,11 @@ const styles = StyleSheet.create({
         marginLeft: 12,
     },
     forgotButton: {
-        backgroundColor: "#FF4500",
+        backgroundColor: "#2E7D32",
         paddingVertical: 8,
         borderRadius: 12,
         marginTop: 8,
-        shadowColor: "#FF4500",
+        shadowColor: "#2E7D32",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     loginLink: {
-        color: "#FF4500",
+        color: "#2E7D32",
         fontSize: 14,
         fontWeight: "bold",
     },
