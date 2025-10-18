@@ -16,7 +16,10 @@ import RegisterScreen from './src/views/auth/RegisterScreen';
 import ForgotPasswordScreen from './src/views/auth/ForgotPasswordScreen';
 import SettingsScreen from './src/views/settings/SettingsScreen';
 import { CartProvider } from './src/contexts/CartContext';
-import { AuthProvider } from './src/contexts/AuthContext';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { OnboardingProvider, useOnboarding } from './src/contexts/OnboardingContext';
+import SplashScreen from './src/views/splash/SplashScreen';
+import OnboardingNavigator from './src/views/onboarding/OnboardingNavigator';
 
 
 // Exporte os tipos para que possam ser importados em outros arquivos
@@ -156,17 +159,36 @@ const TabNavigator = () => {
   );
 };
 
+const RootNavigator = () => {
+  const { state: authState } = useAuth();
+  const { state: onboardingState, completeOnboarding } = useOnboarding();
+
+  if (authState.isLoading || onboardingState.isLoading) {
+    return <SplashScreen />;
+  }
+
+  if (!onboardingState.hasCompletedOnboarding) {
+    return <OnboardingNavigator onComplete={completeOnboarding} />;
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={TabNavigator} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
+
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="MainTabs" component={TabNavigator} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </CartProvider>
-    </AuthProvider>
+    <OnboardingProvider>
+      <AuthProvider>
+        <CartProvider>
+          <RootNavigator />
+        </CartProvider>
+      </AuthProvider>
+    </OnboardingProvider>
   );
 };
 
