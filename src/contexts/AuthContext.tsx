@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { getToken, getUser, saveToken, saveUser, clearStorage } from '../utils/storage';
+import { updateUserProfile, updateUserProfilePartial, uploadProfilePicture } from '../services/authService';
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  address?: string;
+  profilePicture?: string;
 }
 
 interface AuthState {
@@ -12,19 +16,26 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isUpdatingProfile: boolean;
+  updateError: string | null;
 }
 
 type AuthAction =
   | { type: 'RESTORE_TOKEN'; payload: { user: User | null; token: string | null } }
   | { type: 'LOGIN'; payload: { user: User; token: string } }
   | { type: 'LOGOUT' }
-  | { type: 'SET_LOADING'; payload: boolean };
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'UPDATE_PROFILE_START' }
+  | { type: 'UPDATE_PROFILE_SUCCESS'; payload: { user: User } }
+  | { type: 'UPDATE_PROFILE_FAILURE'; payload: { error: string } };
 
 const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
   isLoading: true,
+  isUpdatingProfile: false,
+  updateError: null,
 };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -62,6 +73,28 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isLoading: action.payload,
       };
 
+    case 'UPDATE_PROFILE_START':
+      return {
+        ...state,
+        isUpdatingProfile: true,
+        updateError: null,
+      };
+
+    case 'UPDATE_PROFILE_SUCCESS':
+      return {
+        ...state,
+        user: action.payload.user,
+        isUpdatingProfile: false,
+        updateError: null,
+      };
+
+    case 'UPDATE_PROFILE_FAILURE':
+      return {
+        ...state,
+        isUpdatingProfile: false,
+        updateError: action.payload.error,
+      };
+
     default:
       return state;
   }
@@ -72,6 +105,10 @@ interface AuthContextType {
   login: (user: User, token: string) => Promise<void>;
   logout: () => Promise<void>;
   restoreToken: () => Promise<void>;
+  updateProfile: (profileData: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
+  updateProfilePartial: (profileData: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
+  uploadProfilePicture: (file: any) => Promise<void>;
+  clearUpdateError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -120,8 +157,76 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateProfile = async (profileData: { name?: string; email?: string; phone?: string; address?: string }) => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    dispatch({ type: 'UPDATE_PROFILE_START' });
+
+    try {
+      const updatedUser = await updateUserProfile(state.token, profileData);
+      await saveUser(updatedUser);
+      dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar perfil';
+      dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: errorMessage } });
+      throw error;
+    }
+  };
+
+  const updateProfilePartial = async (profileData: { name?: string; email?: string; phone?: string; address?: string }) => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    dispatch({ type: 'UPDATE_PROFILE_START' });
+
+    try {
+      const updatedUser = await updateUserProfilePartial(state.token, profileData);
+      await saveUser(updatedUser);
+      dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar perfil parcialmente';
+      dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: errorMessage } });
+      throw error;
+    }
+  };
+
+  const uploadProfilePictureHandler = async (file: any) => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    dispatch({ type: 'UPDATE_PROFILE_START' });
+
+    try {
+      const result = await uploadProfilePicture(state.token, file);
+      const updatedUser = { ...state.user!, profilePicture: result.profilePicture };
+      await saveUser(updatedUser);
+      dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer upload da foto';
+      dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: errorMessage } });
+      throw error;
+    }
+  };
+
+  const clearUpdateError = () => {
+    dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: null } });
+  };
+
   return (
-    <AuthContext.Provider value={{ state, login, logout, restoreToken }}>
+    <AuthContext.Provider value={{
+      state,
+      login,
+      logout,
+      restoreToken,
+      updateProfile,
+      updateProfilePartial,
+      uploadProfilePicture: uploadProfilePictureHandler,
+      clearUpdateError
+    }}>
       {children}
     </AuthContext.Provider>
   );
