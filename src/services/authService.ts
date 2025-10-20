@@ -15,10 +15,20 @@ export interface ForgotPasswordRequest {
     email: string;
 }
 
+export interface ProfileUpdateRequest {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+}
+
 export interface User {
     id: string;
     name: string;
     email: string;
+    phone?: string;
+    address?: string;
+    profilePicture?: string;
 }
 
 export interface AuthResponse {
@@ -104,6 +114,80 @@ export const forgotPassword = async (data: ForgotPasswordRequest): Promise<{ mes
         return response.data;
     } catch (error) {
         console.error("Erro ao solicitar recuperação de senha:", error);
+        throw error;
+    }
+};
+
+export const getUserProfile = async (token: string): Promise<User> => {
+    try {
+        const response = await api.get<User>("/auth/me", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao obter perfil do usuário:", error);
+        throw error;
+    }
+};
+
+export const updateUserProfile = async (token: string, profileData: ProfileUpdateRequest): Promise<User> => {
+    try {
+        const response = await api.put<User>("/auth/me", profileData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao atualizar perfil completo:", error);
+        throw error;
+    }
+};
+
+export const updateUserProfilePartial = async (token: string, profileData: ProfileUpdateRequest): Promise<User> => {
+    try {
+        const response = await api.patch<User>("/auth/me", profileData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao atualizar perfil parcialmente:", error);
+        throw error;
+    }
+};
+
+export const uploadProfilePicture = async (token: string, file: any): Promise<{ profilePicture: string }> => {
+    try {
+        const formData = new FormData();
+        formData.append("profilePicture", file);
+
+        const response = await api.post<{ profilePicture: string }>("/auth/upload-profile-picture", formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao fazer upload da foto de perfil:", error);
+        throw error;
+    }
+};
+
+export const getProfileHistory = async (token: string): Promise<any[]> => {
+    try {
+        const response = await api.get<any[]>("/auth/profile-history", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Erro ao obter histórico do perfil:", error);
         throw error;
     }
 };
