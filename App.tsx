@@ -145,7 +145,7 @@ const TabNavigator = () => {
                 iconName = "home-outline";
             }
 
-            return <Ionicons name={iconName as any} size={iconSize} color={focused ? "#2E7D32" : "gray"} />;
+            return <Ionicons name={iconName as any} size={iconSize} color={focused ? "#FF4500" : "gray"} />;
         },
       })}
     >
