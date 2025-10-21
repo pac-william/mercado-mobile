@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomModal from '../../components/ui/CustomModal';
 
 const EditProfileScreen: React.FC = () => {
   const { state, updateProfile, updateProfilePartial, uploadProfilePicture, clearUpdateError } = useAuth();
@@ -9,12 +10,19 @@ const EditProfileScreen: React.FC = () => {
     name: '',
     email: '',
     phone: '',
-    address: '',
+    birthDate: '',
   });
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    type: 'success' as 'success' | 'error' | 'warning' | 'info',
+    title: '',
+    message: '',
+    primaryButton: { text: 'OK', onPress: () => setModalVisible(false) } as { text: string; onPress: () => void },
+  });
 
   useEffect(() => {
     if (state.user) {
@@ -22,17 +30,32 @@ const EditProfileScreen: React.FC = () => {
         name: state.user.name || '',
         email: state.user.email || '',
         phone: state.user.phone || '',
-        address: state.user.address || '',
+        birthDate: state.user.birthDate || '',
       });
     }
   }, [state.user]);
 
   useEffect(() => {
     if (state.updateError) {
-      Alert.alert('Erro', state.updateError);
+      showModal('error', 'Erro', state.updateError, { text: 'OK', onPress: () => setModalVisible(false) });
       clearUpdateError();
     }
   }, [state.updateError]);
+
+  const showModal = (
+    type: 'success' | 'error' | 'warning' | 'info',
+    title: string,
+    message: string,
+    primaryButton?: { text: string; onPress: () => void }
+  ) => {
+    setModalConfig({
+      type,
+      title,
+      message,
+      primaryButton: primaryButton || { text: 'OK', onPress: () => setModalVisible(false) }
+    });
+    setModalVisible(true);
+  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -57,9 +80,9 @@ const EditProfileScreen: React.FC = () => {
     setIsLoading(true);
     try {
       await updateProfile(formData);
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+      showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', { text: 'OK', onPress: () => setModalVisible(false) });
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível atualizar o perfil.');
+      showModal('error', 'Erro', 'Não foi possível atualizar o perfil.', { text: 'OK', onPress: () => setModalVisible(false) });
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +94,7 @@ const EditProfileScreen: React.FC = () => {
         name: state.user.name || '',
         email: state.user.email || '',
         phone: state.user.phone || '',
-        address: state.user.address || '',
+        birthDate: state.user.birthDate || '',
       });
     }
     setErrors({});
@@ -96,17 +119,17 @@ const EditProfileScreen: React.FC = () => {
       // Simular um arquivo de imagem (em produção, use a biblioteca real)
       const mockFile = { uri: 'mock-image-uri', type: 'image/jpeg', fileName: 'profile.jpg' };
       await uploadProfilePicture(mockFile);
-      Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+      showModal('success', 'Sucesso', 'Foto de perfil atualizada!', { text: 'OK', onPress: () => setModalVisible(false) });
       setSelectedImage(mockFile.uri);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível fazer upload da imagem.');
+      showModal('error', 'Erro', 'Não foi possível fazer upload da imagem.', { text: 'OK', onPress: () => setModalVisible(false) });
     } finally {
       setIsUploadingImage(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView className="flex-1 p-4">
         <Text className="text-2xl font-bold text-gray-800 mb-6">Editar Perfil</Text>
 
@@ -126,7 +149,7 @@ const EditProfileScreen: React.FC = () => {
             )}
           </View>
           <TouchableOpacity
-            className={`py-2 px-4 rounded-lg ${isUploadingImage ? 'bg-gray-400' : 'bg-blue-600'}`}
+            className={`py-2 px-4 rounded-lg ${isUploadingImage ? 'bg-gray-400' : 'bg-green-600'}`}
             onPress={handleImageUpload}
             disabled={isUploadingImage}
           >
@@ -138,74 +161,86 @@ const EditProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        <View className="mb-4">
-          <Text className="text-gray-600 mb-2">Nome *</Text>
-          <TextInput
-            className={`border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 bg-gray-50`}
-            value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
-            placeholder="Digite seu nome"
-          />
-          {errors.name && <Text className="text-red-500 text-sm mt-1">{errors.name}</Text>}
-        </View>
+          <View className="mb-4">
+            <Text className="text-gray-600 mb-2">Nome *</Text>
+            <TextInput
+              className={`border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 bg-gray-50`}
+              value={formData.name}
+              onChangeText={(text) => setFormData({ ...formData, name: text })}
+              placeholder="Digite seu nome"
+            />
+            {errors.name && <Text className="text-red-500 text-sm mt-1">{errors.name}</Text>}
+          </View>
 
-        <View className="mb-4">
-          <Text className="text-gray-600 mb-2">Email *</Text>
-          <TextInput
-            className={`border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 bg-gray-50`}
-            value={formData.email}
-            onChangeText={(text) => setFormData({ ...formData, email: text })}
-            placeholder="Digite seu email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          {errors.email && <Text className="text-red-500 text-sm mt-1">{errors.email}</Text>}
-        </View>
+          <View className="mb-4">
+            <Text className="text-gray-600 mb-2">Email *</Text>
+            <TextInput
+              className={`border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 bg-gray-50`}
+              value={formData.email}
+              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              placeholder="Digite seu email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {errors.email && <Text className="text-red-500 text-sm mt-1">{errors.email}</Text>}
+          </View>
 
-        <View className="mb-4">
-          <Text className="text-gray-600 mb-2">Telefone</Text>
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-            value={formData.phone}
-            onChangeText={(text) => setFormData({ ...formData, phone: text })}
-            placeholder="Digite seu telefone"
-            keyboardType="phone-pad"
-          />
-        </View>
+          <View className="mb-4">
+            <Text className="text-gray-600 mb-2">Telefone</Text>
+            <TextInput
+              className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+              value={formData.phone}
+              onChangeText={(text) => setFormData({ ...formData, phone: text })}
+              placeholder="Digite seu telefone"
+              keyboardType="phone-pad"
+            />
+          </View>
 
-        <View className="mb-6">
-          <Text className="text-gray-600 mb-2">Endereço</Text>
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-            value={formData.address}
-            onChangeText={(text) => setFormData({ ...formData, address: text })}
-            placeholder="Digite seu endereço"
-          />
-        </View>
+          <View className="mb-6">
+            <Text className="text-gray-600 mb-2">Data de Nascimento</Text>
+            <TextInput
+              className="border border-gray-300 rounded-lg p-3 bg-gray-50"
+              value={formData.birthDate}
+              onChangeText={(text) => setFormData({ ...formData, birthDate: text })}
+              placeholder="DD/MM/AAAA"
+              keyboardType="numeric"
+            />
+          </View>
 
-        <View className="flex-row justify-between mb-4">
-          <TouchableOpacity
-            className="bg-gray-500 py-3 px-6 rounded-lg flex-1 mr-2"
-            onPress={handleCancel}
-            disabled={isLoading}
-          >
-            <Text className="text-white text-center font-semibold">Cancelar</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            className={`py-3 px-6 rounded-lg flex-1 ml-2 ${isLoading ? 'bg-gray-400' : 'bg-blue-600'}`}
-            onPress={handleSave}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text className="text-white text-center font-semibold">Salvar</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className="bg-gray-500 py-3 px-6 rounded-lg flex-1 mr-2"
+              onPress={handleCancel}
+              disabled={isLoading}
+            >
+              <Text className="text-white text-center font-semibold">Cancelar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className={`py-3 px-6 rounded-lg flex-1 ml-2 ${isLoading ? 'bg-gray-400' : 'bg-green-600'}`}
+              onPress={handleSave}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white text-center font-semibold">Salvar</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        {/* Modal de Feedback */}
+        <CustomModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          type={modalConfig.type}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          primaryButton={modalConfig.primaryButton}
+        />
+      </SafeAreaView>
   );
 };
 

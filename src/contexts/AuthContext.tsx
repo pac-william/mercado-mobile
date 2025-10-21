@@ -9,6 +9,7 @@ export interface User {
   phone?: string;
   address?: string;
   profilePicture?: string;
+  birthDate?: string;
 }
 
 interface AuthState {
@@ -157,33 +158,70 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const updateProfile = async (profileData: { name?: string; email?: string; phone?: string; address?: string }) => {
+  const updateProfile = async (profileData: { name?: string; email?: string; phone?: string; address?: string; birthDate?: string }) => {
     if (!state.token) {
       throw new Error('Usuário não autenticado');
     }
 
+    console.log('Tentando atualizar perfil com token:', state.token.substring(0, 20) + '...'); // Log parcial do token
+
+    // Formatar dados antes de enviar
+    const formattedData = { ...profileData };
+
+    // Formatar birthDate de DD/MM/AAAA para YYYY-MM-DD
+    if (formattedData.birthDate) {
+      const dateParts = formattedData.birthDate.split('/');
+      if (dateParts.length === 3) {
+        formattedData.birthDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
+      }
+    }
+
+    // Garantir que telefone tenha pelo menos 10 caracteres (adicionar código de área se necessário)
+    if (formattedData.phone && formattedData.phone.length < 10) {
+      formattedData.phone = `11${formattedData.phone}`; // Exemplo: adicionar DDD 11 para São Paulo
+    }
+
+    console.log('Dados formatados enviados:', formattedData);
+
     dispatch({ type: 'UPDATE_PROFILE_START' });
 
     try {
-      const updatedUser = await updateUserProfile(state.token, profileData);
+      const updatedUser = await updateUserProfile(state.token, formattedData);
       await saveUser(updatedUser);
       dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
     } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar perfil';
       dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: errorMessage } });
       throw error;
     }
   };
 
-  const updateProfilePartial = async (profileData: { name?: string; email?: string; phone?: string; address?: string }) => {
+  const updateProfilePartial = async (profileData: { name?: string; email?: string; phone?: string; address?: string; birthDate?: string }) => {
     if (!state.token) {
       throw new Error('Usuário não autenticado');
+    }
+
+    // Formatar dados antes de enviar
+    const formattedData = { ...profileData };
+
+    // Formatar birthDate de DD/MM/AAAA para YYYY-MM-DD
+    if (formattedData.birthDate) {
+      const dateParts = formattedData.birthDate.split('/');
+      if (dateParts.length === 3) {
+        formattedData.birthDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
+      }
+    }
+
+    // Garantir que telefone tenha pelo menos 10 caracteres
+    if (formattedData.phone && formattedData.phone.length < 10) {
+      formattedData.phone = `11${formattedData.phone}`;
     }
 
     dispatch({ type: 'UPDATE_PROFILE_START' });
 
     try {
-      const updatedUser = await updateUserProfilePartial(state.token, profileData);
+      const updatedUser = await updateUserProfilePartial(state.token, formattedData);
       await saveUser(updatedUser);
       dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
     } catch (error) {
