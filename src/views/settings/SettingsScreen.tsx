@@ -3,9 +3,13 @@ import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Alert, ScrollVi
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { Header } from "../../components/layout/header";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { SettingsStackParamList } from "../../../App";
 
 export default function SettingsScreen() {
     const { state, logout, restoreToken } = useAuth();
+    const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
     const [refreshing, setRefreshing] = useState(false);
 
     const handleRefresh = async () => {
@@ -70,7 +74,10 @@ export default function SettingsScreen() {
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Conta</Text>
                             
-                            <TouchableOpacity style={styles.menuItem}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => navigation.navigate('EditProfile')}
+                            >
                                 <Ionicons name="person-outline" size={24} color="#666" />
                                 <Text style={styles.menuItemText}>Editar perfil</Text>
                                 <Ionicons name="chevron-forward" size={20} color="#999" />
