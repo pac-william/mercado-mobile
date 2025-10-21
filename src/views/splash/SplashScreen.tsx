@@ -41,12 +41,9 @@ export default function SplashScreen() {
       </Animated.View>
       
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E65100" />
+        <ActivityIndicator size="large" color="#2E7D32" />
         <Text variant="bodyLarge" style={styles.loadingText}>
           Carregando...
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitleText}>
-          Preparando as melhores ofertas e ajustando sua experiência de compras
         </Text>
       </View>
     </View>
@@ -73,14 +70,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    color: "#E65100",
+    color: "#2E7D32",
     fontWeight: "600",
   },
-  subtitleText: {
-    marginTop: 8,
-    color: "#6b7280",
-    textAlign: "center",
-  },
 });
-
-

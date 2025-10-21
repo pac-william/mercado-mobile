@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   primaryButton: {
-    backgroundColor: '#FF4500',
+    backgroundColor: '#2E7D32',
   },
   dangerButton: {
     backgroundColor: '#F44336',

@@ -54,8 +54,8 @@ export default function SettingsScreen() {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={handleRefresh}
-                        colors={["#FF4500"]}
-                        tintColor="#FF4500"
+                        colors={["#2E7D32"]}
+                        tintColor="#2E7D32"
                     />
                 }
             >
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: "#FF4500",
+        backgroundColor: "#2E7D32",
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 16,
@@ -259,4 +259,3 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
 });
-

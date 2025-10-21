@@ -66,7 +66,7 @@ export default function Home() {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#FF4500" />
+                <ActivityIndicator size="large" color="#2E7D32" />
                 <Text>Carregando...</Text>
             </View>
         );
@@ -82,8 +82,8 @@ export default function Home() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={["#FF4500"]}
-            tintColor="#FF4500"
+            colors={["#2E7D32"]}
+            tintColor="#2E7D32"
           />
         }
       >

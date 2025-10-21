@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   title: {
-    color: "#E65100",
+    color: "#2E7D32",
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 16,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeIndicator: {
-    backgroundColor: "#E65100",
+    backgroundColor: "#2E7D32",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -109,10 +109,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   backButton: {
-    backgroundColor: "#E65100",
+    backgroundColor: "#2E7D32",
   },
   nextButton: {
-    backgroundColor: "#E65100",
+    backgroundColor: "#2E7D32",
     borderRadius: 25,
     paddingHorizontal: 20,
     flex: 1,

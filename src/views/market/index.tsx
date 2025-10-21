@@ -103,7 +103,7 @@ export default function MarketDetailsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF4500" />
+        <ActivityIndicator size="large" color="#2E7D32" />
         <Text>Carregando...</Text>
       </View>
     );
