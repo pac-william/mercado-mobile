@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EditProfileScreen: React.FC = () => {
-  const { state, updateProfile, updateProfilePartial, clearUpdateError } = useAuth();
+  const { state, updateProfile, updateProfilePartial, uploadProfilePicture, clearUpdateError } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
   });
+  const [selectedImage, setSelectedImage] = useState<any>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     if (state.user) {
@@ -73,12 +75,68 @@ const EditProfileScreen: React.FC = () => {
       });
     }
     setErrors({});
+    setSelectedImage(null);
+  };
+
+  const handleImageUpload = async () => {
+    // Simulação de seleção de imagem (em um app real, use react-native-image-picker)
+    Alert.alert(
+      'Selecionar Imagem',
+      'Em um app real, isso abriria a galeria. Por agora, simular upload.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Simular Upload', onPress: simulateImageUpload }
+      ]
+    );
+  };
+
+  const simulateImageUpload = async () => {
+    setIsUploadingImage(true);
+    try {
+      // Simular um arquivo de imagem (em produção, use a biblioteca real)
+      const mockFile = { uri: 'mock-image-uri', type: 'image/jpeg', fileName: 'profile.jpg' };
+      await uploadProfilePicture(mockFile);
+      Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+      setSelectedImage(mockFile.uri);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível fazer upload da imagem.');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1 p-4">
         <Text className="text-2xl font-bold text-gray-800 mb-6">Editar Perfil</Text>
+
+        {/* Seção de Foto de Perfil */}
+        <View className="items-center mb-6">
+          <View className="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden">
+            {(state.user?.profilePicture || selectedImage) ? (
+              <Image
+                source={{ uri: selectedImage || state.user?.profilePicture || '' }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            ) : (
+              <View className="w-full h-full items-center justify-center">
+                <Text className="text-gray-500">Foto</Text>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            className={`py-2 px-4 rounded-lg ${isUploadingImage ? 'bg-gray-400' : 'bg-blue-600'}`}
+            onPress={handleImageUpload}
+            disabled={isUploadingImage}
+          >
+            {isUploadingImage ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-white text-center">Alterar Foto</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <View className="mb-4">
           <Text className="text-gray-600 mb-2">Nome *</Text>
