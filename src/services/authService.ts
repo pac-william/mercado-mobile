@@ -57,14 +57,17 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
     try {
         const response = await api.post<BackendLoginResponse>("/auth/login", credentials);
         const data = response.data;
-        
+
+        // Buscar dados completos do usuário após login
+        const userResponse = await api.get<User>("/auth/me", {
+            headers: {
+                Authorization: `Bearer ${data.accessToken}`
+            }
+        });
+
         return {
             token: data.accessToken,
-            user: {
-                id: data.id,
-                name: credentials.email.split('@')[0],
-                email: credentials.email
-            }
+            user: userResponse.data
         };
     } catch (error) {
         console.error("Erro ao fazer login:", error);
