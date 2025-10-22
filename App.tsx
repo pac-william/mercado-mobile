@@ -19,7 +19,7 @@ import EditProfileScreen from './src/views/profile/EditProfileScreen';
 import { CartProvider } from './src/contexts/CartContext';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { OnboardingProvider, useOnboarding } from './src/contexts/OnboardingContext';
-import SplashScreen from './src/views/splash/SplashScreen';
+import SplashScreen, { InitialLoadingScreen } from './src/views/splash/SplashScreen';
 import OnboardingNavigator from './src/views/onboarding/OnboardingNavigator';
 
 
@@ -188,6 +188,20 @@ const RootNavigator = () => {
 };
 
 const App: React.FC = () => {
+  const [showInitial, setShowInitial] = React.useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowInitial(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showInitial) {
+    return <InitialLoadingScreen />;
+  }
+
   return (
     <OnboardingProvider>
       <AuthProvider>
