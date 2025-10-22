@@ -9,7 +9,6 @@ export interface User {
   phone?: string;
   address?: string;
   profilePicture?: string;
-  birthDate?: string;
 }
 
 interface AuthState {
@@ -165,10 +164,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     console.log('Tentando atualizar perfil com token:', state.token.substring(0, 20) + '...'); // Log parcial do token
 
-    // Formatar dados antes de enviar
-    const formattedData = { ...profileData };
+  
+    const formattedData: any = {};
 
-    // Formatar birthDate de DD/MM/AAAA para YYYY-MM-DD
+
+    Object.keys(profileData).forEach(key => {
+      const value = (profileData as any)[key];
+      if (value !== null && value !== undefined && value !== '') {
+        formattedData[key] = value;
+      }
+    });
+
     if (formattedData.birthDate) {
       const dateParts = formattedData.birthDate.split('/');
       if (dateParts.length === 3) {
@@ -176,7 +182,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
 
-    // Garantir que telefone tenha pelo menos 10 caracteres (adicionar código de área se necessário)
+  
     if (formattedData.phone && formattedData.phone.length < 10) {
       formattedData.phone = `11${formattedData.phone}`; // Exemplo: adicionar DDD 11 para São Paulo
     }
@@ -202,10 +208,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Usuário não autenticado');
     }
 
-    // Formatar dados antes de enviar
-    const formattedData = { ...profileData };
+  
+    const formattedData: any = {};
 
-    // Formatar birthDate de DD/MM/AAAA para YYYY-MM-DD
+    Object.keys(profileData).forEach(key => {
+      const value = (profileData as any)[key];
+      if (value !== null && value !== undefined && value !== '') {
+        formattedData[key] = value;
+      }
+    });
+
+  
     if (formattedData.birthDate) {
       const dateParts = formattedData.birthDate.split('/');
       if (dateParts.length === 3) {
@@ -213,7 +226,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
 
-    // Garantir que telefone tenha pelo menos 10 caracteres
     if (formattedData.phone && formattedData.phone.length < 10) {
       formattedData.phone = `11${formattedData.phone}`;
     }
