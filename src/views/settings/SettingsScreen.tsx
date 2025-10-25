@@ -89,7 +89,10 @@ export default function SettingsScreen() {
                                 <Ionicons name="chevron-forward" size={20} color="#999" />
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.menuItem}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => navigation.navigate('AddressesMain')}
+                            >
                                 <Ionicons name="location-outline" size={24} color="#666" />
                                 <Text style={styles.menuItemText}>Endereços</Text>
                                 <Ionicons name="chevron-forward" size={20} color="#999" />

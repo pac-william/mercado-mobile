@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { getToken, getUser, saveToken, saveUser, clearStorage } from '../utils/storage';
 import { updateUserProfile, updateUserProfilePartial, uploadProfilePicture } from '../services/authService';
+import {
+    getUserAddresses,
+    createAddress,
+    updateAddress,
+    deleteAddress,
+    setAddressFavorite,
+    getFavoriteAddress,
+    getActiveAddresses,
+    AddressResponseDTO
+} from '../services/addressService';
 
 export interface User {
   id: string;
@@ -11,6 +21,23 @@ export interface User {
   profilePicture?: string;
 }
 
+export interface Address {
+  id: string;
+  userId: string;
+  name: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  isFavorite: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -18,6 +45,10 @@ interface AuthState {
   isLoading: boolean;
   isUpdatingProfile: boolean;
   updateError: string | null;
+  addresses: Address[];
+  favoriteAddress: Address | null;
+  isLoadingAddresses: boolean;
+  addressesError: string | null;
 }
 
 type AuthAction =
@@ -27,7 +58,14 @@ type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'UPDATE_PROFILE_START' }
   | { type: 'UPDATE_PROFILE_SUCCESS'; payload: { user: User } }
-  | { type: 'UPDATE_PROFILE_FAILURE'; payload: { error: string } };
+  | { type: 'UPDATE_PROFILE_FAILURE'; payload: { error: string } }
+  | { type: 'LOAD_ADDRESSES_START' }
+  | { type: 'LOAD_ADDRESSES_SUCCESS'; payload: { addresses: Address[]; favoriteAddress: Address | null } }
+  | { type: 'LOAD_ADDRESSES_FAILURE'; payload: { error: string } }
+  | { type: 'ADD_ADDRESS_SUCCESS'; payload: { address: Address } }
+  | { type: 'UPDATE_ADDRESS_SUCCESS'; payload: { address: Address } }
+  | { type: 'DELETE_ADDRESS_SUCCESS'; payload: { addressId: string } }
+  | { type: 'SET_FAVORITE_ADDRESS_SUCCESS'; payload: { address: Address } };
 
 const initialState: AuthState = {
   user: null,
@@ -36,6 +74,10 @@ const initialState: AuthState = {
   isLoading: true,
   isUpdatingProfile: false,
   updateError: null,
+  addresses: [],
+  favoriteAddress: null,
+  isLoadingAddresses: false,
+  addressesError: null,
 };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -95,6 +137,65 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         updateError: action.payload.error,
       };
 
+    case 'LOAD_ADDRESSES_START':
+      return {
+        ...state,
+        isLoadingAddresses: true,
+        addressesError: null,
+      };
+
+    case 'LOAD_ADDRESSES_SUCCESS':
+      return {
+        ...state,
+        addresses: action.payload.addresses,
+        favoriteAddress: action.payload.favoriteAddress,
+        isLoadingAddresses: false,
+        addressesError: null,
+      };
+
+    case 'LOAD_ADDRESSES_FAILURE':
+      return {
+        ...state,
+        isLoadingAddresses: false,
+        addressesError: action.payload.error,
+      };
+
+    case 'ADD_ADDRESS_SUCCESS':
+      return {
+        ...state,
+        addresses: [...state.addresses, action.payload.address],
+      };
+
+    case 'UPDATE_ADDRESS_SUCCESS':
+      return {
+        ...state,
+        addresses: state.addresses.map(addr =>
+          addr.id === action.payload.address.id ? action.payload.address : addr
+        ),
+        favoriteAddress: state.favoriteAddress?.id === action.payload.address.id
+          ? action.payload.address
+          : state.favoriteAddress,
+      };
+
+    case 'DELETE_ADDRESS_SUCCESS':
+      return {
+        ...state,
+        addresses: state.addresses.filter(addr => addr.id !== action.payload.addressId),
+        favoriteAddress: state.favoriteAddress?.id === action.payload.addressId
+          ? null
+          : state.favoriteAddress,
+      };
+
+    case 'SET_FAVORITE_ADDRESS_SUCCESS':
+      return {
+        ...state,
+        addresses: state.addresses.map(addr => ({
+          ...addr,
+          isFavorite: addr.id === action.payload.address.id
+        })),
+        favoriteAddress: action.payload.address,
+      };
+
     default:
       return state;
   }
@@ -109,6 +210,13 @@ interface AuthContextType {
   updateProfilePartial: (profileData: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
   uploadProfilePicture: (file: any) => Promise<void>;
   clearUpdateError: () => void;
+  getUserAddresses: () => Promise<void>;
+  addAddress: (addressData: any) => Promise<void>;
+  updateAddress: (id: string, addressData: any) => Promise<void>;
+  deleteAddress: (id: string) => Promise<void>;
+  setAddressFavorite: (id: string, isFavorite: boolean) => Promise<void>;
+  getFavoriteAddress: () => Promise<void>;
+  clearAddressesError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -266,6 +374,105 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: null } });
   };
 
+  const getUserAddresses = async () => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    dispatch({ type: 'LOAD_ADDRESSES_START' });
+
+    try {
+      const addressesResponse = await getUserAddresses();
+      const favoriteResponse = await getFavoriteAddress();
+
+      dispatch({
+        type: 'LOAD_ADDRESSES_SUCCESS',
+        payload: {
+          addresses: addressesResponse.addresses,
+          favoriteAddress: favoriteResponse
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar endereços';
+      dispatch({ type: 'LOAD_ADDRESSES_FAILURE', payload: { error: errorMessage } });
+      throw error;
+    }
+  };
+
+  const addAddress = async (addressData: any) => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    try {
+      const newAddress = await createAddress(addressData);
+      dispatch({ type: 'ADD_ADDRESS_SUCCESS', payload: { address: newAddress } });
+    } catch (error) {
+      console.error('Erro ao adicionar endereço:', error);
+      throw error;
+    }
+  };
+
+  const updateAddress = async (id: string, addressData: any) => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    try {
+      const updatedAddress = await updateAddress(id, addressData);
+      dispatch({ type: 'UPDATE_ADDRESS_SUCCESS', payload: { address: updatedAddress } });
+    } catch (error) {
+      console.error('Erro ao atualizar endereço:', error);
+      throw error;
+    }
+  };
+
+  const deleteAddress = async (id: string) => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    try {
+      await deleteAddress(id);
+      dispatch({ type: 'DELETE_ADDRESS_SUCCESS', payload: { addressId: id } });
+    } catch (error) {
+      console.error('Erro ao deletar endereço:', error);
+      throw error;
+    }
+  };
+
+  const setAddressFavorite = async (id: string, isFavorite: boolean) => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    try {
+      const updatedAddress = await setAddressFavorite(id, isFavorite);
+      dispatch({ type: 'SET_FAVORITE_ADDRESS_SUCCESS', payload: { address: updatedAddress } });
+    } catch (error) {
+      console.error('Erro ao definir endereço favorito:', error);
+      throw error;
+    }
+  };
+
+  const getFavoriteAddress = async () => {
+    if (!state.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    try {
+      const favoriteAddress = await getFavoriteAddress();
+      dispatch({ type: 'SET_FAVORITE_ADDRESS_SUCCESS', payload: { address: favoriteAddress } });
+    } catch (error) {
+      console.error('Erro ao buscar endereço favorito:', error);
+      throw error;
+    }
+  };
+
+  const clearAddressesError = () => {
+    dispatch({ type: 'LOAD_ADDRESSES_FAILURE', payload: { error: null } });
+  };
+
   return (
     <AuthContext.Provider value={{
       state,
@@ -275,7 +482,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateProfile,
       updateProfilePartial,
       uploadProfilePicture: uploadProfilePictureHandler,
-      clearUpdateError
+      clearUpdateError,
+      getUserAddresses,
+      addAddress,
+      updateAddress,
+      deleteAddress,
+      setAddressFavorite,
+      getFavoriteAddress,
+      clearAddressesError
     }}>
       {children}
     </AuthContext.Provider>

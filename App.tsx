@@ -16,6 +16,8 @@ import RegisterScreen from './src/views/auth/RegisterScreen';
 import ForgotPasswordScreen from './src/views/auth/ForgotPasswordScreen';
 import SettingsScreen from './src/views/settings/SettingsScreen';
 import EditProfileScreen from './src/views/profile/EditProfileScreen';
+import AddressesScreen from './src/views/addresses/index';
+import AddEditAddressScreen from './src/views/addresses/AddEditAddressScreen';
 import { CartProvider } from './src/contexts/CartContext';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { OnboardingProvider, useOnboarding } from './src/contexts/OnboardingContext';
@@ -33,6 +35,9 @@ export type HomeStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   EditProfile: undefined;
+  AddressesMain: undefined;
+  AddAddress: undefined;
+  EditAddress: { addressId: string };
 };
 
 export type SearchStackParamList = {
@@ -44,6 +49,9 @@ export type SearchStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   EditProfile: undefined;
+  AddressesMain: undefined;
+  AddAddress: undefined;
+  EditAddress: { addressId: string };
 };
 
 export type SettingsStackParamList = {
@@ -54,6 +62,9 @@ export type SettingsStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   EditProfile: undefined;
+  AddressesMain: undefined;
+  AddAddress: undefined;
+  EditAddress: { addressId: string };
 };
 
 export type AuthStackParamList = {
@@ -88,6 +99,9 @@ const HomeScreen: React.FC<BottomTabScreenProps<TabParamList, 'HomeStack'>> = ()
       <HomeStack.Screen name="Register" component={RegisterScreen} />
       <HomeStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <HomeStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <HomeStack.Screen name="AddressesMain" component={AddressesScreen} />
+      <HomeStack.Screen name="AddAddress" component={AddEditAddressScreen} />
+      <HomeStack.Screen name="EditAddress" component={AddEditAddressScreen} />
     </HomeStack.Navigator>
   );
 };
@@ -103,6 +117,9 @@ const SearchScreen: React.FC<BottomTabScreenProps<TabParamList, 'SearchStack'>> 
       <SearchStack.Screen name="Register" component={RegisterScreen} />
       <SearchStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <SearchStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <SearchStack.Screen name="AddressesMain" component={AddressesScreen} />
+      <SearchStack.Screen name="AddAddress" component={AddEditAddressScreen} />
+      <SearchStack.Screen name="EditAddress" component={AddEditAddressScreen} />
     </SearchStack.Navigator>
   );
 };
@@ -117,6 +134,9 @@ const SettingsStackScreen: React.FC<BottomTabScreenProps<TabParamList, 'Settings
       <SettingsStack.Screen name="Register" component={RegisterScreen} />
       <SettingsStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <SettingsStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <SettingsStack.Screen name="AddressesMain" component={AddressesScreen} />
+      <SettingsStack.Screen name="AddAddress" component={AddEditAddressScreen} />
+      <SettingsStack.Screen name="EditAddress" component={AddEditAddressScreen} />
     </SettingsStack.Navigator>
   );
 };

@@ -101,3 +101,4 @@ export const AddressFavoriteDTO = z.object({
 });
 
 export type AddressFavoriteDTO = z.infer<typeof AddressFavoriteDTO>;
+

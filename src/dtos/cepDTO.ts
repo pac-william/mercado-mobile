@@ -16,3 +16,4 @@ export const CEPErrorDTO = z.object({
 });
 
 export type CEPErrorDTO = z.infer<typeof CEPErrorDTO>;
+
