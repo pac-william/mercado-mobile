@@ -13,10 +13,22 @@ import { useCart } from '../../contexts/CartContext';
 import { Header } from '../../components/layout/header';
 import CustomModal from '../../components/ui/CustomModal';
 import { useModal } from '../../hooks/useModal';
+import { createOrder } from '../../services/orderService';
+import { useAuth } from "../../contexts/AuthContext";
+import { OrderCreateDTO } from "../../domain/orderDomain";
+
 
 const CartScreen: React.FC = () => {
-  const { state, removeItem, updateQuantity, clearCart } = useCart();
+  const { state: cartState, removeItem, updateQuantity, clearCart } = useCart();
   const { modalState, hideModal, showWarning, showSuccess } = useModal();
+  const { state, logout } = useAuth();
+
+
+  if (!state.user) {
+    console.error("Usuário não autenticado!");
+    return;
+  }
+
 
   const handleRemoveItem = (id: string, name: string) => {
     showWarning(
@@ -56,24 +68,49 @@ const CartScreen: React.FC = () => {
     );
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     showSuccess(
       'Finalizar Compra',
-      `Total: R$ ${state.total.toFixed(2)}\n\nDeseja finalizar sua compra?`,
+      `Total: R$ ${cartState.total.toFixed(2)}\n\nDeseja finalizar sua compra?`,
       {
         text: 'Finalizar Compra',
-        onPress: () => {
-          clearCart();
-          hideModal();
-          showSuccess(
-            'Compra Finalizada!',
-            'Sua compra foi processada com sucesso! Obrigado por escolher nossos produtos.',
-            {
-              text: 'Continuar Comprando',
-              onPress: hideModal,
-              style: 'success',
-            }
-          );
+        onPress: async () => {
+          try {
+            hideModal();
+
+            const orderData: OrderCreateDTO = {
+              userId: state.user.id, 
+              marketId: cartState.items[0]?.marketId || "",
+              items: cartState.items.map((item) => ({
+                productId: item.id,
+                quantity: item.quantity,
+              })),
+            };
+            
+            const newOrder = await createOrder(orderData, state.token);
+
+            clearCart();
+
+            showSuccess(
+              'Compra Finalizada!',
+              `Pedido #${newOrder.id} criado com sucesso!`,
+              {
+                text: 'Continuar Comprando',
+                onPress: hideModal,
+                style: 'success',
+              }
+            );
+          } catch (error) {
+            console.error('Erro ao criar pedido:', error);
+            showWarning(
+              'Erro ao finalizar',
+              'Não foi possível processar seu pedido. Tente novamente.',
+              {
+                text: 'OK',
+                onPress: hideModal,
+              }
+            );
+          }
         },
         style: 'success',
       },
@@ -84,28 +121,28 @@ const CartScreen: React.FC = () => {
     );
   };
 
-  if (state.items.length === 0) {
+  if (cartState.items.length === 0) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
         <Header />
-        <View style={{ 
-          flex: 1, 
-          justifyContent: 'center', 
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
           alignItems: 'center',
           paddingHorizontal: 32
         }}>
           <Ionicons name="cart-outline" size={80} color="#ccc" />
-          <Text style={{ 
-            fontSize: 24, 
-            fontWeight: 'bold', 
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 'bold',
             color: '#666',
             marginTop: 16,
             marginBottom: 8
           }}>
             Carrinho Vazio
           </Text>
-          <Text style={{ 
-            fontSize: 16, 
+          <Text style={{
+            fontSize: 16,
             color: '#999',
             textAlign: 'center',
             lineHeight: 24
@@ -120,14 +157,14 @@ const CartScreen: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
       <Header />
-      
+
       {/* Container principal com flex */}
       <View style={{ flex: 1 }}>
-        <ScrollView 
+        <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ 
+          contentContainerStyle={{
             paddingBottom: 20,
-            paddingTop: 10 
+            paddingTop: 10
           }}
           showsVerticalScrollIndicator={false}
           bounces={true}
@@ -150,9 +187,9 @@ const CartScreen: React.FC = () => {
             elevation: 4,
           }}>
             <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1a1a1a' }}>
-              Meu Carrinho ({state.itemCount} {state.itemCount === 1 ? 'item' : 'itens'})
+              Meu Carrinho ({cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'})
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handleClearCart}
               style={{
                 flexDirection: 'row',
@@ -170,202 +207,202 @@ const CartScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-        {/* Lista de itens */}
-        {state.items.map((item, index) => (
-          <View key={item.id} style={{
-            backgroundColor: 'white',
-            marginHorizontal: 16,
-            marginTop: 12,
-            borderRadius: 20,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 12,
-            elevation: 6,
-            overflow: 'hidden',
-          }}>
-            {/* Header do item com botão remover */}
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: 20,
-              paddingBottom: 16,
+          {/* Lista de itens */}
+          {cartState.items.map((item, index) => (
+            <View key={item.id} style={{
+              backgroundColor: 'white',
+              marginHorizontal: 16,
+              marginTop: 12,
+              borderRadius: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 6,
+              overflow: 'hidden',
             }}>
-              <View style={{ flex: 1, flexDirection: 'row' }}>
-                {/* Imagem do produto */}
-                <Image
-                  source={{ uri: item.image }}
-                  style={{
-                    width: 90,
-                    height: 90,
-                    borderRadius: 16,
-                    backgroundColor: '#f5f5f5',
-                  }}
-                  resizeMode="contain"
-                />
+              {/* Header do item com botão remover */}
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                padding: 20,
+                paddingBottom: 16,
+              }}>
+                <View style={{ flex: 1, flexDirection: 'row' }}>
+                  {/* Imagem do produto */}
+                  <Image
+                    source={{ uri: item.image }}
+                    style={{
+                      width: 90,
+                      height: 90,
+                      borderRadius: 16,
+                      backgroundColor: '#f5f5f5',
+                    }}
+                    resizeMode="contain"
+                  />
 
-                {/* Informações do produto */}
-                <View style={{ flex: 1, marginLeft: 16, justifyContent: 'space-between' }}>
-                  <View>
-                    <Text style={{ 
-                      fontSize: 17, 
-                      fontWeight: 'bold', 
-                      color: '#1a1a1a',
-                      marginBottom: 6,
-                      lineHeight: 24
+                  {/* Informações do produto */}
+                  <View style={{ flex: 1, marginLeft: 16, justifyContent: 'space-between' }}>
+                    <View>
+                      <Text style={{
+                        fontSize: 17,
+                        fontWeight: 'bold',
+                        color: '#1a1a1a',
+                        marginBottom: 6,
+                        lineHeight: 24
+                      }}>
+                        {item.name}
+                      </Text>
+
+                      <Text style={{
+                        fontSize: 14,
+                        color: '#666',
+                        marginBottom: 8
+                      }}>
+                        {item.marketName}
+                      </Text>
+                    </View>
+
+                    <Text style={{
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      color: '#2e7d32'
                     }}>
-                      {item.name}
-                    </Text>
-                    
-                    <Text style={{ 
-                      fontSize: 14, 
-                      color: '#666',
-                      marginBottom: 8
-                    }}>
-                      {item.marketName}
+                      R$ {item.price.toFixed(2)}
                     </Text>
                   </View>
-
-                  <Text style={{ 
-                    fontSize: 20, 
-                    fontWeight: 'bold', 
-                    color: '#2e7d32'
-                  }}>
-                    R$ {item.price.toFixed(2)}
-                  </Text>
                 </View>
+
+                {/* Botão remover */}
+                <TouchableOpacity
+                  onPress={() => handleRemoveItem(item.id, item.name)}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    backgroundColor: '#ffebee',
+                    borderRadius: 18,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginLeft: 12,
+                  }}
+                >
+                  <Ionicons name="close" size={18} color="#d32f2f" />
+                </TouchableOpacity>
               </View>
 
-              {/* Botão remover */}
-              <TouchableOpacity
-                onPress={() => handleRemoveItem(item.id, item.name)}
-                style={{
-                  width: 36,
-                  height: 36,
-                  backgroundColor: '#ffebee',
-                  borderRadius: 18,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginLeft: 12,
-                }}
-              >
-                <Ionicons name="close" size={18} color="#d32f2f" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Controles de quantidade */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: 20,
-              paddingBottom: 16,
-            }}>
-              <Text style={{ 
-                fontSize: 16, 
-                fontWeight: '600', 
-                color: '#1a1a1a' 
-              }}>
-                Quantidade
-              </Text>
-
+              {/* Controles de quantidade */}
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: '#f8f9fa',
-                borderRadius: 30,
-                paddingHorizontal: 6,
-                paddingVertical: 4,
+                justifyContent: 'space-between',
+                paddingHorizontal: 20,
+                paddingBottom: 16,
               }}>
-                <TouchableOpacity
-                  onPress={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: item.quantity <= 1 ? '#e0e0e0' : '#2E7D32',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowColor: item.quantity <= 1 ? 'transparent' : '#2E7D32',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: item.quantity <= 1 ? 0 : 3,
-                  }}
-                  disabled={item.quantity <= 1}
-                >
-                  <Ionicons 
-                    name="remove" 
-                    size={22} 
-                    color={item.quantity <= 1 ? '#999' : 'white'} 
-                  />
-                </TouchableOpacity>
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: '#1a1a1a'
+                }}>
+                  Quantidade
+                </Text>
 
                 <View style={{
-                  minWidth: 50,
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  marginHorizontal: 16,
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: 30,
+                  paddingHorizontal: 6,
+                  paddingVertical: 4,
                 }}>
-                  <Text style={{
-                    fontSize: 20,
-                    fontWeight: 'bold',
-                    color: '#1a1a1a',
-                  }}>
-                    {item.quantity}
-                  </Text>
-                </View>
+                  <TouchableOpacity
+                    onPress={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: item.quantity <= 1 ? '#e0e0e0' : '#FF4500',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      shadowColor: item.quantity <= 1 ? 'transparent' : '#FF4500',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: item.quantity <= 1 ? 0 : 3,
+                    }}
+                    disabled={item.quantity <= 1}
+                  >
+                    <Ionicons
+                      name="remove"
+                      size={22}
+                      color={item.quantity <= 1 ? '#999' : 'white'}
+                    />
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => updateQuantity(item.id, item.quantity + 1)}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: '#2E7D32',
-                    justifyContent: 'center',
+                  <View style={{
+                    minWidth: 50,
                     alignItems: 'center',
-                    shadowColor: '#2E7D32',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
-                    elevation: 3,
-                  }}
-                >
-                  <Ionicons name="add" size={22} color="white" />
-                </TouchableOpacity>
+                    marginHorizontal: 16,
+                  }}>
+                    <Text style={{
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      color: '#1a1a1a',
+                    }}>
+                      {item.quantity}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: '#FF4500',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      shadowColor: '#FF4500',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                  >
+                    <Ionicons name="add" size={22} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Subtotal do item */}
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingHorizontal: 20,
+                paddingBottom: 20,
+                paddingTop: 16,
+                borderTopWidth: 1,
+                borderTopColor: '#f0f0f0',
+                backgroundColor: '#fafafa',
+              }}>
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: '#1a1a1a'
+                }}>
+                  Subtotal
+                </Text>
+                <Text style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  color: '#2e7d32'
+                }}>
+                  R$ {(item.price * item.quantity).toFixed(2)}
+                </Text>
               </View>
             </View>
-
-            {/* Subtotal do item */}
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingHorizontal: 20,
-              paddingBottom: 20,
-              paddingTop: 16,
-              borderTopWidth: 1,
-              borderTopColor: '#f0f0f0',
-              backgroundColor: '#fafafa',
-            }}>
-              <Text style={{ 
-                fontSize: 16, 
-                fontWeight: '600', 
-                color: '#1a1a1a' 
-              }}>
-                Subtotal
-              </Text>
-              <Text style={{ 
-                fontSize: 20, 
-                fontWeight: 'bold', 
-                color: '#2e7d32'
-              }}>
-                R$ {(item.price * item.quantity).toFixed(2)}
-              </Text>
-            </View>
-          </View>
-        ))}
+          ))}
         </ScrollView>
       </View>
 
@@ -392,12 +429,12 @@ const CartScreen: React.FC = () => {
           <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1a1a1a' }}>
             Total
           </Text>
-          <Text style={{ 
-            fontSize: 24, 
-            fontWeight: 'bold', 
+          <Text style={{
+            fontSize: 24,
+            fontWeight: 'bold',
             color: '#2e7d32'
           }}>
-            R$ {state.total.toFixed(2)}
+            R$ {cartState.total.toFixed(2)}
           </Text>
         </View>
 

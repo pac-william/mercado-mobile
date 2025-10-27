@@ -45,7 +45,6 @@ export default function Home() {
           }
         })
       );
-      console.log(marketsWithDetails);
       
       setMarkets(marketsWithDetails);
     } catch (error) {

@@ -119,7 +119,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
                   style={styles.secondaryButton}
                   onPress={secondaryButton.onPress}
                 >
-                  <Text style={styles.secondaryButtonText}>
+                  <Text >
                     {secondaryButton.text}
                   </Text>
                 </TouchableOpacity>
@@ -200,22 +200,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 24,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
   primaryButton: {
     backgroundColor: '#2E7D32',
   },
@@ -238,19 +222,34 @@ const styles = StyleSheet.create({
   successButtonText: {
     color: 'white',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   secondaryButton: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 16,
     alignItems: 'center',
+    justifyContent: 'center', // 🔥 garante alinhamento vertical
     backgroundColor: '#f8f9fa',
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    marginRight: 6, // substitui gap
   },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
+  button: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center', // 🔥 garante centralização vertical
+    marginLeft: 6, // substitui gap
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   closeButton: {
     position: 'absolute',

@@ -24,12 +24,14 @@ export default function ProductDetail({ route }: Props) {
   const navigation = useNavigation();
 
   const handleAddToCart = () => {
+
     addItem({
       id: product.id.toString(),
       name: product.name,
       price: product.price,
       image: product.image,
       marketName: product.marketName,
+      marketId: product.marketId,
     });
     
     showSuccess(

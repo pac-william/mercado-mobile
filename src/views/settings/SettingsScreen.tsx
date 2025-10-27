@@ -3,14 +3,19 @@ import { View, Text, SafeAreaView, StyleSheet, TouchableOpacity, Alert, ScrollVi
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { Header } from "../../components/layout/header";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { SettingsStackParamList } from "../../../App";
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { SearchStackParamList } from '../../../App';
+
+type SearchStackParamListProp = NativeStackNavigationProp<SearchStackParamList>;
 
 export default function SettingsScreen() {
+
+    const navigation = useNavigation<SearchStackParamListProp>();
     const { state, logout, restoreToken } = useAuth();
     const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
     const [refreshing, setRefreshing] = useState(false);
+    
 
     const handleRefresh = async () => {
         setRefreshing(true);
@@ -46,7 +51,7 @@ export default function SettingsScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <Header />
-            <ScrollView 
+            <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
@@ -73,11 +78,8 @@ export default function SettingsScreen() {
 
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Conta</Text>
-                            
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={() => navigation.navigate('EditProfile')}
-                            >
+
+                            <TouchableOpacity style={styles.menuItem}>
                                 <Ionicons name="person-outline" size={24} color="#666" />
                                 <Text style={styles.menuItemText}>Editar perfil</Text>
                                 <Ionicons name="chevron-forward" size={20} color="#999" />
@@ -97,11 +99,17 @@ export default function SettingsScreen() {
                                 <Text style={styles.menuItemText}>Endereços</Text>
                                 <Ionicons name="chevron-forward" size={20} color="#999" />
                             </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Orders")}>
+                                <Ionicons name="receipt-outline" size={24} color="#666" />
+                                <Text style={styles.menuItemText}>Meus pedidos</Text>
+                                <Ionicons name="chevron-forward" size={20} color="#999" />
+                            </TouchableOpacity>
                         </View>
 
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Preferências</Text>
-                            
+
                             <TouchableOpacity style={styles.menuItem}>
                                 <Ionicons name="moon-outline" size={24} color="#666" />
                                 <Text style={styles.menuItemText}>Tema escuro</Text>
@@ -115,7 +123,7 @@ export default function SettingsScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={styles.logoutButton}
                             onPress={handleLogout}
                         >
