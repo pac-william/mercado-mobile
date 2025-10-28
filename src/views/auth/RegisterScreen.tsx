@@ -110,8 +110,12 @@ export default function RegisterScreen() {
         } catch (error: any) {
             let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
             
-            if (error.response) {
+            if (error.name === "EmailAlreadyExists") {
+                errorMessage = error.message;
+            } else if (error.response) {
                 if (error.response.status === 409) {
+                    errorMessage = "Este email já está cadastrado.";
+                } else if (error.response.status === 500) {
                     errorMessage = "Este email já está cadastrado.";
                 } else if (error.response.status === 400) {
                     errorMessage = "Dados inválidos. Verifique os campos.";

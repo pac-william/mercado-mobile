@@ -13,7 +13,6 @@ export default function SettingsScreen() {
 
     const navigation = useNavigation<SearchStackParamListProp>();
     const { state, logout, restoreToken } = useAuth();
-    const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
     const [refreshing, setRefreshing] = useState(false);
     
 

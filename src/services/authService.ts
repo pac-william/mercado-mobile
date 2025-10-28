@@ -36,49 +36,75 @@ export interface AuthResponse {
     user: User;
 }
 
-interface BackendLoginResponse {
-    message: string;
-    role: string;
-    id: string;
-    marketId: string | null;
-    market: any;
-    accessToken: string;
-    refreshToken: string;
+interface GetTokenResponse {
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+    id_token?: string;
 }
 
-interface BackendRegisterResponse {
-    message: string;
-    userId: string;
-    role: string;
-    marketId: string | null;
+interface CreateUserResponse {
+    user_id: string;
+    email: string;
+    name: string;
 }
 
 export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
-        const response = await api.post<BackendLoginResponse>("/auth/login", credentials);
+        console.log('Tentando fazer login com:', credentials.email);
+        console.log('Base URL da API:', api.defaults.baseURL);
+        const response = await api.post<GetTokenResponse>("/auth/signin", {
+            username: credentials.email,
+            password: credentials.password
+        });
+        
+        console.log('Resposta do login:', response.data);
         const data = response.data;
 
-        // Buscar dados completos do usuário após login
-        const userResponse = await api.get<User>("/auth/me", {
-            headers: {
-                Authorization: `Bearer ${data.accessToken}`
-            }
-        });
+        // Tentar buscar dados completos do usuário após login
+        try {
+            const userResponse = await api.get<User>("/auth/me", {
+                headers: {
+                    Authorization: `Bearer ${data.access_token}`
+                }
+            });
 
-        return {
-            token: data.accessToken,
-            user: userResponse.data
-        };
-    } catch (error) {
+            return {
+                token: data.access_token,
+                user: userResponse.data
+            };
+        } catch (meError) {
+            console.log("Endpoint /auth/me não disponível, usando dados do token");
+            return {
+                token: data.access_token,
+                user: {
+                    id: credentials.email,
+                    name: "",
+                    email: credentials.email
+                }
+            };
+        }
+    } catch (error: any) {
         console.error("Erro ao fazer login:", error);
+        console.error("Status:", error.response?.status);
+        console.error("Data:", error.response?.data);
+        console.error("URL tentada:", error.config?.url);
         throw error;
     }
 };
 
 export const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
     try {
-        await api.post<BackendRegisterResponse>("/auth/register/user", userData);
+        console.log('Tentando registrar usuário:', userData.email);
+        console.log('Base URL da API:', api.defaults.baseURL);
+        const response = await api.post<CreateUserResponse>("/auth/signup", {
+            email: userData.email,
+            password: userData.password,
+            name: userData.name
+        });
         
+        console.log('Resposta do registro:', response.data);
+        const createUserData = response.data;
         const loginResponse = await login({
             email: userData.email,
             password: userData.password
@@ -91,8 +117,19 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
                 name: userData.name
             }
         };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Erro ao registrar usuário:", error);
+        console.error("Status:", error.response?.status);
+        console.error("Data:", error.response?.data);
+        console.error("URL tentada:", error.config?.url);
+        
+        // Tratar erro específico de usuário duplicado
+        if (error.response?.status === 500 && error.response?.data?.message?.includes("Erro interno")) {
+            const retryError = new Error("Este email já está cadastrado");
+            retryError.name = "EmailAlreadyExists";
+            throw retryError;
+        }
+        
         throw error;
     }
 };
