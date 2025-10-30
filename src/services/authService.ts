@@ -51,39 +51,24 @@ interface CreateUserResponse {
 
 export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
-        console.log('Tentando fazer login com:', credentials.email);
-        console.log('Base URL da API:', api.defaults.baseURL);
+        
         const response = await api.post<GetTokenResponse>("/auth/signin", {
             username: credentials.email,
             password: credentials.password
         });
         
-        console.log('Resposta do login:', response.data);
         const data = response.data;
 
-        // Tentar buscar dados completos do usuário após login
-        try {
-            const userResponse = await api.get<User>("/auth/me", {
-                headers: {
-                    Authorization: `Bearer ${data.access_token}`
-                }
-            });
 
-            return {
-                token: data.access_token,
-                user: userResponse.data
-            };
-        } catch (meError) {
-            console.log("Endpoint /auth/me não disponível, usando dados do token");
-            return {
-                token: data.access_token,
-                user: {
-                    id: credentials.email,
-                    name: "",
-                    email: credentials.email
-                }
-            };
-        }
+        return {
+            token: data.access_token,
+            user: {
+                id: credentials.email,
+                name: "",
+                email: credentials.email
+            }
+        };
+
     } catch (error: any) {
         console.error("Erro ao fazer login:", error);
         console.error("Status:", error.response?.status);
@@ -123,7 +108,6 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
         console.error("Data:", error.response?.data);
         console.error("URL tentada:", error.config?.url);
         
-        // Tratar erro específico de usuário duplicado
         if (error.response?.status === 500 && error.response?.data?.message?.includes("Erro interno")) {
             const retryError = new Error("Este email já está cadastrado");
             retryError.name = "EmailAlreadyExists";
