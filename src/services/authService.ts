@@ -1,5 +1,7 @@
 import api from "./api";
-import { getAuth0IdFromToken } from "../utils/jwtUtils";
+import { getAuth0IdFromToken, decodeJWT } from "../utils/jwtUtils";
+import { auth0Config, useProxy } from "../config/auth0";
+import * as AuthSession from 'expo-auth-session';
 
 export interface LoginRequest {
     email: string;
@@ -254,6 +256,143 @@ export const getProfileHistory = async (): Promise<any[]> => {
         return response.data;
     } catch (error) {
         console.error("Erro ao obter histórico do perfil:", error);
+        throw error;
+    }
+};
+
+export const loginWithGoogle = async (): Promise<AuthResponse> => {
+    if (!auth0Config.clientId) {
+        throw new Error('AUTH0_CLIENT_ID não configurado. Configure EXPO_PUBLIC_AUTH0_CLIENT_ID no arquivo .env');
+    }
+
+    console.log('Redirect URI:', auth0Config.redirectUri);
+
+    try {
+        const request = new AuthSession.AuthRequest({
+            clientId: auth0Config.clientId,
+            scopes: ['openid', 'profile', 'email'],
+            responseType: AuthSession.ResponseType.Code,
+            redirectUri: auth0Config.redirectUri,
+            extraParams: {
+                connection: 'google-oauth2',
+            },
+            usePKCE: true,
+        });
+
+        const discovery = {
+            authorizationEndpoint: auth0Config.discovery.authorizationEndpoint,
+            tokenEndpoint: auth0Config.discovery.tokenEndpoint,
+        };
+
+        const result = await request.promptAsync(discovery, {
+            showInRecents: true,
+        });
+
+        if (result.type === 'cancel' || result.type === 'dismiss') {
+            const cancelError = new Error('Login cancelado pelo usuário');
+            cancelError.name = 'UserCancelled';
+            throw cancelError;
+        }
+
+        if (result.type === 'error') {
+            throw new Error(`Erro no OAuth: ${result.error?.message || 'Erro desconhecido'}`);
+        }
+
+        if (result.type !== 'success') {
+            throw new Error('Resposta inesperada do Auth0');
+        }
+
+        let accessToken = '';
+        let idToken = '';
+
+        if (result.authentication) {
+            accessToken = result.authentication.accessToken || '';
+            idToken = result.authentication.idToken || accessToken;
+        } else if (result.params?.code) {
+            const code = result.params.code;
+            const codeVerifier = request.codeVerifier || '';
+
+            if (!codeVerifier) {
+                throw new Error('Code verifier não encontrado para trocar código por tokens');
+            }
+
+            const tokenResponse = await fetch(auth0Config.discovery.tokenEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    grant_type: 'authorization_code',
+                    client_id: auth0Config.clientId,
+                    code: code,
+                    redirect_uri: auth0Config.redirectUri,
+                    code_verifier: codeVerifier,
+                }).toString(),
+            });
+
+            if (!tokenResponse.ok) {
+                const errorText = await tokenResponse.text();
+                console.error('Erro ao trocar código por tokens:', errorText);
+                throw new Error('Erro ao trocar código de autorização por tokens');
+            }
+
+            const tokenData = await tokenResponse.json();
+            accessToken = tokenData.access_token || '';
+            idToken = tokenData.id_token || accessToken;
+        } else {
+            accessToken = result.params?.access_token || '';
+            idToken = result.params?.id_token || accessToken;
+        }
+
+        if (!idToken && !accessToken) {
+            throw new Error('Token não recebido na resposta');
+        }
+
+        let auth0Id: string | null = null;
+
+        try {
+            auth0Id = getAuth0IdFromToken(idToken);
+        } catch (error) {
+            console.warn('Não foi possível extrair auth0Id do token:', error);
+            throw new Error('Erro ao processar token do Google');
+        }
+
+        try {
+            const userResponse = await api.get<User>(`/users/auth0/${encodeURIComponent(auth0Id)}`);
+            const user = userResponse.data;
+
+            return {
+                token: accessToken,
+                user
+            };
+        } catch (error: any) {
+            if (error.response?.status === 404) {
+                const decoded = decodeJWT(idToken);
+                
+                const createUserPayload = {
+                    name: decoded.name || decoded.email || 'Usuário',
+                    email: decoded.email || '',
+                    auth0Id: auth0Id,
+                    profilePicture: decoded.picture || undefined,
+                };
+
+                await api.post<User>('/users', createUserPayload);
+
+                const newUserResponse = await api.get<User>(`/users/auth0/${encodeURIComponent(auth0Id)}`);
+                const user = newUserResponse.data;
+
+                return {
+                    token: accessToken,
+                    user
+                };
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        if (error instanceof Error && error.name === 'UserCancelled') {
+            throw error;
+        }
         throw error;
     }
 };

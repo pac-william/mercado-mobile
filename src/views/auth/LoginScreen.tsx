@@ -19,7 +19,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import Logo from "../../assets/logo1.jpg";
 import { LoginDTO } from "../../dtos/authDTO";
-import { login } from "../../services/authService";
+import { login, loginWithGoogle } from "../../services/authService";
 import { useAuth } from "../../contexts/AuthContext";
 import { HomeStackParamList } from "../../../App";
 
@@ -33,6 +33,7 @@ export default function LoginScreen() {
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
     const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(50)).current;
@@ -118,6 +119,38 @@ export default function LoginScreen() {
         }
     };
 
+    const handleGoogleLogin = async () => {
+        setGoogleLoading(true);
+
+        try {
+            const response = await loginWithGoogle();
+            await authLogin(response.user, response.token);
+            navigation.goBack();
+        } catch (error: any) {
+            let errorMessage = "Não foi possível fazer login com Google.";
+
+            if (error.name === "UserCancelled") {
+                return;
+            }
+
+            if (error.response) {
+                if (error.response.status === 409) {
+                    errorMessage = "Este email já está cadastrado com outro método de login.";
+                } else if (error.response.data?.message) {
+                    errorMessage = error.response.data.message;
+                }
+            } else if (error.message === "Network Error") {
+                errorMessage = "Erro de conexão. Verifique sua internet.";
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            Alert.alert("Erro ao fazer login", errorMessage, [{ text: "OK" }]);
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView 
@@ -163,7 +196,7 @@ export default function LoginScreen() {
                             outlineColor="#e0e0e0"
                             activeOutlineColor="#2E7D32"
                             error={!!errors.email}
-                            disabled={loading}
+                            disabled={loading || googleLoading}
                             left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
                         />
                         {errors.email && (
@@ -185,13 +218,13 @@ export default function LoginScreen() {
                             outlineColor="#e0e0e0"
                             activeOutlineColor="#2E7D32"
                             error={!!errors.password}
-                            disabled={loading}
+                            disabled={loading || googleLoading}
                             left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
                             right={
                                 <TextInput.Icon 
                                     icon={() => <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />}
                                     onPress={() => setShowPassword(!showPassword)}
-                                    disabled={loading}
+                                    disabled={loading || googleLoading}
                                 />
                             }
                         />
@@ -211,7 +244,7 @@ export default function LoginScreen() {
                             onPress={handleLogin}
                             style={styles.loginButton}
                             labelStyle={styles.loginButtonLabel}
-                            disabled={loading}
+                            disabled={loading || googleLoading}
                             loading={loading}
                             icon={!loading ? () => <Ionicons name="log-in-outline" size={20} color="white" /> : undefined}
                         >
@@ -223,6 +256,18 @@ export default function LoginScreen() {
                             <Text style={styles.dividerText}>ou</Text>
                             <View style={styles.dividerLine} />
                         </View>
+
+                        <Button
+                            mode="outlined"
+                            onPress={handleGoogleLogin}
+                            style={styles.googleButton}
+                            labelStyle={styles.googleButtonLabel}
+                            disabled={loading || googleLoading}
+                            loading={googleLoading}
+                            icon={!googleLoading ? () => <Ionicons name="logo-google" size={20} color="#4285F4" /> : undefined}
+                        >
+                            {googleLoading ? "Conectando..." : "Entrar com Google"}
+                        </Button>
 
                         <View style={styles.registerContainer}>
                             <Text style={styles.registerText}>Não tem uma conta? </Text>
@@ -333,5 +378,18 @@ const styles = StyleSheet.create({
         color: "#2E7D32",
         fontSize: 14,
         fontWeight: "bold",
+    },
+    googleButton: {
+        borderColor: "#4285F4",
+        borderWidth: 1.5,
+        paddingVertical: 8,
+        borderRadius: 12,
+        marginBottom: 24,
+        backgroundColor: "white",
+    },
+    googleButtonLabel: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#4285F4",
     },
 });
