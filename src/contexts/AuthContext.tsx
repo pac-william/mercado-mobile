@@ -19,6 +19,19 @@ export interface User {
   phone?: string;
   address?: string;
   profilePicture?: string;
+  auth0Id?: string;
+  birthDate?: string | Date;
+  gender?: string;
+  role?: 'CUSTOMER' | 'MARKET_ADMIN';
+  marketId?: string;
+  market?: {
+    id: string;
+    name: string;
+    address: string;
+    profilePicture?: string;
+  };
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface Address {
@@ -270,11 +283,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Usuário não autenticado');
     }
 
-    console.log('Tentando atualizar perfil com token:', state.token.substring(0, 20) + '...'); // Log parcial do token
-
-  
     const formattedData: any = {};
-
 
     Object.keys(profileData).forEach(key => {
       const value = (profileData as any)[key];
@@ -290,9 +299,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
 
-  
     if (formattedData.phone && formattedData.phone.length < 10) {
-      formattedData.phone = `11${formattedData.phone}`; // Exemplo: adicionar DDD 11 para São Paulo
+      formattedData.phone = `11${formattedData.phone}`;
     }
 
     console.log('Dados formatados enviados:', formattedData);
@@ -300,7 +308,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'UPDATE_PROFILE_START' });
 
     try {
-      const updatedUser = await updateUserProfile(state.token, formattedData);
+      const updatedUser = await updateUserProfile(formattedData);
       await saveUser(updatedUser);
       dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
     } catch (error) {
@@ -316,7 +324,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Usuário não autenticado');
     }
 
-  
     const formattedData: any = {};
 
     Object.keys(profileData).forEach(key => {
@@ -326,7 +333,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
 
-  
     if (formattedData.birthDate) {
       const dateParts = formattedData.birthDate.split('/');
       if (dateParts.length === 3) {
@@ -341,7 +347,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'UPDATE_PROFILE_START' });
 
     try {
-      const updatedUser = await updateUserProfilePartial(state.token, formattedData);
+      const updatedUser = await updateUserProfilePartial(formattedData);
       await saveUser(updatedUser);
       dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
     } catch (error) {
@@ -359,7 +365,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'UPDATE_PROFILE_START' });
 
     try {
-      const result = await uploadProfilePicture(state.token, file);
+      const result = await uploadProfilePicture(file);
       const updatedUser = { ...state.user!, profilePicture: result.profilePicture };
       await saveUser(updatedUser);
       dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });

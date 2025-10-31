@@ -1,4 +1,5 @@
 import api from "./api";
+import { getAuth0IdFromToken } from "../utils/jwtUtils";
 
 export interface LoginRequest {
     email: string;
@@ -29,6 +30,19 @@ export interface User {
     phone?: string;
     address?: string;
     profilePicture?: string;
+    auth0Id?: string;
+    birthDate?: string | Date;
+    gender?: string;
+    role?: 'CUSTOMER' | 'MARKET_ADMIN';
+    marketId?: string;
+    market?: {
+        id: string;
+        name: string;
+        address: string;
+        profilePicture?: string;
+    };
+    createdAt?: string | Date;
+    updatedAt?: string | Date;
 }
 
 export interface AuthResponse {
@@ -51,17 +65,48 @@ interface CreateUserResponse {
 
 export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
     try {
-        
         const response = await api.post<GetTokenResponse>("/auth/signin", {
             username: credentials.email,
             password: credentials.password
         });
         
-        const data = response.data;
+        const token = response.data.access_token;
+        const idToken = response.data.id_token;
 
+        try {
+            let auth0Id: string | null = null;
 
+            if (idToken) {
+                try {
+                    auth0Id = getAuth0IdFromToken(idToken);
+                } catch (error) {
+                    console.warn('Não foi possível decodificar id_token:', error);
+                }
+            }
+
+            if (!auth0Id && token) {
+                try {
+                    auth0Id = getAuth0IdFromToken(token);
+                } catch (error) {
+                    console.warn('Não foi possível decodificar access_token:', error);
+                }
+            }
+
+            if (auth0Id) {
+                const userResponse = await api.get<User>(`/users/auth0/${encodeURIComponent(auth0Id)}`);
+                const user = userResponse.data;
+                
+                return {
+                    token,
+                    user
+                };
+            }
+        } catch (fetchError) {
+            console.warn('Não foi possível buscar usuário completo, usando dados básicos:', fetchError);
+        }
+        
         return {
-            token: data.access_token,
+            token,
             user: {
                 id: credentials.email,
                 name: "",
@@ -82,24 +127,42 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
     try {
         console.log('Tentando registrar usuário:', userData.email);
         console.log('Base URL da API:', api.defaults.baseURL);
-        const response = await api.post<CreateUserResponse>("/auth/signup", {
+        const registerResponse = await api.post<CreateUserResponse>("/auth/signup", {
             email: userData.email,
             password: userData.password,
             name: userData.name
         });
         
-        console.log('Resposta do registro:', response.data);
-        const createUserData = response.data;
-        const loginResponse = await login({
-            email: userData.email,
+        console.log('Resposta do registro:', registerResponse.data);
+        
+        const loginResponse = await api.post<GetTokenResponse>("/auth/signin", {
+            username: userData.email,
             password: userData.password
         });
         
+        const token = loginResponse.data.access_token;
+        const auth0Id = registerResponse.data.user_id;
+
+        try {
+            if (auth0Id) {
+                const userResponse = await api.get<User>(`/users/auth0/${encodeURIComponent(auth0Id)}`);
+                const user = userResponse.data;
+                
+                return {
+                    token,
+                    user
+                };
+            }
+        } catch (fetchError) {
+            console.warn('Não foi possível buscar usuário completo, usando dados básicos:', fetchError);
+        }
+        
         return {
-            token: loginResponse.token,
+            token,
             user: {
-                ...loginResponse.user,
-                name: userData.name
+                id: userData.email,
+                name: userData.name,
+                email: userData.email
             }
         };
     } catch (error: any) {
@@ -118,13 +181,9 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
     }
 };
 
-export const verifyToken = async (token: string): Promise<User> => {
+export const verifyToken = async (): Promise<User> => {
     try {
-        const response = await api.get<User>("/auth/me", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get<User>("/auth/me");
         return response.data;
     } catch (error) {
         console.error("Erro ao verificar token:", error);
@@ -142,13 +201,9 @@ export const forgotPassword = async (data: ForgotPasswordRequest): Promise<{ mes
     }
 };
 
-export const getUserProfile = async (token: string): Promise<User> => {
+export const getUserProfile = async (): Promise<User> => {
     try {
-        const response = await api.get<User>("/auth/me", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get<User>("/auth/me");
         return response.data;
     } catch (error) {
         console.error("Erro ao obter perfil do usuário:", error);
@@ -156,13 +211,9 @@ export const getUserProfile = async (token: string): Promise<User> => {
     }
 };
 
-export const updateUserProfile = async (token: string, profileData: ProfileUpdateRequest): Promise<User> => {
+export const updateUserProfile = async (profileData: ProfileUpdateRequest): Promise<User> => {
     try {
-        const response = await api.put<User>("/auth/me", profileData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.put<User>("/auth/me", profileData);
         return response.data;
     } catch (error) {
         console.error("Erro ao atualizar perfil completo:", error);
@@ -170,13 +221,9 @@ export const updateUserProfile = async (token: string, profileData: ProfileUpdat
     }
 };
 
-export const updateUserProfilePartial = async (token: string, profileData: ProfileUpdateRequest): Promise<User> => {
+export const updateUserProfilePartial = async (profileData: ProfileUpdateRequest): Promise<User> => {
     try {
-        const response = await api.patch<User>("/auth/me", profileData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.patch<User>("/auth/me", profileData);
         return response.data;
     } catch (error) {
         console.error("Erro ao atualizar perfil parcialmente:", error);
@@ -184,14 +231,13 @@ export const updateUserProfilePartial = async (token: string, profileData: Profi
     }
 };
 
-export const uploadProfilePicture = async (token: string, file: any): Promise<{ profilePicture: string }> => {
+export const uploadProfilePicture = async (file: any): Promise<{ profilePicture: string }> => {
     try {
         const formData = new FormData();
         formData.append("profilePicture", file);
 
         const response = await api.post<{ profilePicture: string }>("/auth/upload-profile-picture", formData, {
             headers: {
-                Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data",
             },
         });
@@ -202,13 +248,9 @@ export const uploadProfilePicture = async (token: string, file: any): Promise<{ 
     }
 };
 
-export const getProfileHistory = async (token: string): Promise<any[]> => {
+export const getProfileHistory = async (): Promise<any[]> => {
     try {
-        const response = await api.get<any[]>("/auth/profile-history", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get<any[]>("/auth/profile-history");
         return response.data;
     } catch (error) {
         console.error("Erro ao obter histórico do perfil:", error);

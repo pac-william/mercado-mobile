@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { User } from "../contexts/AuthContext";
 
 const TOKEN_KEY = "@mercado_mobile:token";
 const REFRESH_TOKEN_KEY = "@mercado_mobile:refresh_token";
@@ -54,7 +55,7 @@ export const removeRefreshToken = async (): Promise<void> => {
 
 // -------------------- USER --------------------
 
-export const saveUser = async (user: { id: string; name: string; email: string }): Promise<void> => {
+export const saveUser = async (user: User): Promise<void> => {
   try {
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
   } catch (error) {
@@ -63,10 +64,13 @@ export const saveUser = async (user: { id: string; name: string; email: string }
   }
 };
 
-export const getUser = async (): Promise<{ id: string; name: string; email: string } | null> => {
+export const getUser = async (): Promise<User | null> => {
   try {
     const userData = await AsyncStorage.getItem(USER_KEY);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+    
+    const user = JSON.parse(userData) as User;
+    return user;
   } catch (error) {
     console.error("Erro ao buscar dados do usuário:", error);
     return null;
@@ -78,7 +82,7 @@ export const removeUser = async (): Promise<void> => {
     await AsyncStorage.removeItem(USER_KEY);
   } catch (error) {
     console.error("Erro ao remover dados do usuário:", error);
-    throw error;''
+    throw error;
   }
 };
 
