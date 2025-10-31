@@ -1,13 +1,24 @@
+export interface OrderItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
 export interface Order {
   id: string;
   status: string;
-  totalPrice: number;
+  total?: number;
+  totalPrice?: number;
   userId: string;
   marketId: string;
-  delivererId?: string;
+  delivererId?: string | null;
+  couponId?: string | null;
+  addressId?: string;
+  paymentMethod?: string;
+  items?: OrderItem[];
   createdAt: string;
   updatedAt: string;
-  // adicione outros campos conforme o backend
 }
 
 export interface OrderPaginatedResponse {

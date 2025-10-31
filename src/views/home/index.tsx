@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FlatList, View, Image, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
-import { Text, ActivityIndicator } from "react-native-paper";
+import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import { Text, ActivityIndicator, useTheme } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -9,18 +9,22 @@ import ProductCard from "../../components/ui/ProductCard";
 import FilterButton from "../../components/ui/FilterButton";
 import HeroBanner from "../../components/ui/Hero";
 import { Header } from "../../components/layout/header";
+import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import { getProducts } from "../../services/productService";
 import { getMarkets, getMarketById } from "../../services/marketService";
-import { Market } from "../../domain/marketDomain"
+import { Market } from "../../domain/marketDomain";
+import { isNetworkError } from "../../utils/networkUtils";
 
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function Home() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const paperTheme = useTheme();
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState(false);
+  const [offline, setOffline] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchMarketsWithProducts = async () => {
@@ -36,9 +40,13 @@ export default function Home() {
               ...marketDetails,
               products: resProducts.products
             };
-          } catch (err) {
+          } catch (err: any) {
             console.error(`Erro ao buscar dados completos do mercado ${marketFromList.name}:`, err);
-            setError(true);
+            if (isNetworkError(err)) {
+              setOffline(true);
+            } else {
+              setError(true);
+            }
             return { ...marketFromList, products: [] };
           }finally {
             setLoading(false); 
@@ -47,8 +55,12 @@ export default function Home() {
       );
       
       setMarkets(marketsWithDetails);
-    } catch (error) {
+      setOffline(false);
+    } catch (error: any) {
       console.error("Erro ao buscar mercados:", error);
+      if (isNetworkError(error)) {
+        setOffline(true);
+      }
     }
   };
 
@@ -64,16 +76,19 @@ export default function Home() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
-                <Text>Carregando...</Text>
+            <View style={[styles.loadingContainer, { backgroundColor: paperTheme.colors.background }]}>
+                <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+                <Text style={{ color: paperTheme.colors.onBackground, marginTop: 10 }}>Carregando...</Text>
             </View>
         );
     }
   
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      {offline && (
+        <OfflineBanner message="Sem conexão com a internet. Alguns recursos podem estar limitados." />
+      )}
       <ScrollView
         style={styles.scrollViewFlex}
         contentContainerStyle={styles.scrollViewContent}
@@ -81,8 +96,8 @@ export default function Home() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={["#2E7D32"]}
-            tintColor="#2E7D32"
+            colors={[paperTheme.colors.primary]}
+            tintColor={paperTheme.colors.primary}
           />
         }
       >
@@ -122,12 +137,12 @@ export default function Home() {
 
                   <Text
                     variant="titleMedium"
-                    style={{ fontWeight: "bold", fontSize: 18 }}
+                    style={{ fontWeight: "bold", fontSize: 18, color: paperTheme.colors.onBackground }}
                   >
                     {market.name}
                   </Text>
                   
-                  <Text style={styles.marketAddress} numberOfLines={1} ellipsizeMode="tail">
+                  <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurface, opacity: 0.7 }]} numberOfLines={1} ellipsizeMode="tail">
                     {market.address}
                   </Text>
 
@@ -163,14 +178,14 @@ export default function Home() {
             </View>
           ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#eeeeeeff',
+        // backgroundColor será aplicado dinamicamente via props
     },
     scrollViewFlex: {
         flex: 1,
@@ -187,7 +202,7 @@ const styles = StyleSheet.create({
     },
     marketAddress: {
       fontSize: 12,
-      color: "gray",
+      // color será aplicado dinamicamente via props
     },
     productList: {
         minHeight: 250,

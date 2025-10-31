@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Image, ScrollView, SafeAreaView, TouchableOpacity, Dimensions } from "react-native";
-import { Text, Button, Divider } from "react-native-paper";
+import { View, Image, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { Text, Button, Divider, useTheme } from "react-native-paper";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
@@ -22,6 +22,7 @@ export default function ProductDetail({ route }: Props) {
   const { addItem } = useCart();
   const { modalState, hideModal, showSuccess } = useModal();
   const navigation = useNavigation();
+  const paperTheme = useTheme();
 
   const handleAddToCart = () => {
 
@@ -53,7 +54,7 @@ export default function ProductDetail({ route }: Props) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+    <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
       <Header />
       <ScrollView 
         style={{ flex: 1 }}
@@ -66,7 +67,7 @@ export default function ProductDetail({ route }: Props) {
         
         <View style={{
           height: 320,
-          backgroundColor: '#fff',
+          backgroundColor: paperTheme.colors.surface,
           marginHorizontal: 16,
           marginTop: 10,
           borderRadius: 24,
@@ -102,7 +103,7 @@ export default function ProductDetail({ route }: Props) {
         </View>
 
         <View style={{ 
-          backgroundColor: 'white', 
+          backgroundColor: paperTheme.colors.surface, 
           marginHorizontal: 16,
           marginTop: 20,
           borderRadius: 24, 
@@ -118,7 +119,7 @@ export default function ProductDetail({ route }: Props) {
             style={{ 
               fontWeight: "bold", 
               marginBottom: 12,
-              color: '#1a1a1a',
+              color: paperTheme.colors.onSurface,
               lineHeight: 28
             }}
           >
@@ -130,7 +131,7 @@ export default function ProductDetail({ route }: Props) {
               variant="headlineMedium"
               style={{
                 fontWeight: "bold",
-                color: "#2e7d32",
+                color: paperTheme.colors.primary,
                 fontSize: 28,
                 marginRight: 12
               }}
@@ -139,7 +140,7 @@ export default function ProductDetail({ route }: Props) {
             </Text>
             <Text
               style={{
-                color: "#666",
+                color: paperTheme.colors.onSurfaceVariant,
                 fontSize: 16,
                 textDecorationLine: 'line-through'
               }}
@@ -148,22 +149,22 @@ export default function ProductDetail({ route }: Props) {
             </Text>
           </View>
 
-          <Divider style={{ marginVertical: 16, backgroundColor: '#e0e0e0' }} />
+          <Divider style={{ marginVertical: 16, backgroundColor: paperTheme.colors.outline }} />
 
           <View style={{ 
             flexDirection: 'row', 
             alignItems: 'center', 
             marginBottom: 20,
-            backgroundColor: '#f8f9fa',
+            backgroundColor: paperTheme.colors.surfaceVariant,
             padding: 16,
             borderRadius: 16
           }}>
-            <Ionicons name="storefront-outline" size={24} color="#0891B2" />
+            <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.tertiary} />
             <View style={{ marginLeft: 12, flex: 1 }}>
-              <Text style={{ color: "#666", fontSize: 14, marginBottom: 4 }}>
+              <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
                 Disponível em:
               </Text>
-              <Text style={{ fontWeight: "600", color: "#000", fontSize: 16 }}>
+              <Text style={{ fontWeight: "600", color: paperTheme.colors.onSurface, fontSize: 16 }}>
                 {product.marketName}
               </Text>
             </View>
@@ -184,7 +185,7 @@ export default function ProductDetail({ route }: Props) {
                 />
               ))}
             </View>
-            <Text style={{ color: "#666", fontSize: 14 }}>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14 }}>
               (4.8) • 127 avaliações
             </Text>
           </View>
@@ -195,22 +196,22 @@ export default function ProductDetail({ route }: Props) {
             style={{ 
               borderRadius: 16, 
               paddingVertical: 8,
-              backgroundColor: '#2E7D32',
-              shadowColor: '#2E7D32',
+              backgroundColor: paperTheme.colors.primary,
+              shadowColor: paperTheme.colors.primary,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 8,
               elevation: 6
             }}
             labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
-            icon={() => <Ionicons name="cart" size={20} color="white" />}
+            icon={() => <Ionicons name="cart" size={20} color={paperTheme.colors.onPrimary} />}
           >
             Adicionar ao Carrinho
           </Button>
         </View>
 
         <View style={{ 
-          backgroundColor: 'white', 
+          backgroundColor: paperTheme.colors.surface, 
           marginHorizontal: 16,
           marginTop: 16,
           borderRadius: 24, 
@@ -225,34 +226,34 @@ export default function ProductDetail({ route }: Props) {
             fontSize: 18, 
             fontWeight: 'bold', 
             marginBottom: 16,
-            color: '#1a1a1a'
+            color: paperTheme.colors.onSurface
           }}>
             Detalhes do Produto
           </Text>
           
           <View style={{ marginBottom: 12 }}>
-            <Text style={{ color: '#666', fontSize: 14, marginBottom: 4 }}>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
               Categoria
             </Text>
-            <Text style={{ fontWeight: '600', color: '#000' }}>
+            <Text style={{ fontWeight: '600', color: paperTheme.colors.onSurface }}>
               Alimentos
             </Text>
           </View>
           
           <View style={{ marginBottom: 12 }}>
-            <Text style={{ color: '#666', fontSize: 14, marginBottom: 4 }}>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
               Peso/Volume
             </Text>
-            <Text style={{ fontWeight: '600', color: '#000' }}>
+            <Text style={{ fontWeight: '600', color: paperTheme.colors.onSurface }}>
               500g
             </Text>
           </View>
           
           <View>
-            <Text style={{ color: '#666', fontSize: 14, marginBottom: 4 }}>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
               Validade
             </Text>
-            <Text style={{ fontWeight: '600', color: '#000' }}>
+            <Text style={{ fontWeight: '600', color: paperTheme.colors.onSurface }}>
               30 dias
             </Text>
           </View>
@@ -268,6 +269,6 @@ export default function ProductDetail({ route }: Props) {
         primaryButton={modalState.primaryButton}
         secondaryButton={modalState.secondaryButton}
       />
-    </SafeAreaView>
+    </View>
   );
 }

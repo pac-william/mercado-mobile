@@ -12,7 +12,7 @@ import {
     Alert,
     Animated
 } from "react-native";
-import { TextInput, Button, ActivityIndicator } from "react-native-paper";
+import { TextInput, Button, ActivityIndicator, useTheme } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -22,12 +22,14 @@ import { LoginDTO } from "../../dtos/authDTO";
 import { login, loginWithGoogle } from "../../services/authService";
 import { useAuth } from "../../contexts/AuthContext";
 import { HomeStackParamList } from "../../../App";
+import { isNetworkError } from "../../utils/networkUtils";
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Login'>;
 
 export default function LoginScreen() {
     const navigation = useNavigation<LoginScreenNavigationProp>();
     const { login: authLogin } = useAuth();
+    const paperTheme = useTheme();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -93,7 +95,12 @@ export default function LoginScreen() {
 
         try {
             const response = await login({ email, password });
-            await authLogin(response.user, response.token);
+                hasUser: !!response.user,
+                hasToken: !!response.token,
+                hasIdToken: !!response.idToken,
+                idToken: response.idToken ? `${response.idToken.substring(0, 50)}...` : null
+            });
+            await authLogin(response.user, response.token, response.idToken);
             navigation.goBack();
         } catch (error: any) {
             let errorMessage = "Não foi possível fazer login. Tente novamente.";
@@ -106,8 +113,20 @@ export default function LoginScreen() {
                 } else if (error.response.data?.message) {
                     errorMessage = error.response.data.message;
                 }
-            } else if (error.message === "Network Error") {
-                errorMessage = "Erro de conexão. Verifique sua internet.";
+            } else if (isNetworkError(error)) {
+                // Não mostra alert para erro de rede, apenas informa no console
+                console.warn("Erro de conexão: Sem internet", error);
+                errorMessage = "Sem conexão com a internet. Verifique sua conexão e tente novamente.";
+                // Não mostra Alert para erro de rede - permite que o usuário veja outras partes do app
+                triggerShake();
+                setTimeout(() => {
+                    Alert.alert(
+                        "Sem conexão", 
+                        "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente. Alguns recursos podem estar disponíveis offline.",
+                        [{ text: "OK" }]
+                    );
+                }, 250);
+                return;
             }
             
             triggerShake();
@@ -124,7 +143,7 @@ export default function LoginScreen() {
 
         try {
             const response = await loginWithGoogle();
-            await authLogin(response.user, response.token);
+            await authLogin(response.user, response.token, response.idToken);
             navigation.goBack();
         } catch (error: any) {
             let errorMessage = "Não foi possível fazer login com Google.";
@@ -139,8 +158,14 @@ export default function LoginScreen() {
                 } else if (error.response.data?.message) {
                     errorMessage = error.response.data.message;
                 }
-            } else if (error.message === "Network Error") {
-                errorMessage = "Erro de conexão. Verifique sua internet.";
+            } else if (isNetworkError(error)) {
+                console.warn("Erro de conexão: Sem internet", error);
+                Alert.alert(
+                    "Sem conexão", 
+                    "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente. Alguns recursos podem estar disponíveis offline.",
+                    [{ text: "OK" }]
+                );
+                return;
             } else if (error.message) {
                 errorMessage = error.message;
             }
@@ -152,7 +177,7 @@ export default function LoginScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
             <KeyboardAvoidingView 
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
@@ -170,14 +195,23 @@ export default function LoginScreen() {
                     >
                         <View style={styles.logoContainer}>
                             <Image source={Logo} style={styles.logo} resizeMode="contain" />
-                            <Text style={styles.appName}>Smart Marketing</Text>
-                            <Text style={styles.subtitle}>Bem-vindo de volta</Text>
+                            <Text style={[styles.appName, { color: paperTheme.colors.onBackground }]}>
+                                Smart Marketing
+                            </Text>
+                            <Text style={[styles.subtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                Bem-vindo de volta
+                            </Text>
                         </View>
 
                         <Animated.View 
                             style={[
                                 styles.formContainer,
-                                { transform: [{ translateX: shakeAnim }] }
+                                { 
+                                    transform: [{ translateX: shakeAnim }],
+                                    backgroundColor: paperTheme.colors.surface,
+                                    borderRadius: 16,
+                                    padding: 24,
+                                }
                             ]}
                         >
                         <TextInput
@@ -193,14 +227,16 @@ export default function LoginScreen() {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             style={styles.input}
-                            outlineColor="#e0e0e0"
-                            activeOutlineColor="#2E7D32"
+                            outlineColor={paperTheme.colors.outline}
+                            activeOutlineColor={paperTheme.colors.primary}
                             error={!!errors.email}
                             disabled={loading || googleLoading}
-                            left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
+                            left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color={paperTheme.colors.onSurfaceVariant} />} />}
                         />
                         {errors.email && (
-                            <Text style={styles.errorText}>{errors.email}</Text>
+                            <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>
+                                {errors.email}
+                            </Text>
                         )}
 
                         <TextInput
@@ -215,28 +251,32 @@ export default function LoginScreen() {
                             mode="outlined"
                             secureTextEntry={!showPassword}
                             style={styles.input}
-                            outlineColor="#e0e0e0"
-                            activeOutlineColor="#2E7D32"
+                            outlineColor={paperTheme.colors.outline}
+                            activeOutlineColor={paperTheme.colors.primary}
                             error={!!errors.password}
                             disabled={loading || googleLoading}
-                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
+                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color={paperTheme.colors.onSurfaceVariant} />} />}
                             right={
                                 <TextInput.Icon 
-                                    icon={() => <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />}
+                                    icon={() => <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={paperTheme.colors.onSurfaceVariant} />}
                                     onPress={() => setShowPassword(!showPassword)}
                                     disabled={loading || googleLoading}
                                 />
                             }
                         />
                         {errors.password && (
-                            <Text style={styles.errorText}>{errors.password}</Text>
+                            <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>
+                                {errors.password}
+                            </Text>
                         )}
 
                         <TouchableOpacity
                             style={styles.forgotPasswordContainer}
                             onPress={() => navigation.navigate('ForgotPassword')}
                         >
-                            <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
+                            <Text style={[styles.forgotPasswordText, { color: paperTheme.colors.primary }]}>
+                                Esqueceu sua senha?
+                            </Text>
                         </TouchableOpacity>
 
                         <Button
@@ -252,9 +292,9 @@ export default function LoginScreen() {
                         </Button>
 
                         <View style={styles.divider}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>ou</Text>
-                            <View style={styles.dividerLine} />
+                            <View style={[styles.dividerLine, { backgroundColor: paperTheme.colors.outline }]} />
+                            <Text style={[styles.dividerText, { color: paperTheme.colors.onSurfaceVariant }]}>ou</Text>
+                            <View style={[styles.dividerLine, { backgroundColor: paperTheme.colors.outline }]} />
                         </View>
 
                         <Button
@@ -270,9 +310,13 @@ export default function LoginScreen() {
                         </Button>
 
                         <View style={styles.registerContainer}>
-                            <Text style={styles.registerText}>Não tem uma conta? </Text>
+                            <Text style={[styles.registerText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                Não tem uma conta?{" "}
+                            </Text>
                             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                                <Text style={styles.registerLink}>Cadastre-se</Text>
+                                <Text style={[styles.registerLink, { color: paperTheme.colors.primary }]}>
+                                    Cadastre-se
+                                </Text>
                             </TouchableOpacity>
                         </View>
                         </Animated.View>
@@ -286,7 +330,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f8f9fa",
+        // backgroundColor será aplicado dinamicamente via props
     },
     scrollContent: {
         flexGrow: 1,
@@ -307,22 +351,23 @@ const styles = StyleSheet.create({
     appName: {
         fontSize: 28,
         fontWeight: "bold",
-        color: "#1a1a1a",
+        // color será aplicado dinamicamente via props
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
-        color: "#666",
+        // color será aplicado dinamicamente via props
     },
     formContainer: {
         width: "100%",
+        // backgroundColor será aplicado dinamicamente via props
     },
     input: {
         marginBottom: 4,
-        backgroundColor: "white",
+        // backgroundColor será aplicado dinamicamente via props do Paper
     },
     errorText: {
-        color: "#d32f2f",
+        // color será aplicado dinamicamente via props
         fontSize: 12,
         marginBottom: 12,
         marginLeft: 12,
@@ -332,15 +377,15 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     forgotPasswordText: {
-        color: "#0891B2",
+        // color será aplicado dinamicamente via props
         fontSize: 14,
         fontWeight: "600",
     },
     loginButton: {
-        backgroundColor: "#2E7D32",
+        // backgroundColor será aplicado dinamicamente via props do Paper
         paddingVertical: 8,
         borderRadius: 12,
-        shadowColor: "#2E7D32",
+        // shadowColor será aplicado dinamicamente via props do Paper
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -358,11 +403,11 @@ const styles = StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: "#e0e0e0",
+        // backgroundColor será aplicado dinamicamente via props
     },
     dividerText: {
         marginHorizontal: 16,
-        color: "#999",
+        // color será aplicado dinamicamente via props
         fontSize: 14,
     },
     registerContainer: {
@@ -371,11 +416,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     registerText: {
-        color: "#666",
+        // color será aplicado dinamicamente via props
         fontSize: 14,
     },
     registerLink: {
-        color: "#2E7D32",
+        // color será aplicado dinamicamente via props
         fontSize: 14,
         fontWeight: "bold",
     },

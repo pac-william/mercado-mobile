@@ -49,6 +49,7 @@ export interface User {
 
 export interface AuthResponse {
     token: string;
+    idToken?: string;
     user: User;
 }
 
@@ -71,9 +72,11 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
             username: credentials.email,
             password: credentials.password
         });
+
         
         const token = response.data.access_token;
         const idToken = response.data.id_token;
+        
 
         try {
             let auth0Id: string | null = null;
@@ -100,6 +103,7 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
                 
                 return {
                     token,
+                    idToken: idToken ? idToken : undefined,
                     user
                 };
             }
@@ -109,6 +113,7 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
         
         return {
             token,
+            idToken: idToken ? idToken : undefined,
             user: {
                 id: credentials.email,
                 name: "",
@@ -127,15 +132,12 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
 
 export const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
     try {
-        console.log('Tentando registrar usuário:', userData.email);
-        console.log('Base URL da API:', api.defaults.baseURL);
         const registerResponse = await api.post<CreateUserResponse>("/auth/signup", {
             email: userData.email,
             password: userData.password,
             name: userData.name
         });
         
-        console.log('Resposta do registro:', registerResponse.data);
         
         const loginResponse = await api.post<GetTokenResponse>("/auth/signin", {
             username: userData.email,
@@ -143,6 +145,7 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
         });
         
         const token = loginResponse.data.access_token;
+        const idToken = loginResponse.data.id_token;
         const auth0Id = registerResponse.data.user_id;
 
         try {
@@ -152,6 +155,7 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
                 
                 return {
                     token,
+                    idToken: idToken || undefined,
                     user
                 };
             }
@@ -161,6 +165,7 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
         
         return {
             token,
+            idToken: idToken || undefined,
             user: {
                 id: userData.email,
                 name: userData.name,
@@ -265,7 +270,6 @@ export const loginWithGoogle = async (): Promise<AuthResponse> => {
         throw new Error('AUTH0_CLIENT_ID não configurado. Configure EXPO_PUBLIC_AUTH0_CLIENT_ID no arquivo .env');
     }
 
-    console.log('Redirect URI:', auth0Config.redirectUri);
 
     try {
         const request = new AuthSession.AuthRequest({
@@ -363,6 +367,7 @@ export const loginWithGoogle = async (): Promise<AuthResponse> => {
 
             return {
                 token: accessToken,
+                idToken: idToken || undefined,
                 user
             };
         } catch (error: any) {
@@ -383,6 +388,7 @@ export const loginWithGoogle = async (): Promise<AuthResponse> => {
 
                 return {
                     token: accessToken,
+                    idToken: idToken || undefined,
                     user
                 };
             } else {

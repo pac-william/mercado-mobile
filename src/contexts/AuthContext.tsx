@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { getToken, getUser, saveToken, saveUser, clearStorage } from '../utils/storage';
+import { getToken, getUser, saveToken, saveUser, clearStorage, saveIdToken, getIdToken } from '../utils/storage';
 import { updateUserProfile, updateUserProfilePartial, uploadProfilePicture } from '../services/authService';
 import {
     getUserAddresses,
@@ -216,7 +216,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 
 interface AuthContextType {
   state: AuthState;
-  login: (user: User, token: string) => Promise<void>;
+  login: (user: User, token: string, idToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   restoreToken: () => Promise<void>;
   updateProfile: (profileData: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
@@ -257,10 +257,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const login = async (user: User, token: string) => {
+  const login = async (user: User, token: string, idToken?: string) => {
     try {
+
       await saveToken(token);
       await saveUser(user);
+      
+      if (idToken && idToken !== 'undefined' && idToken !== 'null' && idToken.trim() !== '') {
+        await saveIdToken(idToken);
+        
+        // Aguarda um pouco para garantir que foi salvo
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verifica se foi salvo corretamente
+        const savedIdToken = await getIdToken();
+      }
+      
       dispatch({ type: 'LOGIN', payload: { user, token } });
     } catch (error) {
       console.error('Erro ao fazer login:', error);
@@ -302,8 +314,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (formattedData.phone && formattedData.phone.length < 10) {
       formattedData.phone = `11${formattedData.phone}`;
     }
-
-    console.log('Dados formatados enviados:', formattedData);
 
     dispatch({ type: 'UPDATE_PROFILE_START' });
 

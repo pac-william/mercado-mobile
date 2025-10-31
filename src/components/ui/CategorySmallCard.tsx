@@ -1,5 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, Image, Dimensions, View } from "react-native";
+import { useTheme } from "react-native-paper";
 
 const { width } = Dimensions.get("window");
 const cardWidth = (width / 2) - 32;
@@ -12,13 +13,30 @@ interface Props {
 }
 
 const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) => {
+  const paperTheme = useTheme();
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity 
+      style={[
+        styles.card,
+        {
+          backgroundColor: paperTheme.colors.surface,
+          borderWidth: 1,
+          borderColor: paperTheme.colors.outline,
+        }
+      ]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Image source={{ uri: image }} style={styles.image} />
       <View style={styles.textContainer}>
-        <Text style={styles.text}>{name}</Text>
+        <Text style={[styles.text, { color: paperTheme.colors.onSurface }]}>
+          {name}
+        </Text>
         {subtitle && (
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={[styles.subtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+            {subtitle}
+          </Text>
         )}
       </View>
     </TouchableOpacity>
@@ -28,8 +46,8 @@ const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) 
 const styles = StyleSheet.create({
   card: {
     width: cardWidth,
-    minHeight: 90, 
-    backgroundColor: "#f8f8f8",
+    minHeight: 90,
+    // backgroundColor será aplicado dinamicamente via props
     margin: 8,
     borderRadius: 12,
     flexDirection: "row",
@@ -40,6 +58,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
+    // borderWidth e borderColor serão aplicados dinamicamente via props
   },
   image: {
     width: 60,
@@ -54,11 +74,11 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    // color será aplicado dinamicamente via props
   },
   subtitle: {
     fontSize: 12,
-    color: '#666',
+    // color será aplicado dinamicamente via props
     marginTop: 4,
   },
 });

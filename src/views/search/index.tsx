@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { View, FlatList, StyleSheet } from "react-native";
-import { Text } from "react-native-paper";
+import { View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 import { Header } from "../../components/layout/header";
 import SearchItens from "../../components/ui/SearchItens";
 import HeroBanner from "../../components/ui/Hero";
@@ -8,6 +8,7 @@ import CategoriesGrid from "../../components/ui/CategoriesGrid";
 import { SuggestionResponse } from "../../services/suggestionService";
 
 export default function Search() {
+  const paperTheme = useTheme();
   const [results, setResults] = useState<SuggestionResponse | null>(null);
 
   const flatListData = useMemo(() => {
@@ -28,7 +29,7 @@ export default function Search() {
   }, [results]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
 
       <FlatList
@@ -50,9 +51,21 @@ export default function Search() {
           </>
         }
         renderItem={({ item }) => (
-          <View style={styles.resultItem}>
-            <Text style={styles.itemText}>• {item.value}</Text>
-          </View>
+          <TouchableOpacity 
+            style={[
+              styles.resultItem,
+              {
+                backgroundColor: paperTheme.colors.surface,
+                borderWidth: 1,
+                borderColor: paperTheme.colors.outline,
+              }
+            ]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.itemText, { color: paperTheme.colors.onSurface }]}>
+              {item.value}
+            </Text>
+          </TouchableOpacity>
         )}
         contentContainerStyle={{ paddingBottom: 40 }}
       />
@@ -63,7 +76,7 @@ export default function Search() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#eeeeeeff",
+    // backgroundColor será aplicado dinamicamente via props
   },
   searchSection: {
     marginTop: 16, 
@@ -80,11 +93,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   resultItem: {
-    marginVertical: 4,
-    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginVertical: 6,
+    padding: 16,
+    borderRadius: 12,
+    // backgroundColor será aplicado dinamicamente via props
+    // borderWidth e borderColor serão aplicados dinamicamente via props
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
   itemText: {
     fontSize: 16,
-    color: "#333",
+    fontWeight: "500",
+    // color será aplicado dinamicamente via props
   },
 });

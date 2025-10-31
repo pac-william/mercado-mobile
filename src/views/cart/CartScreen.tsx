@@ -3,11 +3,13 @@ import {
   View,
   Text,
   ScrollView,
-  SafeAreaView,
   TouchableOpacity,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { Button, Divider } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, Divider, useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../contexts/CartContext';
 import { Header } from '../../components/layout/header';
@@ -22,6 +24,8 @@ const CartScreen: React.FC = () => {
   const { state: cartState, removeItem, updateQuantity, clearCart } = useCart();
   const { modalState, hideModal, showWarning, showSuccess } = useModal();
   const { state, logout } = useAuth();
+  const paperTheme = useTheme();
+  const insets = useSafeAreaInsets();
 
 
   if (!state.user) {
@@ -87,7 +91,7 @@ const CartScreen: React.FC = () => {
               })),
             };
             
-            const newOrder = await createOrder(orderData, state.token);
+            const newOrder = await createOrder(orderData);
 
             clearCart();
 
@@ -123,7 +127,7 @@ const CartScreen: React.FC = () => {
 
   if (cartState.items.length === 0) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+      <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
         <Header />
         <View style={{
           flex: 1,
@@ -131,11 +135,11 @@ const CartScreen: React.FC = () => {
           alignItems: 'center',
           paddingHorizontal: 32
         }}>
-          <Ionicons name="cart-outline" size={80} color="#ccc" />
+          <Ionicons name="cart-outline" size={80} color={paperTheme.colors.outline} />
           <Text style={{
             fontSize: 24,
             fontWeight: 'bold',
-            color: '#666',
+            color: paperTheme.colors.onBackground,
             marginTop: 16,
             marginBottom: 8
           }}>
@@ -143,32 +147,38 @@ const CartScreen: React.FC = () => {
           </Text>
           <Text style={{
             fontSize: 16,
-            color: '#999',
+            color: paperTheme.colors.onSurface,
             textAlign: 'center',
-            lineHeight: 24
+            lineHeight: 24,
+            opacity: 0.7
           }}>
             Adicione alguns produtos ao seu carrinho para começar suas compras
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
+    <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
       <Header />
 
-      {/* Container principal com flex */}
-      <View style={{ flex: 1 }}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{
-            paddingBottom: 20,
-            paddingTop: 10
-          }}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-        >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        {/* Container principal com flex */}
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingBottom: 10,
+              paddingTop: 10
+            }}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+          >
           {/* Header do carrinho */}
           <View style={{
             flexDirection: 'row',
@@ -176,7 +186,7 @@ const CartScreen: React.FC = () => {
             alignItems: 'center',
             paddingHorizontal: 20,
             paddingVertical: 16,
-            backgroundColor: 'white',
+            backgroundColor: paperTheme.colors.surface,
             marginHorizontal: 16,
             marginTop: 16,
             borderRadius: 16,
@@ -186,7 +196,7 @@ const CartScreen: React.FC = () => {
             shadowRadius: 8,
             elevation: 4,
           }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1a1a1a' }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
               Meu Carrinho ({cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'})
             </Text>
             <TouchableOpacity
@@ -210,7 +220,7 @@ const CartScreen: React.FC = () => {
           {/* Lista de itens */}
           {cartState.items.map((item, index) => (
             <View key={item.id} style={{
-              backgroundColor: 'white',
+              backgroundColor: paperTheme.colors.surface,
               marginHorizontal: 16,
               marginTop: 12,
               borderRadius: 20,
@@ -248,7 +258,7 @@ const CartScreen: React.FC = () => {
                       <Text style={{
                         fontSize: 17,
                         fontWeight: 'bold',
-                        color: '#1a1a1a',
+                        color: paperTheme.colors.onSurface,
                         marginBottom: 6,
                         lineHeight: 24
                       }}>
@@ -257,7 +267,8 @@ const CartScreen: React.FC = () => {
 
                       <Text style={{
                         fontSize: 14,
-                        color: '#666',
+                        color: paperTheme.colors.onSurface,
+                        opacity: 0.7,
                         marginBottom: 8
                       }}>
                         {item.marketName}
@@ -267,7 +278,7 @@ const CartScreen: React.FC = () => {
                     <Text style={{
                       fontSize: 20,
                       fontWeight: 'bold',
-                      color: '#2e7d32'
+                      color: paperTheme.colors.primary
                     }}>
                       R$ {item.price.toFixed(2)}
                     </Text>
@@ -302,7 +313,7 @@ const CartScreen: React.FC = () => {
                 <Text style={{
                   fontSize: 16,
                   fontWeight: '600',
-                  color: '#1a1a1a'
+                  color: paperTheme.colors.onSurface
                 }}>
                   Quantidade
                 </Text>
@@ -310,7 +321,7 @@ const CartScreen: React.FC = () => {
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: '#f8f9fa',
+                  backgroundColor: paperTheme.colors.surfaceVariant,
                   borderRadius: 30,
                   paddingHorizontal: 6,
                   paddingVertical: 4,
@@ -347,7 +358,7 @@ const CartScreen: React.FC = () => {
                     <Text style={{
                       fontSize: 20,
                       fontWeight: 'bold',
-                      color: '#1a1a1a',
+                      color: paperTheme.colors.onSurface,
                     }}>
                       {item.quantity}
                     </Text>
@@ -383,80 +394,79 @@ const CartScreen: React.FC = () => {
                 paddingBottom: 20,
                 paddingTop: 16,
                 borderTopWidth: 1,
-                borderTopColor: '#f0f0f0',
-                backgroundColor: '#fafafa',
+                borderTopColor: paperTheme.colors.outline,
+                backgroundColor: paperTheme.colors.surfaceVariant,
               }}>
                 <Text style={{
                   fontSize: 16,
                   fontWeight: '600',
-                  color: '#1a1a1a'
+                  color: paperTheme.colors.onSurface
                 }}>
                   Subtotal
                 </Text>
                 <Text style={{
                   fontSize: 20,
                   fontWeight: 'bold',
-                  color: '#2e7d32'
+                  color: paperTheme.colors.primary
                 }}>
                   R$ {(item.price * item.quantity).toFixed(2)}
                 </Text>
               </View>
             </View>
           ))}
-        </ScrollView>
-      </View>
-
-      {/* Resumo do pedido - fixo na parte inferior */}
-      <View style={{
-        backgroundColor: 'white',
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 40, // Aumentado para garantir visibilidade
-        borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 10,
-      }}>
-        <View style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1a1a1a' }}>
-            Total
-          </Text>
-          <Text style={{
-            fontSize: 24,
-            fontWeight: 'bold',
-            color: '#2e7d32'
-          }}>
-            R$ {cartState.total.toFixed(2)}
-          </Text>
+          </ScrollView>
         </View>
 
-        <Button
-          mode="contained"
-          onPress={handleCheckout}
-          style={{
-            borderRadius: 16,
-            paddingVertical: 8,
-            backgroundColor: '#2E7D32',
-            shadowColor: '#2E7D32',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 6,
-          }}
-          labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
-          icon={() => <Ionicons name="card" size={20} color="white" />}
-        >
-          Finalizar Compra
-        </Button>
-      </View>
+        {/* Resumo do pedido - fixo na parte inferior */}
+        <View style={{
+          backgroundColor: paperTheme.colors.surface,
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: Math.max(insets.bottom + 10, 20),
+          borderTopWidth: 1,
+          borderTopColor: paperTheme.colors.outline,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 10,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
+              Total
+            </Text>
+            <Text style={{
+              fontSize: 24,
+              fontWeight: 'bold',
+              color: paperTheme.colors.primary
+            }}>
+              R$ {cartState.total.toFixed(2)}
+            </Text>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={handleCheckout}
+            style={{
+              borderRadius: 16,
+              minHeight: 56,
+              backgroundColor: paperTheme.colors.primary,
+            }}
+            contentStyle={{
+              paddingVertical: 12,
+            }}
+            labelStyle={{ fontSize: 18, fontWeight: 'bold' }}
+            icon={() => <Ionicons name="card" size={22} color={paperTheme.colors.onPrimary} />}
+          >
+            Finalizar Compra
+          </Button>
+        </View>
+      </KeyboardAvoidingView>
 
       {/* Modal customizado */}
       <CustomModal
@@ -468,7 +478,7 @@ const CartScreen: React.FC = () => {
         primaryButton={modalState.primaryButton}
         secondaryButton={modalState.secondaryButton}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

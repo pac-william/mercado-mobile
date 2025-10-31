@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, FlatList, Image, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, FlatList, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { getMarketById } from '../../services/marketService';
 import { getProducts } from '../../services/productService';
 import { getCategories } from '../../services/categoryService';
 import ProductCard from '../../components/ui/ProductCard';
 import { Header } from '../../components/layout/header';
+import { OfflineBanner } from '../../components/ui/OfflineBanner';
 import { Market } from '../../domain/marketDomain';
 import { Product } from '../../domain/productDomain';
 import { Category } from '../../domain/categoryDomain';
 import { HomeStackParamList } from '../../../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator, useTheme } from 'react-native-paper';
+import { isNetworkError } from '../../utils/networkUtils';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -28,6 +30,7 @@ interface CategoryGroup {
 export default function MarketDetailsScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const route = useRoute();
+  const paperTheme = useTheme();
   const { marketId } = route.params as MarketDetailsRouteParams;
 
   const [market, setMarket] = useState<Market | null>(null);
@@ -37,6 +40,7 @@ export default function MarketDetailsScreen() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [offline, setOffline] = useState(false);
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -50,9 +54,14 @@ export default function MarketDetailsScreen() {
 
         const categoriesResponse = await getCategories(1, 100);
         setCategories(categoriesResponse?.category ?? []);
-      } catch (error) {
+        setOffline(false);
+      } catch (error: any) {
         console.error('Erro ao buscar dados do mercado:', error);
-        setError(true);
+        if (isNetworkError(error)) {
+          setOffline(true);
+        } else {
+          setError(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -94,37 +103,45 @@ export default function MarketDetailsScreen() {
 
   if (!market) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>Carregando...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: paperTheme.colors.background }]}>
+        <Text style={{ color: paperTheme.colors.onBackground }}>Carregando...</Text>
       </View>
     );
   }
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-        <Text>Carregando...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: paperTheme.colors.background }]}>
+        <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+        <Text style={{ color: paperTheme.colors.onBackground, marginTop: 10 }}>Carregando...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      {offline && (
+        <OfflineBanner message="Sem conexão com a internet. Alguns recursos podem estar limitados." />
+      )}
         <View style={styles.marketInfoContainer}>
           <Image source={{ uri: market.profilePicture }} style={styles.marketImage} />
           <View style={styles.textContainer}>
-            <Text style={styles.marketName}>{market.name}</Text>
-            <Text style={styles.marketAddress}>{market.address}</Text>
+            <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
+              {market.name}
+            </Text>
+            <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]}>
+              {market.address}
+            </Text>
           </View>
         </View>
 
         {categorizedProducts.length > 0 ? (
           categorizedProducts.map((category) => (
             <View key={category.id} style={styles.categoryContainer}>
-              <Text style={styles.categoryTitle}>{category.name}</Text>
+              <Text style={[styles.categoryTitle, { color: paperTheme.colors.onSurface }]}>
+                {category.name}
+              </Text>
               <FlatList
                 data={category.products}
                 keyExtractor={(item) => item.id}
@@ -151,22 +168,24 @@ export default function MarketDetailsScreen() {
             </View>
           ))
         ) : (
-          <Text style={styles.noProductsText}>Nenhum produto cadastrado</Text>
+          <Text style={[styles.noProductsText, { color: paperTheme.colors.onSurfaceVariant }]}>
+            Nenhum produto cadastrado
+          </Text>
         )}
-      </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eeeeeeff',
+    // backgroundColor será aplicado dinamicamente via props
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    // backgroundColor será aplicado dinamicamente via props
   },
   scrollContent: {
     padding: 16,
@@ -188,11 +207,11 @@ const styles = StyleSheet.create({
   marketName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    // color será aplicado dinamicamente via props
   },
   marketAddress: {
     fontSize: 16,
-    color: '#666',
+    // color será aplicado dinamicamente via props
   },
   categoryContainer: {
     marginBottom: 24,
@@ -201,11 +220,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
+    // color será aplicado dinamicamente via props
   },
   noProductsText: {
     textAlign: 'center',
     marginTop: 50,
     fontSize: 16,
-    color: 'gray',
+    // color será aplicado dinamicamente via props
   },
 });

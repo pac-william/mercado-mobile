@@ -35,7 +35,16 @@ export const getProducts = async (
 
     return response.data;
   } catch (error) {
-    console.log(error);
+    throw error;
+  }
+};
+
+export const getProductById = async (id: string): Promise<Product> => {
+  try {
+    const response = await api.get<Product>(`/products/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao buscar produto com ID ${id}:`, error);
     throw error;
   }
 };

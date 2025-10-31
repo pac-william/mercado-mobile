@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../contexts/AuthContext";
 
 const TOKEN_KEY = "@mercado_mobile:token";
+const ID_TOKEN_KEY = "@mercado_mobile:id_token";
 const REFRESH_TOKEN_KEY = "@mercado_mobile:refresh_token";
 const USER_KEY = "@mercado_mobile:user";
 
@@ -30,6 +31,40 @@ export const removeToken = async (): Promise<void> => {
     await AsyncStorage.removeItem(TOKEN_KEY);
   } catch (error) {
     console.error("Erro ao remover token:", error);
+    throw error;
+  }
+};
+
+// -------------------- ID TOKEN --------------------
+
+export const saveIdToken = async (idToken: string): Promise<void> => {
+  try {
+    
+    await AsyncStorage.setItem(ID_TOKEN_KEY, idToken);
+    
+    // Verifica imediatamente após salvar
+    const verification = await AsyncStorage.getItem(ID_TOKEN_KEY);
+  } catch (error) {
+    console.error("❌ Erro ao salvar id_token:", error);
+    throw error;
+  }
+};
+
+export const getIdToken = async (): Promise<string | null> => {
+  try {
+    const token = await AsyncStorage.getItem(ID_TOKEN_KEY);
+    return token;
+  } catch (error) {
+    console.error("❌ Erro ao buscar id_token:", error);
+    return null;
+  }
+};
+
+export const removeIdToken = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(ID_TOKEN_KEY);
+  } catch (error) {
+    console.error("Erro ao remover id_token:", error);
     throw error;
   }
 };
@@ -90,7 +125,7 @@ export const removeUser = async (): Promise<void> => {
 
 export const clearStorage = async (): Promise<void> => {
   try {
-    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, REFRESH_TOKEN_KEY]);
+    await AsyncStorage.multiRemove([TOKEN_KEY, ID_TOKEN_KEY, USER_KEY, REFRESH_TOKEN_KEY]);
   } catch (error) {
     console.error("Erro ao limpar storage:", error);
     throw error;

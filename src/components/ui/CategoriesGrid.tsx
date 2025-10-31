@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, FlatList, StyleSheet, ActivityIndicator, Dimensions } from "react-native";
+import { useTheme } from "react-native-paper";
 import CategorySmallCard from "./CategorySmallCard";
 import { getMarkets } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
@@ -15,6 +16,7 @@ const numColumns = 2;
 const cardWidth = (width - cardMargin * (numColumns + 1)) / numColumns;
 
 const CategoriesGrid = () => {
+    const paperTheme = useTheme();
     const [markets, setMarkets] = useState<Market[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -39,7 +41,7 @@ const CategoriesGrid = () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={paperTheme.colors.primary} />
             </View>
         );
     }

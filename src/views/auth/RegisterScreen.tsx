@@ -12,7 +12,7 @@ import {
     Alert,
     Animated
 } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, useTheme } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -22,12 +22,14 @@ import { RegisterDTO } from "../../dtos/authDTO";
 import { register, loginWithGoogle } from "../../services/authService";
 import { useAuth } from "../../contexts/AuthContext";
 import { HomeStackParamList } from "../../../App";
+import { isNetworkError } from "../../utils/networkUtils";
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Register'>;
 
 export default function RegisterScreen() {
     const navigation = useNavigation<RegisterScreenNavigationProp>();
     const { login: authLogin } = useAuth();
+    const paperTheme = useTheme();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -106,7 +108,7 @@ export default function RegisterScreen() {
 
         try {
             const response = await register({ name, email, password });
-            await authLogin(response.user, response.token);
+            await authLogin(response.user, response.token, response.idToken);
             navigation.goBack();
         } catch (error: any) {
             let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
@@ -123,8 +125,18 @@ export default function RegisterScreen() {
                 } else if (error.response.data?.message) {
                     errorMessage = error.response.data.message;
                 }
-            } else if (error.message === "Network Error") {
-                errorMessage = "Erro de conexão. Verifique sua internet.";
+            } else if (isNetworkError(error)) {
+                // Não mostra alert para erro de rede
+                console.warn("Erro de conexão: Sem internet", error);
+                triggerShake();
+                setTimeout(() => {
+                    Alert.alert(
+                        "Sem conexão", 
+                        "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente. Alguns recursos podem estar disponíveis offline.",
+                        [{ text: "OK" }]
+                    );
+                }, 250);
+                return;
             }
             
             triggerShake();
@@ -141,7 +153,7 @@ export default function RegisterScreen() {
 
         try {
             const response = await loginWithGoogle();
-            await authLogin(response.user, response.token);
+            await authLogin(response.user, response.token, response.idToken);
             navigation.goBack();
         } catch (error: any) {
             let errorMessage = "Não foi possível fazer login com Google.";
@@ -156,8 +168,14 @@ export default function RegisterScreen() {
                 } else if (error.response.data?.message) {
                     errorMessage = error.response.data.message;
                 }
-            } else if (error.message === "Network Error") {
-                errorMessage = "Erro de conexão. Verifique sua internet.";
+            } else if (isNetworkError(error)) {
+                console.warn("Erro de conexão: Sem internet", error);
+                Alert.alert(
+                    "Sem conexão", 
+                    "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente. Alguns recursos podem estar disponíveis offline.",
+                    [{ text: "OK" }]
+                );
+                return;
             } else if (error.message) {
                 errorMessage = error.message;
             }
@@ -169,7 +187,7 @@ export default function RegisterScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
             <KeyboardAvoidingView 
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
@@ -187,14 +205,23 @@ export default function RegisterScreen() {
                     >
                         <View style={styles.logoContainer}>
                             <Image source={Logo} style={styles.logo} resizeMode="contain" />
-                            <Text style={styles.appName}>Smart Marketing</Text>
-                            <Text style={styles.subtitle}>Crie sua conta</Text>
+                            <Text style={[styles.appName, { color: paperTheme.colors.onBackground }]}>
+                                Smart Marketing
+                            </Text>
+                            <Text style={[styles.subtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                Crie sua conta
+                            </Text>
                         </View>
 
                         <Animated.View 
                             style={[
                                 styles.formContainer,
-                                { transform: [{ translateX: shakeAnim }] }
+                                { 
+                                    transform: [{ translateX: shakeAnim }],
+                                    backgroundColor: paperTheme.colors.surface,
+                                    borderRadius: 16,
+                                    padding: 24,
+                                }
                             ]}
                         >
                         <TextInput
@@ -209,14 +236,16 @@ export default function RegisterScreen() {
                             mode="outlined"
                             autoCapitalize="words"
                             style={styles.input}
-                            outlineColor="#e0e0e0"
-                            activeOutlineColor="#2E7D32"
+                            outlineColor={paperTheme.colors.outline}
+                            activeOutlineColor={paperTheme.colors.primary}
                             error={!!errors.name}
                             disabled={loading || googleLoading}
-                            left={<TextInput.Icon icon={() => <Ionicons name="person-outline" size={20} color="#666" />} />}
+                            left={<TextInput.Icon icon={() => <Ionicons name="person-outline" size={20} color={paperTheme.colors.onSurfaceVariant} />} />}
                         />
                         {errors.name && (
-                            <Text style={styles.errorText}>{errors.name}</Text>
+                            <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>
+                                {errors.name}
+                            </Text>
                         )}
 
                         <TextInput
@@ -232,14 +261,16 @@ export default function RegisterScreen() {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             style={styles.input}
-                            outlineColor="#e0e0e0"
-                            activeOutlineColor="#2E7D32"
+                            outlineColor={paperTheme.colors.outline}
+                            activeOutlineColor={paperTheme.colors.primary}
                             error={!!errors.email}
                             disabled={loading || googleLoading}
-                            left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color="#666" />} />}
+                            left={<TextInput.Icon icon={() => <Ionicons name="mail-outline" size={20} color={paperTheme.colors.onSurfaceVariant} />} />}
                         />
                         {errors.email && (
-                            <Text style={styles.errorText}>{errors.email}</Text>
+                            <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>
+                                {errors.email}
+                            </Text>
                         )}
 
                         <TextInput
@@ -254,21 +285,23 @@ export default function RegisterScreen() {
                             mode="outlined"
                             secureTextEntry={!showPassword}
                             style={styles.input}
-                            outlineColor="#e0e0e0"
-                            activeOutlineColor="#2E7D32"
+                            outlineColor={paperTheme.colors.outline}
+                            activeOutlineColor={paperTheme.colors.primary}
                             error={!!errors.password}
                             disabled={loading || googleLoading}
-                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
+                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color={paperTheme.colors.onSurfaceVariant} />} />}
                             right={
                                 <TextInput.Icon 
-                                    icon={() => <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />}
+                                    icon={() => <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={paperTheme.colors.onSurfaceVariant} />}
                                     onPress={() => setShowPassword(!showPassword)}
                                     disabled={loading || googleLoading}
                                 />
                             }
                         />
                         {errors.password && (
-                            <Text style={styles.errorText}>{errors.password}</Text>
+                            <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>
+                                {errors.password}
+                            </Text>
                         )}
 
                         <TextInput
@@ -283,21 +316,23 @@ export default function RegisterScreen() {
                             mode="outlined"
                             secureTextEntry={!showConfirmPassword}
                             style={styles.input}
-                            outlineColor="#e0e0e0"
-                            activeOutlineColor="#2E7D32"
+                            outlineColor={paperTheme.colors.outline}
+                            activeOutlineColor={paperTheme.colors.primary}
                             error={!!errors.confirmPassword}
                             disabled={loading || googleLoading}
-                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color="#666" />} />}
+                            left={<TextInput.Icon icon={() => <Ionicons name="lock-closed-outline" size={20} color={paperTheme.colors.onSurfaceVariant} />} />}
                             right={
                                 <TextInput.Icon 
-                                    icon={() => <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />}
+                                    icon={() => <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color={paperTheme.colors.onSurfaceVariant} />}
                                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                                     disabled={loading || googleLoading}
                                 />
                             }
                         />
                         {errors.confirmPassword && (
-                            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                            <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>
+                                {errors.confirmPassword}
+                            </Text>
                         )}
 
                         <Button
@@ -313,9 +348,9 @@ export default function RegisterScreen() {
                         </Button>
 
                         <View style={styles.divider}>
-                            <View style={styles.dividerLine} />
-                            <Text style={styles.dividerText}>ou</Text>
-                            <View style={styles.dividerLine} />
+                            <View style={[styles.dividerLine, { backgroundColor: paperTheme.colors.outline }]} />
+                            <Text style={[styles.dividerText, { color: paperTheme.colors.onSurfaceVariant }]}>ou</Text>
+                            <View style={[styles.dividerLine, { backgroundColor: paperTheme.colors.outline }]} />
                         </View>
 
                         <Button
@@ -331,9 +366,13 @@ export default function RegisterScreen() {
                         </Button>
 
                         <View style={styles.loginContainer}>
-                            <Text style={styles.loginText}>Já tem uma conta? </Text>
+                            <Text style={[styles.loginText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                Já tem uma conta?{" "}
+                            </Text>
                             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                                <Text style={styles.loginLink}>Entrar</Text>
+                                <Text style={[styles.loginLink, { color: paperTheme.colors.primary }]}>
+                                    Entrar
+                                </Text>
                             </TouchableOpacity>
                         </View>
                         </Animated.View>
@@ -347,7 +386,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f8f9fa",
+        // backgroundColor será aplicado dinamicamente via props
     },
     scrollContent: {
         flexGrow: 1,
@@ -368,22 +407,23 @@ const styles = StyleSheet.create({
     appName: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "#1a1a1a",
+        // color será aplicado dinamicamente via props
         marginBottom: 6,
     },
     subtitle: {
         fontSize: 16,
-        color: "#666",
+        // color será aplicado dinamicamente via props
     },
     formContainer: {
         width: "100%",
+        // backgroundColor será aplicado dinamicamente via props
     },
     input: {
         marginBottom: 4,
-        backgroundColor: "white",
+        // backgroundColor será aplicado dinamicamente via props do Paper
     },
     errorText: {
-        color: "#d32f2f",
+        // color será aplicado dinamicamente via props
         fontSize: 12,
         marginBottom: 12,
         marginLeft: 12,
@@ -411,11 +451,11 @@ const styles = StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: "#e0e0e0",
+        // backgroundColor será aplicado dinamicamente via props
     },
     dividerText: {
         marginHorizontal: 16,
-        color: "#999",
+        // color será aplicado dinamicamente via props
         fontSize: 14,
     },
     loginContainer: {
@@ -424,11 +464,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     loginText: {
-        color: "#666",
+        // color será aplicado dinamicamente via props
         fontSize: 14,
     },
     loginLink: {
-        color: "#2E7D32",
+        // color será aplicado dinamicamente via props
         fontSize: 14,
         fontWeight: "bold",
     },
