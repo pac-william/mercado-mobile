@@ -1,7 +1,9 @@
 import React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet, Dimensions, ImageBackground } from "react-native";
 import { Text, Button, IconButton } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import TelaOnboarding2 from "../../assets/tela-onboarding-2.png";
 
 interface OnboardingScreen2Props {
   onNext: () => void;
@@ -10,55 +12,65 @@ interface OnboardingScreen2Props {
 
 export default function OnboardingScreen2({ onNext, onBack }: OnboardingScreen2Props) {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        
-        <View style={styles.spacer} /> 
-
-        <View style={styles.textContainer}>
-          <Text variant="headlineMedium" style={styles.title}>
-            A união da tecnologia e do praticidade
-          </Text>
-          <Text variant="bodyLarge" style={styles.description}>
-            Unindo tecnologia para te auxiliar e praticidade para você comprar.
-          </Text>
-        </View>
-
-        <View style={styles.footer}>
-          <View style={styles.indicators}>
-            <View style={styles.indicator} />
-            <View style={[styles.indicator, styles.activeIndicator]} />
-          </View>
+    <ImageBackground
+      source={TelaOnboarding2}
+      style={styles.backgroundImage}
+      resizeMode="stretch"
+    >
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
           
-          <View style={styles.buttonContainer}>
-            <IconButton
-              icon="arrow-left"
-              mode="contained"
-              onPress={onBack}
-              style={styles.backButton}
-              iconColor="#fff"
-            />
+          <View style={styles.spacer} /> 
+
+          <View style={styles.textContainer}>
+            <Text variant="headlineMedium" style={styles.title}>
+              A união da tecnologia e do praticidade
+            </Text>
+            <Text variant="bodyLarge" style={styles.description}>
+              Unindo tecnologia para te auxiliar e praticidade para você comprar.
+            </Text>
+          </View>
+
+          <View style={styles.footer}>
+            <View style={styles.indicators}>
+              <View style={styles.indicator} />
+              <View style={[styles.indicator, styles.activeIndicator]} />
+            </View>
             
-            <Button
-              mode="contained"
-              onPress={onNext}
-              style={styles.nextButton}
-              contentStyle={styles.buttonContent}
-              labelStyle={styles.buttonLabel}
-            >
-              Próximo →
-            </Button>
+            <View style={styles.buttonContainer}>
+              <IconButton
+                icon="arrow-left"
+                mode="contained"
+                onPress={onBack}
+                style={styles.backButton}
+                iconColor="#fff"
+              />
+              
+              <Button
+                mode="contained"
+                onPress={onNext}
+                style={styles.nextButton}
+                contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
+              >
+                Próximo →
+              </Button>
+            </View>
           </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f6f0",
+  },
+  backgroundImage: {
+    flex: 1,
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
   },
   content: {
     flex: 1,

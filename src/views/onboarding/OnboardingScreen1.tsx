@@ -1,7 +1,9 @@
 import React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet, Dimensions, ImageBackground } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import RelaOnboarding1 from "../../assets/tela-onboarding-1.png";
 
 interface OnboardingScreen1Props {
   onNext: () => void;
@@ -9,45 +11,55 @@ interface OnboardingScreen1Props {
 
 export default function OnboardingScreen1({ onNext }: OnboardingScreen1Props) {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.spacer} />
+    <ImageBackground 
+      source={RelaOnboarding1} 
+      style={styles.backgroundImage}
+      resizeMode="stretch"
+    >
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.spacer} />
 
-        <View style={styles.textContainer}>
-          <Text variant="headlineMedium" style={styles.title}>
-            Descubra os melhores produtos e preços incríveis!
-          </Text>
-          <Text variant="bodyLarge" style={styles.description}>
-            Encontre os melhores preços e ofertas especiais, selecionados para você.
-            Compre produtos de qualidade a preços imbatíveis!
-          </Text>
-        </View>
-
-        <View style={styles.footer}>
-          <View style={styles.indicators}>
-            <View style={[styles.indicator, styles.activeIndicator]} />
-            <View style={styles.indicator} />
+          <View style={styles.textContainer}>
+            <Text variant="headlineMedium" style={styles.title}>
+              Descubra os melhores produtos e preços incríveis!
+            </Text>
+            <Text variant="bodyLarge" style={styles.description}>
+              Encontre os melhores preços e ofertas especiais, selecionados para você.
+              Compre produtos de qualidade a preços imbatíveis!
+            </Text>
           </View>
 
-          <Button
-            mode="contained"
-            onPress={onNext}
-            style={styles.nextButton}
-            contentStyle={styles.buttonContent}
-            labelStyle={styles.buttonLabel}
-          >
-            Próximo →
-          </Button>
+          <View style={styles.footer}>
+            <View style={styles.indicators}>
+              <View style={[styles.indicator, styles.activeIndicator]} />
+              <View style={styles.indicator} />
+            </View>
+
+            <Button
+              mode="contained"
+              onPress={onNext}
+              style={styles.nextButton}
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
+            >
+              Próximo →
+            </Button>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f6f0",
+  },
+  backgroundImage: {
+    flex: 1,
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
   },
   content: {
     flex: 1,
