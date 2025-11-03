@@ -13,10 +13,7 @@ WebBrowser.maybeCompleteAuthSession();
 export const auth0Config = {
   domain,
   clientId,
-  redirectUri: AuthSession.makeRedirectUri({
-    scheme: 'smart.marketin',
-    path: 'auth0',
-  }),
+  redirectUri: 'smart.marketin://auth0',
   discovery: {
     authorizationEndpoint: `https://${domain}/authorize`,
     tokenEndpoint: `https://${domain}/oauth/token`,

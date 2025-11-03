@@ -95,11 +95,6 @@ export default function LoginScreen() {
 
         try {
             const response = await login({ email, password });
-                hasUser: !!response.user,
-                hasToken: !!response.token,
-                hasIdToken: !!response.idToken,
-                idToken: response.idToken ? `${response.idToken.substring(0, 50)}...` : null
-            });
             await authLogin(response.user, response.token, response.idToken);
             navigation.goBack();
         } catch (error: any) {
