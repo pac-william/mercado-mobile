@@ -82,7 +82,10 @@ export default function SettingsScreen() {
                         <View style={[styles.section, { backgroundColor: paperTheme.colors.surface }]}>
                             <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface, opacity: 0.6 }]}>Conta</Text>
 
-                            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}>
+                            <TouchableOpacity
+                                style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
+                                onPress={() => navigation.navigate('EditProfile')}
+                            >
                                 <Ionicons name="person-outline" size={24} color={paperTheme.colors.onSurface} />
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Editar perfil</Text>
                                 <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />

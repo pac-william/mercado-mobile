@@ -208,19 +208,9 @@ export const forgotPassword = async (data: ForgotPasswordRequest): Promise<{ mes
     }
 };
 
-export const getUserProfile = async (): Promise<User> => {
+export const updateUserProfile = async (userId: string, profileData: ProfileUpdateRequest): Promise<User> => {
     try {
-        const response = await api.get<User>("/auth/me");
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao obter perfil do usuário:", error);
-        throw error;
-    }
-};
-
-export const updateUserProfile = async (profileData: ProfileUpdateRequest): Promise<User> => {
-    try {
-        const response = await api.put<User>("/auth/me", profileData);
+        const response = await api.put<User>(`/users/${encodeURIComponent(userId)}`, profileData);
         return response.data;
     } catch (error) {
         console.error("Erro ao atualizar perfil completo:", error);
@@ -228,39 +218,12 @@ export const updateUserProfile = async (profileData: ProfileUpdateRequest): Prom
     }
 };
 
-export const updateUserProfilePartial = async (profileData: ProfileUpdateRequest): Promise<User> => {
+export const updateUserProfilePartial = async (userId: string, profileData: ProfileUpdateRequest): Promise<User> => {
     try {
-        const response = await api.patch<User>("/auth/me", profileData);
+        const response = await api.patch<User>(`/users/${encodeURIComponent(userId)}`, profileData);
         return response.data;
     } catch (error) {
         console.error("Erro ao atualizar perfil parcialmente:", error);
-        throw error;
-    }
-};
-
-export const uploadProfilePicture = async (file: any): Promise<{ profilePicture: string }> => {
-    try {
-        const formData = new FormData();
-        formData.append("profilePicture", file);
-
-        const response = await api.post<{ profilePicture: string }>("/auth/upload-profile-picture", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao fazer upload da foto de perfil:", error);
-        throw error;
-    }
-};
-
-export const getProfileHistory = async (): Promise<any[]> => {
-    try {
-        const response = await api.get<any[]>("/auth/profile-history");
-        return response.data;
-    } catch (error) {
-        console.error("Erro ao obter histórico do perfil:", error);
         throw error;
     }
 };

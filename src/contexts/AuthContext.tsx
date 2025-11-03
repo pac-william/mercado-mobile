@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { getToken, getUser, saveToken, saveUser, clearStorage, saveIdToken, getIdToken } from '../utils/storage';
-import { updateUserProfile, updateUserProfilePartial, uploadProfilePicture } from '../services/authService';
+import { updateUserProfile, updateUserProfilePartial } from '../services/authService';
 import {
     getUserAddresses,
     createAddress,
@@ -219,9 +219,8 @@ interface AuthContextType {
   login: (user: User, token: string, idToken?: string) => Promise<void>;
   logout: () => Promise<void>;
   restoreToken: () => Promise<void>;
-  updateProfile: (profileData: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
-  updateProfilePartial: (profileData: { name?: string; email?: string; phone?: string; address?: string }) => Promise<void>;
-  uploadProfilePicture: (file: any) => Promise<void>;
+  updateProfile: (profileData: { name?: string; email?: string; phone?: string; address?: string; birthDate?: string }) => Promise<void>;
+  updateProfilePartial: (profileData: { name?: string; email?: string; phone?: string; address?: string; birthDate?: string }) => Promise<void>;
   clearUpdateError: () => void;
   getUserAddresses: () => Promise<void>;
   addAddress: (addressData: any) => Promise<void>;
@@ -295,6 +294,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Usuário não autenticado');
     }
 
+    if (!state.user?.id) {
+      throw new Error('ID do usuário não encontrado');
+    }
+
     const formattedData: any = {};
 
     Object.keys(profileData).forEach(key => {
@@ -318,7 +321,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'UPDATE_PROFILE_START' });
 
     try {
-      const updatedUser = await updateUserProfile(formattedData);
+      const updatedUser = await updateUserProfile(state.user.id, formattedData);
       await saveUser(updatedUser);
       dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
     } catch (error) {
@@ -334,6 +337,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Usuário não autenticado');
     }
 
+    if (!state.user?.id) {
+      throw new Error('ID do usuário não encontrado');
+    }
+
     const formattedData: any = {};
 
     Object.keys(profileData).forEach(key => {
@@ -357,30 +364,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'UPDATE_PROFILE_START' });
 
     try {
-      const updatedUser = await updateUserProfilePartial(formattedData);
+      const updatedUser = await updateUserProfilePartial(state.user.id, formattedData);
       await saveUser(updatedUser);
       dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar perfil parcialmente';
-      dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: errorMessage } });
-      throw error;
-    }
-  };
-
-  const uploadProfilePictureHandler = async (file: any) => {
-    if (!state.token) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    dispatch({ type: 'UPDATE_PROFILE_START' });
-
-    try {
-      const result = await uploadProfilePicture(file);
-      const updatedUser = { ...state.user!, profilePicture: result.profilePicture };
-      await saveUser(updatedUser);
-      dispatch({ type: 'UPDATE_PROFILE_SUCCESS', payload: { user: updatedUser } });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer upload da foto';
       dispatch({ type: 'UPDATE_PROFILE_FAILURE', payload: { error: errorMessage } });
       throw error;
     }
@@ -497,7 +485,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       restoreToken,
       updateProfile,
       updateProfilePartial,
-      uploadProfilePicture: uploadProfilePictureHandler,
       clearUpdateError,
       getUserAddresses,
       addAddress,
