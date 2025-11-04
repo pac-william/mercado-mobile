@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image, StyleSheet } from 'react-native';
+import { useTheme as usePaperTheme } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomModal from '../../components/ui/CustomModal';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SettingsStackParamList } from '../../../App';
+
+type EditProfileScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'EditProfile'>;
 
 const EditProfileScreen: React.FC = () => {
-  const { state, updateProfile, updateProfilePartial, uploadProfilePicture, clearUpdateError } = useAuth();
+  const navigation = useNavigation<EditProfileScreenNavigationProp>();
+  const paperTheme = usePaperTheme();
+  const { state, updateProfile, clearUpdateError } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     birthDate: '',
   });
-  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -24,23 +32,14 @@ const EditProfileScreen: React.FC = () => {
     primaryButton: { text: 'OK', onPress: () => setModalVisible(false) } as { text: string; onPress: () => void },
   });
 
-  useEffect(() => {
-    if (state.user) {
-      setFormData({
-        name: state.user.name || '',
-        email: state.user.email || '',
-        phone: state.user.phone || '',
-        birthDate: state.user.birthDate || '',
-      });
-    }
-  }, [state.user]);
-
-  useEffect(() => {
-    if (state.updateError) {
-      showModal('error', 'Erro', state.updateError, { text: 'OK', onPress: () => setModalVisible(false) });
-      clearUpdateError();
-    }
-  }, [state.updateError]);
+  const formatDateForInput = (date: string | Date): string => {
+    if (!date) return '';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   const showModal = (
     type: 'success' | 'error' | 'warning' | 'info',
@@ -56,6 +55,24 @@ const EditProfileScreen: React.FC = () => {
     });
     setModalVisible(true);
   };
+
+  useEffect(() => {
+    if (state.user) {
+      setFormData({
+        name: state.user.name || '',
+        email: state.user.email || '',
+        phone: state.user.phone || '',
+        birthDate: state.user.birthDate ? formatDateForInput(state.user.birthDate) : '',
+      });
+    }
+  }, [state.user]);
+
+  useEffect(() => {
+    if (state.updateError) {
+      showModal('error', 'Erro', state.updateError, { text: 'OK', onPress: () => setModalVisible(false) });
+      clearUpdateError();
+    }
+  }, [state.updateError]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -80,7 +97,13 @@ const EditProfileScreen: React.FC = () => {
     setIsLoading(true);
     try {
       await updateProfile(formData);
-      showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', { text: 'OK', onPress: () => setModalVisible(false) });
+      showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', { 
+        text: 'OK', 
+        onPress: () => {
+          setModalVisible(false);
+          navigation.goBack();
+        }
+      });
     } catch (error) {
       showModal('error', 'Erro', 'Não foi possível atualizar o perfil.', { text: 'OK', onPress: () => setModalVisible(false) });
     } finally {
@@ -89,158 +112,288 @@ const EditProfileScreen: React.FC = () => {
   };
 
   const handleCancel = () => {
-    if (state.user) {
-      setFormData({
-        name: state.user.name || '',
-        email: state.user.email || '',
-        phone: state.user.phone || '',
-        birthDate: state.user.birthDate || '',
-      });
-    }
-    setErrors({});
-    setSelectedImage(null);
+    navigation.goBack();
   };
 
-  const handleImageUpload = async () => {
-    // Simulação de seleção de imagem (em um app real, use react-native-image-picker)
+  const handleImageUpload = () => {
     Alert.alert(
       'Selecionar Imagem',
-      'Em um app real, isso abriria a galeria. Por agora, simular upload.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Simular Upload', onPress: simulateImageUpload }
-      ]
+      'Funcionalidade de upload de imagem em desenvolvimento.',
+      [{ text: 'OK', style: 'default' }]
     );
   };
 
-  const simulateImageUpload = async () => {
-    setIsUploadingImage(true);
-    try {
-      // Simular um arquivo de imagem (em produção, use a biblioteca real)
-      const mockFile = { uri: 'mock-image-uri', type: 'image/jpeg', fileName: 'profile.jpg' };
-      await uploadProfilePicture(mockFile);
-      showModal('success', 'Sucesso', 'Foto de perfil atualizada!', { text: 'OK', onPress: () => setModalVisible(false) });
-      setSelectedImage(mockFile.uri);
-    } catch (error) {
-      showModal('error', 'Erro', 'Não foi possível fazer upload da imagem.', { text: 'OK', onPress: () => setModalVisible(false) });
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: paperTheme.colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 16,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      marginBottom: 24,
+      color: paperTheme.colors.onBackground,
+    },
+    profileSection: {
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    avatarContainer: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      marginBottom: 16,
+      overflow: 'hidden',
+      backgroundColor: paperTheme.colors.surfaceVariant,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+    },
+    avatarPlaceholder: {
+      fontSize: 32,
+      color: paperTheme.colors.onSurfaceVariant,
+    },
+    uploadButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 8,
+      backgroundColor: isUploadingImage ? paperTheme.colors.outline : paperTheme.colors.primary,
+      minWidth: 140,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    uploadButtonText: {
+      color: paperTheme.colors.onPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    formGroup: {
+      marginBottom: 16,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 8,
+      color: paperTheme.colors.onSurface,
+    },
+    input: {
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      backgroundColor: paperTheme.colors.surface,
+      color: paperTheme.colors.onSurface,
+    },
+    inputError: {
+      borderColor: paperTheme.colors.error,
+    },
+    inputNormal: {
+      borderColor: paperTheme.colors.outline,
+    },
+    errorText: {
+      color: paperTheme.colors.error,
+      fontSize: 14,
+      marginTop: 4,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 8,
+      marginBottom: 16,
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 8,
+      backgroundColor: paperTheme.colors.surfaceVariant,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButtonText: {
+      color: paperTheme.colors.onSurfaceVariant,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    saveButton: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 8,
+      backgroundColor: paperTheme.colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    saveButtonDisabled: {
+      backgroundColor: paperTheme.colors.outline,
+    },
+    saveButtonText: {
+      color: paperTheme.colors.onPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1 p-4">
-        <Text className="text-2xl font-bold text-gray-800 mb-6">Editar Perfil</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>Editar Perfil</Text>
 
-        {/* Seção de Foto de Perfil */}
-        <View className="items-center mb-6">
-          <View className="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden">
+        <View style={styles.profileSection}>
+          <View style={[styles.avatarContainer, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
             {(state.user?.profilePicture || selectedImage) ? (
               <Image
                 source={{ uri: selectedImage || state.user?.profilePicture || '' }}
-                className="w-full h-full"
+                style={styles.avatarImage}
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-full h-full items-center justify-center">
-                <Text className="text-gray-500">Foto</Text>
+              <View style={styles.avatarContainer}>
+                <Text style={[styles.avatarPlaceholder, { color: paperTheme.colors.onSurfaceVariant }]}>
+                  {state.user?.name?.charAt(0).toUpperCase() || 'U'}
+                </Text>
               </View>
             )}
           </View>
           <TouchableOpacity
-            className={`py-2 px-4 rounded-lg ${isUploadingImage ? 'bg-gray-400' : 'bg-green-600'}`}
+            style={[styles.uploadButton, { backgroundColor: isUploadingImage ? paperTheme.colors.outline : paperTheme.colors.primary }]}
             onPress={handleImageUpload}
             disabled={isUploadingImage}
           >
             {isUploadingImage ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={paperTheme.colors.onPrimary} />
             ) : (
-              <Text className="text-white text-center">Alterar Foto</Text>
+              <Text style={[styles.uploadButtonText, { color: paperTheme.colors.onPrimary }]}>Alterar Foto</Text>
             )}
           </TouchableOpacity>
         </View>
 
-          <View className="mb-4">
-            <Text className="text-gray-600 mb-2">Nome *</Text>
-            <TextInput
-              className={`border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 bg-gray-50`}
-              value={formData.name}
-              onChangeText={(text) => setFormData({ ...formData, name: text })}
-              placeholder="Digite seu nome"
-            />
-            {errors.name && <Text className="text-red-500 text-sm mt-1">{errors.name}</Text>}
-          </View>
+        <View style={styles.formGroup}>
+          <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Nome *</Text>
+          <TextInput
+            style={[
+              styles.input,
+              { 
+                backgroundColor: paperTheme.colors.surface,
+                color: paperTheme.colors.onSurface,
+                borderColor: errors.name ? paperTheme.colors.error : paperTheme.colors.outline,
+              }
+            ]}
+            value={formData.name}
+            onChangeText={(text) => setFormData({ ...formData, name: text })}
+            placeholder="Digite seu nome"
+            placeholderTextColor={paperTheme.colors.onSurfaceVariant}
+          />
+          {errors.name && <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>{errors.name}</Text>}
+        </View>
 
-          <View className="mb-4">
-            <Text className="text-gray-600 mb-2">Email *</Text>
-            <TextInput
-              className={`border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 bg-gray-50`}
-              value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
-              placeholder="Digite seu email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            {errors.email && <Text className="text-red-500 text-sm mt-1">{errors.email}</Text>}
-          </View>
+        <View style={styles.formGroup}>
+          <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Email *</Text>
+          <TextInput
+            style={[
+              styles.input,
+              { 
+                backgroundColor: paperTheme.colors.surface,
+                color: paperTheme.colors.onSurface,
+                borderColor: errors.email ? paperTheme.colors.error : paperTheme.colors.outline,
+              }
+            ]}
+            value={formData.email}
+            onChangeText={(text) => setFormData({ ...formData, email: text })}
+            placeholder="Digite seu email"
+            placeholderTextColor={paperTheme.colors.onSurfaceVariant}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          {errors.email && <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>{errors.email}</Text>}
+        </View>
 
-          <View className="mb-4">
-            <Text className="text-gray-600 mb-2">Telefone</Text>
-            <TextInput
-              className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-              value={formData.phone}
-              onChangeText={(text) => setFormData({ ...formData, phone: text })}
-              placeholder="Digite seu telefone"
-              keyboardType="phone-pad"
-            />
-          </View>
+        <View style={styles.formGroup}>
+          <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Telefone</Text>
+          <TextInput
+            style={[
+              styles.input,
+              { 
+                backgroundColor: paperTheme.colors.surface,
+                color: paperTheme.colors.onSurface,
+                borderColor: paperTheme.colors.outline,
+              }
+            ]}
+            value={formData.phone}
+            onChangeText={(text) => setFormData({ ...formData, phone: text })}
+            placeholder="Digite seu telefone"
+            placeholderTextColor={paperTheme.colors.onSurfaceVariant}
+            keyboardType="phone-pad"
+          />
+        </View>
 
-          <View className="mb-6">
-            <Text className="text-gray-600 mb-2">Data de Nascimento</Text>
-            <TextInput
-              className="border border-gray-300 rounded-lg p-3 bg-gray-50"
-              value={formData.birthDate}
-              onChangeText={(text) => setFormData({ ...formData, birthDate: text })}
-              placeholder="DD/MM/AAAA"
-              keyboardType="numeric"
-            />
-          </View>
+        <View style={styles.formGroup}>
+          <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Data de Nascimento</Text>
+          <TextInput
+            style={[
+              styles.input,
+              { 
+                backgroundColor: paperTheme.colors.surface,
+                color: paperTheme.colors.onSurface,
+                borderColor: paperTheme.colors.outline,
+              }
+            ]}
+            value={formData.birthDate}
+            onChangeText={(text) => setFormData({ ...formData, birthDate: text })}
+            placeholder="DD/MM/AAAA"
+            placeholderTextColor={paperTheme.colors.onSurfaceVariant}
+            keyboardType="numeric"
+          />
+        </View>
 
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.cancelButton, { backgroundColor: paperTheme.colors.surfaceVariant }]}
+            onPress={handleCancel}
+            disabled={isLoading}
+          >
+            <Text style={[styles.cancelButtonText, { color: paperTheme.colors.onSurfaceVariant }]}>Cancelar</Text>
+          </TouchableOpacity>
 
-          <View className="flex-row justify-between mb-4">
-            <TouchableOpacity
-              className="bg-gray-500 py-3 px-6 rounded-lg flex-1 mr-2"
-              onPress={handleCancel}
-              disabled={isLoading}
-            >
-              <Text className="text-white text-center font-semibold">Cancelar</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              { backgroundColor: isLoading ? paperTheme.colors.outline : paperTheme.colors.primary }
+            ]}
+            onPress={handleSave}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color={paperTheme.colors.onPrimary} />
+            ) : (
+              <Text style={[styles.saveButtonText, { color: paperTheme.colors.onPrimary }]}>Salvar</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
-            <TouchableOpacity
-              className={`py-3 px-6 rounded-lg flex-1 ml-2 ${isLoading ? 'bg-gray-400' : 'bg-green-600'}`}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text className="text-white text-center font-semibold">Salvar</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        {/* Modal de Feedback */}
-        <CustomModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          type={modalConfig.type}
-          title={modalConfig.title}
-          message={modalConfig.message}
-          primaryButton={modalConfig.primaryButton}
-        />
-      </SafeAreaView>
+      <CustomModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        type={modalConfig.type}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        primaryButton={modalConfig.primaryButton}
+      />
+    </SafeAreaView>
   );
 };
 
