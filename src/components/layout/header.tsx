@@ -1,13 +1,13 @@
-import React from "react";
-import { View, Image, TouchableOpacity, StyleSheet, Text } from "react-native";
-import { useTheme as usePaperTheme } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme as usePaperTheme } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeStackParamList } from "../../../App";
 import { useCart } from "../../contexts/CartContext";
-import { useAuth } from "../../contexts/AuthContext";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ProfileButton } from "../ui/ProfileButton";
 
 import Logo from "../../assets/logo1.jpg";
 
@@ -19,7 +19,6 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onPressHistory }) => {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const { state: cartState } = useCart();
-  const { state: authState } = useAuth();
   const paperTheme = usePaperTheme();
 
   return (
@@ -30,15 +29,15 @@ export const Header: React.FC<HeaderProps> = ({ onPressHistory }) => {
         <View style={{ flex: 1 }} />
 
         <View style={styles.buttonsContainer}>
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]} 
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]}
             onPress={onPressHistory}
           >
             <Ionicons name="time-outline" size={24} color={paperTheme.colors.tertiary} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]} 
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]}
             onPress={() => navigation.navigate("Cart")}
           >
             <Ionicons name="cart-outline" size={24} color={paperTheme.colors.tertiary} />
@@ -51,29 +50,7 @@ export const Header: React.FC<HeaderProps> = ({ onPressHistory }) => {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]} 
-            onPress={() => {
-              if (authState.isAuthenticated) {
-                const parentNav = navigation.getParent();
-                if (parentNav) {
-                  parentNav.navigate('SettingsStack' as never);
-                }
-              } else {
-                navigation.navigate("Login");
-              }
-            }}
-          >
-            {authState.isAuthenticated && authState.user ? (
-              <View style={[styles.userAvatar, { backgroundColor: paperTheme.colors.primary }]}>
-                <Text style={styles.userAvatarText}>
-                  {authState.user.name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            ) : (
-              <Ionicons name="person-outline" size={24} color={paperTheme.colors.tertiary} />
-            )}
-          </TouchableOpacity>
+          <ProfileButton buttonStyle={styles.button} />
         </View>
       </View>
     </SafeAreaView>
@@ -93,19 +70,19 @@ const styles = StyleSheet.create({
     minHeight: 60
   },
   logo: { width: 80, height: 50, borderRadius: 20 },
-  title: { 
-    fontSize: 16, 
-    fontWeight: "bold", 
-    marginLeft: 8, 
-    flexShrink: 1 
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 8,
+    flexShrink: 1
     // color será aplicado dinamicamente via props
   },
   buttonsContainer: { flexDirection: "row" },
-  button: { 
-    padding: 8, 
-    borderRadius: 10, 
-    marginLeft: 8, 
-    position: 'relative' 
+  button: {
+    padding: 8,
+    borderRadius: 10,
+    marginLeft: 8,
+    position: 'relative'
     // backgroundColor será aplicado dinamicamente via props
   },
   cartBadge: {
@@ -123,19 +100,6 @@ const styles = StyleSheet.create({
   cartBadgeText: {
     color: 'white',
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // backgroundColor será aplicado dinamicamente via props
-  },
-  userAvatarText: {
-    color: 'white',
-    fontSize: 16,
     fontWeight: 'bold',
   },
 });

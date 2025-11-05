@@ -1,9 +1,9 @@
-import React from "react";
-import { TouchableOpacity, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
 import { AntDesign } from '@expo/vector-icons'; // Certifique-se de ter @expo/vector-icons instalado
+import React from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 
-export default function FilterButton({ title, onPress }) {
+export default function FilterButton({ title, onPress }: { title: string, onPress: () => void }) {
   const { colors } = useTheme();
 
   return (

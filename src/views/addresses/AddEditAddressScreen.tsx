@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-  Alert,
-  ActivityIndicator
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
+import { Address, createAddress, getAddressById, updateAddress } from '../../services/addressService';
 
 type AddEditAddressScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -22,10 +23,10 @@ interface RouteParams {
 }
 
 export default function AddEditAddressScreen() {
-  const { state, addAddress, updateAddress } = useAuth();
   const navigation = useNavigation<AddEditAddressScreenNavigationProp>();
   const route = useRoute();
   const { addressId } = route.params as RouteParams;
+  const [address, setAddress] = useState<Address | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -44,22 +45,34 @@ export default function AddEditAddressScreen() {
   useEffect(() => {
     if (addressId) {
       setIsEditing(true);
-      const address = state.addresses.find(addr => addr.id === addressId);
-      if (address) {
-        setFormData({
-          name: address.name,
-          street: address.street,
-          number: address.number,
-          complement: address.complement || '',
-          neighborhood: address.neighborhood,
-          city: address.city,
-          state: address.state,
-          zipCode: address.zipCode,
-          isFavorite: address.isFavorite,
-        });
-      }
+      const loadAddress = async () => {
+        try {
+          const addressData = await getAddressById(addressId);
+          // Converter null para undefined para compatibilidade de tipos
+          const addressWithFixedTypes = {
+            ...addressData,
+            complement: addressData.complement ?? undefined
+          };
+          setAddress(addressWithFixedTypes);
+          setFormData({
+            name: addressData.name,
+            street: addressData.street,
+            number: addressData.number,
+            complement: addressData.complement || '',
+            neighborhood: addressData.neighborhood,
+            city: addressData.city,
+            state: addressData.state,
+            zipCode: addressData.zipCode,
+            isFavorite: addressData.isFavorite,
+          });
+        } catch (error) {
+          console.error('Erro ao carregar endereço:', error);
+          Alert.alert('Erro', 'Não foi possível carregar o endereço.');
+        }
+      };
+      loadAddress();
     }
-  }, [addressId, state.addresses]);
+  }, [addressId]);
 
   const handleSave = async () => {
     if (!validateForm()) return;
@@ -70,7 +83,7 @@ export default function AddEditAddressScreen() {
         await updateAddress(addressId, formData);
         Alert.alert('Sucesso', 'Endereço atualizado com sucesso!');
       } else {
-        await addAddress(formData);
+        await createAddress(formData);
         Alert.alert('Sucesso', 'Endereço adicionado com sucesso!');
       }
       navigation.goBack();
@@ -253,7 +266,7 @@ export default function AddEditAddressScreen() {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -267,7 +280,7 @@ const styles = {
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold' as any,
+    fontWeight: 'bold',
     color: '#1a1a1a',
     marginBottom: 8,
   },
@@ -283,7 +296,7 @@ const styles = {
   },
   label: {
     fontSize: 16,
-    fontWeight: '600' as any,
+    fontWeight: '600',
     color: '#1a1a1a',
     marginBottom: 8,
   },
@@ -297,8 +310,8 @@ const styles = {
     backgroundColor: 'white',
   },
   favoriteToggle: {
-    flexDirection: 'row' as any,
-    alignItems: 'center' as any,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
     backgroundColor: '#f8f9fa',
@@ -318,10 +331,10 @@ const styles = {
   },
   favoriteTextActive: {
     color: '#8b6914',
-    fontWeight: '600' as any,
+    fontWeight: '600',
   },
   buttonContainer: {
-    flexDirection: 'row' as any,
+    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 20,
     gap: 12,
@@ -331,11 +344,11 @@ const styles = {
     paddingVertical: 16,
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
-    alignItems: 'center' as any,
+    alignItems: 'center',
   },
   cancelButtonText: {
     fontSize: 16,
-    fontWeight: '600' as any,
+    fontWeight: '600',
     color: '#666',
   },
   saveButton: {
@@ -343,14 +356,14 @@ const styles = {
     paddingVertical: 16,
     backgroundColor: '#2E7D32',
     borderRadius: 8,
-    alignItems: 'center' as any,
+    alignItems: 'center',
   },
   saveButtonDisabled: {
     backgroundColor: '#ccc',
   },
   saveButtonText: {
     fontSize: 16,
-    fontWeight: '600' as any,
+    fontWeight: '600',
     color: 'white',
   },
-};
+});

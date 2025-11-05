@@ -1,20 +1,15 @@
-import "react-native-gesture-handler";
 import React from "react";
+import "react-native-gesture-handler";
 import { CartProvider } from './src/contexts/CartContext';
-import { AuthProvider } from './src/contexts/AuthContext';
 import { OnboardingProvider } from './src/contexts/OnboardingContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
-import { InitialLoadingScreen } from './src/views/splash/SplashScreen';
 import { RootNavigator } from './src/navigation';
+import { InitialLoadingScreen } from './src/views/splash/SplashScreen';
 
 // Re-exporta os tipos de navegação para manter compatibilidade com imports existentes
 export type {
-  HomeStackParamList,
-  SearchStackParamList,
-  SettingsStackParamList,
-  AuthStackParamList,
-  TabParamList,
-  RootStackParamList,
+  AuthStackParamList, HomeStackParamList, RootStackParamList, SearchStackParamList,
+  SettingsStackParamList, TabParamList
 } from './src/navigation';
 
 const App: React.FC = () => {
@@ -35,11 +30,9 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <OnboardingProvider>
-        <AuthProvider>
-          <CartProvider>
-            <RootNavigator />
-          </CartProvider>
-        </AuthProvider>
+        <CartProvider>
+          <RootNavigator />
+        </CartProvider>
       </OnboardingProvider>
     </ThemeProvider>
   );

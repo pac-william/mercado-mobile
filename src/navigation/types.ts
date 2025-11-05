@@ -4,9 +4,6 @@ export type HomeStackParamList = {
   ProductDetail: { product: any };
   Cart: undefined;
   MarketDetails: { marketId: string };
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: undefined;
@@ -18,9 +15,6 @@ export type SearchStackParamList = {
   ProductDetail: { product: any };
   Cart: undefined;
   MarketDetails: { marketId: string };
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: undefined;
@@ -31,9 +25,6 @@ export type SettingsStackParamList = {
   SettingsMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: undefined;
@@ -42,19 +33,13 @@ export type SettingsStackParamList = {
   OrderDetail: { orderId: string };
 };
 
-export type AuthStackParamList = {
-  Login: undefined;
-  Register: undefined;
-};
+export type AuthStackParamList = {};
 
 export type AIStackParamList = {
   AIMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
   MarketDetails: { marketId: string };
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: undefined;

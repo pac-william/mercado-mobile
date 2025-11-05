@@ -1,15 +1,16 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, FlatList, RefreshControl, ActivityIndicator, TouchableOpacity } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useAuth } from "../../contexts/AuthContext";
-import { getOrders } from "../../services/orderService";
-import { Order } from "../../domain/orderDomain";
+import * as SecureStore from 'expo-secure-store';
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "../../components/layout/header";
-import { Ionicons } from "@expo/vector-icons";
+import { Order } from "../../domain/orderDomain";
 import { SettingsStackParamList } from "../../navigation/types";
+import { getOrders } from "../../services/orderService";
+import { User } from "../../types/user";
 
 const getStatusColor = (status: string) => {
   switch (status?.toUpperCase()) {
@@ -57,17 +58,33 @@ const getStatusText = (status: string) => {
 type OrdersScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'Orders'>;
 
 export default function OrdersScreen() {
-  const { state } = useAuth();
   const navigation = useNavigation<OrdersScreenNavigationProp>();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
+  const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offline, setOffline] = useState(false);
 
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await SecureStore.getItemAsync('mercado_mobile_user') || 
+                        await SecureStore.getItemAsync('userInfo');
+        if (userData) {
+          const currentUser = JSON.parse(userData) as User;
+          setUser(currentUser);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar usuário:', error);
+      }
+    };
+    loadUser();
+  }, []);
+
   const fetchOrders = useCallback(async () => {
-    if (!state.user) {
+    if (!user) {
       setLoading(false);
       return;
     }
@@ -76,7 +93,7 @@ export default function OrdersScreen() {
     setOffline(false);
 
     try {
-      const response = await getOrders(1, 50, { userId: state.user.id });
+      const response = await getOrders(1, 50, { userId: user.id });
       setOrders(response.orders);
       setOffline(false);
     } catch (error: any) {
@@ -85,7 +102,7 @@ export default function OrdersScreen() {
       // Tenta carregar apenas dos dados locais diretamente
       try {
         const { getOrders: getOrdersLocal } = await import("../../domain/order/orderStorage");
-        const localOrders = await getOrdersLocal(state.user.id);
+        const localOrders = await getOrdersLocal(user.id);
         setOrders(localOrders);
         setOffline(true);
       } catch (localError) {
@@ -97,7 +114,7 @@ export default function OrdersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [state.user]);
+  }, [user]);
 
   useEffect(() => {
     fetchOrders();

@@ -1,8 +1,9 @@
 import axios from "axios";
-import { getToken, getIdToken } from "../utils/storage";
+import * as SecureStore from 'expo-secure-store';
+import { apiBaseUrl } from "../utils/server";
 
 const api = axios.create({
-  baseURL: "http://10.0.0.180:8080/api/v1", 
+  baseURL: `${apiBaseUrl}/api/v1`,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -12,22 +13,25 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
- 
-      let token = await getIdToken();
+      // Busca ID token primeiro (se disponível)
+      let token = await SecureStore.getItemAsync('mercado_mobile_id_token');
 
-      
-      
+      // Se não tiver ID token, busca o token normal
       if (!token) {
-        token = await getToken();
+        token = await SecureStore.getItemAsync('mercado_mobile_token');
       }
-      
+
+      // Se ainda não tiver, tenta buscar do authToken (compatibilidade com ProfileButton)
+      if (!token) {
+        token = await SecureStore.getItemAsync('authToken');
+      }
+
       if (token && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.warn('Não foi possível buscar token:', error);
     }
-    
+
     return config;
   },
   (error) => {
@@ -47,7 +51,7 @@ api.interceptors.response.use(
         error.message = 'Network Error - Sem conexão com a internet';
       }
     }
-    
+
     if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
       error.isNetworkError = true;
       error.networkError = true;

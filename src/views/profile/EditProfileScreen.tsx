@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image, StyleSheet } from 'react-native';
-import { useTheme as usePaperTheme } from 'react-native-paper';
-import { useAuth } from '../../contexts/AuthContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomModal from '../../components/ui/CustomModal';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTheme as usePaperTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { SettingsStackParamList } from '../../../App';
+import CustomModal from '../../components/ui/CustomModal';
+import api from '../../services/api';
+import { User } from '../../types/user';
 
 type EditProfileScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'EditProfile'>;
 
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
   const paperTheme = usePaperTheme();
-  const { state, updateProfile, clearUpdateError } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,22 +59,26 @@ const EditProfileScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    if (state.user) {
-      setFormData({
-        name: state.user.name || '',
-        email: state.user.email || '',
-        phone: state.user.phone || '',
-        birthDate: state.user.birthDate ? formatDateForInput(state.user.birthDate) : '',
-      });
-    }
-  }, [state.user]);
-
-  useEffect(() => {
-    if (state.updateError) {
-      showModal('error', 'Erro', state.updateError, { text: 'OK', onPress: () => setModalVisible(false) });
-      clearUpdateError();
-    }
-  }, [state.updateError]);
+    const loadUser = async () => {
+      try {
+        const userData = await SecureStore.getItemAsync('mercado_mobile_user') || 
+                        await SecureStore.getItemAsync('userInfo');
+        if (userData) {
+          const currentUser = JSON.parse(userData) as User;
+          setUser(currentUser);
+          setFormData({
+            name: currentUser.name || '',
+            email: currentUser.email || '',
+            phone: currentUser.phone || '',
+            birthDate: currentUser.birthDate ? formatDateForInput(currentUser.birthDate) : '',
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar usuário:', error);
+      }
+    };
+    loadUser();
+  }, []);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -93,10 +99,18 @@ const EditProfileScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!validateForm()) return;
+    if (!user?.id) {
+      showModal('error', 'Erro', 'Usuário não encontrado.', { text: 'OK', onPress: () => setModalVisible(false) });
+      return;
+    }
 
     setIsLoading(true);
     try {
-      await updateProfile(formData);
+      const response = await api.put(`/users/${user.id}`, formData);
+      const updatedUser = response.data as User;
+      await SecureStore.setItemAsync('mercado_mobile_user', JSON.stringify(updatedUser));
+      await SecureStore.setItemAsync('userInfo', JSON.stringify(updatedUser));
+      setUser(updatedUser);
       showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', { 
         text: 'OK', 
         onPress: () => {
@@ -254,16 +268,16 @@ const EditProfileScreen: React.FC = () => {
 
         <View style={styles.profileSection}>
           <View style={[styles.avatarContainer, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-            {(state.user?.profilePicture || selectedImage) ? (
+            {(user?.profilePicture || selectedImage) ? (
               <Image
-                source={{ uri: selectedImage || state.user?.profilePicture || '' }}
+                source={{ uri: selectedImage || user?.profilePicture || '' }}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />
             ) : (
               <View style={styles.avatarContainer}>
                 <Text style={[styles.avatarPlaceholder, { color: paperTheme.colors.onSurfaceVariant }]}>
-                  {state.user?.name?.charAt(0).toUpperCase() || 'U'}
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </Text>
               </View>
             )}

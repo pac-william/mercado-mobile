@@ -1,28 +1,71 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, RefreshControl, Switch } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme as usePaperTheme } from "react-native-paper";
-import { useAuth } from "../../contexts/AuthContext";
-import { useTheme } from "../../contexts/ThemeContext";
-import { Header } from "../../components/layout/header";
+import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { useTheme as usePaperTheme } from "react-native-paper";
 import { SettingsStackParamList } from '../../../App';
+import { Header } from "../../components/layout/header";
+import { auth0Domain, clientId, redirectUri } from "../../config/auth0";
+import { useTheme } from "../../contexts/ThemeContext";
+import { User } from "../../types/user";
 
 type SettingsStackParamListProp = NativeStackNavigationProp<SettingsStackParamList>;
 
 export default function SettingsScreen() {
 
     const navigation = useNavigation<SettingsStackParamListProp>();
-    const { state, logout, restoreToken } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const paperTheme = usePaperTheme();
     const [refreshing, setRefreshing] = useState(false);
-    
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    const loadUser = useCallback(async () => {
+        try {
+            setLoading(true);
+            // Verifica se há token
+            const token = await SecureStore.getItemAsync('mercado_mobile_token') || 
+                         await SecureStore.getItemAsync('authToken');
+            
+            // Busca dados do usuário
+            const userData = await SecureStore.getItemAsync('mercado_mobile_user') || 
+                           await SecureStore.getItemAsync('userInfo');
+            
+            if (token && userData) {
+                const parsedUser = JSON.parse(userData) as User;
+                setUser(parsedUser);
+                setIsAuthenticated(true);
+            } else {
+                setUser(null);
+                setIsAuthenticated(false);
+            }
+        } catch (error) {
+            console.error("Erro ao verificar autenticação:", error);
+            setUser(null);
+            setIsAuthenticated(false);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadUser();
+    }, [loadUser]);
+
+    // Verificar autenticação quando a tela ganha foco
+    useFocusEffect(
+        useCallback(() => {
+            loadUser();
+        }, [loadUser])
+    );
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        await restoreToken();
+        await loadUser();
         setRefreshing(false);
     };
 
@@ -40,7 +83,58 @@ export default function SettingsScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await logout();
+                            // Limpar todas as chaves do SecureStore
+                            const keysToDelete = [
+                                'authToken',
+                                'userInfo',
+                                'mercado_mobile_token',
+                                'mercado_mobile_id_token',
+                                'mercado_mobile_user'
+                            ];
+
+                            // Deletar todas as chaves em paralelo
+                            await Promise.allSettled(
+                                keysToDelete.map(key => 
+                                    SecureStore.deleteItemAsync(key).catch(err => {
+                                        // Ignora erros se a chave não existir
+                                        console.warn(`Erro ao deletar ${key}:`, err);
+                                    })
+                                )
+                            );
+
+                            // Limpar estado local
+                            setUser(null);
+                            setIsAuthenticated(false);
+
+                            // Tentar fazer logout no Auth0 (opcional, pode falhar se não houver conexão)
+                            try {
+                                const logoutUrl = `https://${auth0Domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(redirectUri)}`;
+                                await WebBrowser.openBrowserAsync(logoutUrl);
+                            } catch (logoutError) {
+                                // Ignora erro do logout do Auth0, o importante é limpar localmente
+                                console.warn("Erro ao fazer logout no Auth0:", logoutError);
+                            }
+
+                            // Navegar para a página principal (Home)
+                            try {
+                                // Tenta navegar via tab navigator (pai direto)
+                                const tabNavigator = navigation.getParent();
+                                if (tabNavigator) {
+                                    tabNavigator.dispatch(
+                                        CommonActions.navigate({
+                                            name: 'HomeStack',
+                                            params: {
+                                                screen: 'HomeMain',
+                                            },
+                                        })
+                                    );
+                                }
+                            } catch (navError) {
+                                console.warn("Erro ao navegar para Home:", navError);
+                            }
+
+                            // Recarregar para atualizar a UI
+                            await loadUser();
                         } catch (error) {
                             console.error("Erro ao fazer logout:", error);
                             Alert.alert("Erro", "Não foi possível sair da conta.");
@@ -67,16 +161,23 @@ export default function SettingsScreen() {
                     />
                 }
             >
-                {state.isAuthenticated && state.user ? (
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+                        <Text style={[styles.loadingText, { color: paperTheme.colors.onSurface }]}>
+                            Verificando autenticação...
+                        </Text>
+                    </View>
+                ) : isAuthenticated && user ? (
                     <>
                         <View style={[styles.profileSection, { backgroundColor: paperTheme.colors.surface }]}>
                             <View style={[styles.avatarLarge, { backgroundColor: paperTheme.colors.primary }]}>
                                 <Text style={styles.avatarLargeText}>
-                                    {state.user.name.charAt(0).toUpperCase()}
+                                    {user.name.charAt(0).toUpperCase()}
                                 </Text>
                             </View>
-                            <Text style={[styles.userName, { color: paperTheme.colors.onSurface }]}>{state.user.name}</Text>
-                            <Text style={[styles.userEmail, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>{state.user.email}</Text>
+                            <Text style={[styles.userName, { color: paperTheme.colors.onSurface }]}>{user.name}</Text>
+                            <Text style={[styles.userEmail, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>{user.email}</Text>
                         </View>
 
                         <View style={[styles.section, { backgroundColor: paperTheme.colors.surface }]}>
@@ -281,5 +382,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: "center",
         lineHeight: 20,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingVertical: 100,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
     },
 });

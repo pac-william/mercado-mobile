@@ -1,30 +1,23 @@
-import React from 'react';
-import { ComponentType } from 'react';
+import React, { ComponentType } from 'react';
 
 // Imports dos componentes de tela
-import Home from '../views/home/index';
-import Search from '../views/search/index';
-import AISearch from '../views/ai/index';
-import ProductDetail from '../views/product/ProductDetail';
-import MarketDetailsScreen from '../views/market/index';
-import CartScreen from '../views/cart/CartScreen';
-import LoginScreen from '../views/auth/LoginScreen';
-import RegisterScreen from '../views/auth/RegisterScreen';
-import ForgotPasswordScreen from '../views/auth/ForgotPasswordScreen';
-import SettingsScreen from '../views/settings/SettingsScreen';
-import EditProfileScreen from '../views/profile/EditProfileScreen';
-import AddressesScreen from '../views/addresses/index';
 import AddEditAddressScreen from '../views/addresses/AddEditAddressScreen';
-import OrdersScreen from '../views/orders/OrdersScreen';
+import AddressesScreen from '../views/addresses/index';
+import AISearch from '../views/ai/index';
+import CartScreen from '../views/cart/CartScreen';
+import Home from '../views/home/index';
+import MarketDetailsScreen from '../views/market/index';
 import OrderDetailScreen from '../views/orders/OrderDetailScreen';
+import OrdersScreen from '../views/orders/OrdersScreen';
+import ProductDetail from '../views/product/ProductDetail';
+import EditProfileScreen from '../views/profile/EditProfileScreen';
+import Search from '../views/search/index';
+import SettingsScreen from '../views/settings/SettingsScreen';
 
 // Configuração das rotas compartilhadas (rotas que aparecem em múltiplos stacks)
 export const sharedRoutes = [
   { name: 'ProductDetail', component: ProductDetail },
   { name: 'Cart', component: CartScreen },
-  { name: 'Login', component: LoginScreen },
-  { name: 'Register', component: RegisterScreen },
-  { name: 'ForgotPassword', component: ForgotPasswordScreen },
   { name: 'EditProfile', component: EditProfileScreen },
   { name: 'AddressesMain', component: AddressesScreen },
   { name: 'AddAddress', component: AddEditAddressScreen },

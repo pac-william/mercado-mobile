@@ -1,25 +1,15 @@
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
-const domain = 'dev-gk5bz75smosenq24.us.auth0.com';
-const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID || '';
-
-if (!clientId) {
-  console.warn('AUTH0_CLIENT_ID não configurado. Configure EXPO_PUBLIC_AUTH0_CLIENT_ID no arquivo .env');
-}
+export const auth0Domain = 'dev-gk5bz75smosenq24.us.auth0.com';
+export const clientId = '5Rhl8bRWw4JKHtexpJUiR7Dqseu4me3G';
+export const redirectUri = AuthSession.makeRedirectUri({ path: 'callback' });
 
 WebBrowser.maybeCompleteAuthSession();
 
-export const auth0Config = {
-  domain,
-  clientId,
-  redirectUri: 'smart.marketin://auth0',
-  discovery: {
-    authorizationEndpoint: `https://${domain}/authorize`,
-    tokenEndpoint: `https://${domain}/oauth/token`,
-    revocationEndpoint: `https://${domain}/oauth/revoke`,
-  },
+// Discovery document for Auth0
+export const discovery: AuthSession.DiscoveryDocument = {
+  authorizationEndpoint: `https://${auth0Domain}/authorize`,
+  tokenEndpoint: `https://${auth0Domain}/oauth/token`,
 };
-
-export const useProxy = false;
 

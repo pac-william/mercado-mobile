@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../contexts/AuthContext';
-import { Header } from '../../components/layout/header';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { HomeStackParamList } from '../../../App';
+import { Header } from '../../components/layout/header';
+import { Address, getUserAddresses } from '../../services/addressService';
 
 type AddressesScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function AddressesScreen() {
-  const { state, getUserAddresses } = useAuth();
   const navigation = useNavigation<AddressesScreenNavigationProp>();
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -20,7 +20,13 @@ export default function AddressesScreen() {
 
   const loadAddresses = async () => {
     try {
-      await getUserAddresses();
+      const response = await getUserAddresses(1, 100);
+      // Converter null para undefined para compatibilidade de tipos
+      const addressesList = (response.addresses || []).map(addr => ({
+        ...addr,
+        complement: addr.complement ?? undefined
+      }));
+      setAddresses(addressesList);
     } catch (error) {
       console.error('Erro ao carregar endereços:', error);
     }
@@ -74,9 +80,9 @@ export default function AddressesScreen() {
           <Text style={styles.subtitle}>Gerencie seus endereços de entrega</Text>
         </View>
 
-        {state.addresses.length > 0 ? (
+        {addresses.length > 0 ? (
           <FlatList
-            data={state.addresses}
+            data={addresses}
             keyExtractor={(item) => item.id}
             renderItem={renderAddressItem}
             refreshing={refreshing}
@@ -95,7 +101,7 @@ export default function AddressesScreen() {
         )}
       </View>
 
-      {state.addresses.length < 3 && (
+      {addresses.length < 3 && (
         <TouchableOpacity style={styles.floatingButton} onPress={handleAddAddress}>
           <Ionicons name="add" size={30} color="white" />
         </TouchableOpacity>
@@ -104,7 +110,7 @@ export default function AddressesScreen() {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -176,7 +182,7 @@ const styles = {
     lineHeight: 20,
   },
   floatingButton: {
-    position: 'absolute' as any,
+    position: 'absolute',
     bottom: 24,
     right: 24,
     width: 60,
@@ -191,5 +197,5 @@ const styles = {
     shadowRadius: 8,
     elevation: 6,
   },
-};
+});
 

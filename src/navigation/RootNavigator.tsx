@@ -1,20 +1,18 @@
-import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { RootStackParamList } from './types';
-import { TabNavigator } from './TabNavigator';
-import { useAuth } from '../contexts/AuthContext';
+import React from 'react';
 import { useOnboarding } from '../contexts/OnboardingContext';
-import SplashScreen from '../views/splash/SplashScreen';
 import OnboardingNavigator from '../views/onboarding/OnboardingNavigator';
+import SplashScreen from '../views/splash/SplashScreen';
+import { TabNavigator } from './TabNavigator';
+import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
-  const { state: authState } = useAuth();
   const { state: onboardingState, completeOnboarding } = useOnboarding();
 
-  if (authState.isLoading || onboardingState.isLoading) {
+  if (onboardingState.isLoading) {
     return <SplashScreen />;
   }
 
