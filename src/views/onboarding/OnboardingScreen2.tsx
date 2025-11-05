@@ -1,9 +1,8 @@
-import React from "react";
-import { View, StyleSheet, Dimensions, ImageBackground } from "react-native";
-import { Text, Button, IconButton } from "react-native-paper";
+import { Dimensions, ImageBackground, StyleSheet, View } from "react-native";
+import { Button, IconButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import TelaOnboarding2 from "../../assets/tela-onboarding-2.png";
+import TelaOnboarding2 from "../../assets/tela-onboarding-2.jpg";
 
 interface OnboardingScreen2Props {
   onNext: () => void;

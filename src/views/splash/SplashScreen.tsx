@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { View, Image, StyleSheet, Animated } from "react-native";
+import { useEffect, useState } from "react";
+import { Animated, Image, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Text } from "react-native-paper";
 
 export default function SplashScreen() {
@@ -34,7 +34,7 @@ export default function SplashScreen() {
         ]}
       >
         <Image
-          source={require("../../assets/logo-smart-marketing.png")}
+          source={require("../../assets/logo-smart-marketing.jpg")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -85,7 +85,7 @@ export function InitialLoadingScreen() {
         ]}
       >
         <Image
-          source={require("../../assets/logo-smart-marketing.png")}
+          source={require("../../assets/logo-smart-marketing.jpg")}
           style={styles.logo}
           resizeMode="contain"
         />
