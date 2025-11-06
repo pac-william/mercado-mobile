@@ -70,8 +70,7 @@ export default function OrdersScreen() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await SecureStore.getItemAsync('mercado_mobile_user') || 
-                        await SecureStore.getItemAsync('userInfo');
+        const userData = await SecureStore.getItemAsync('userInfo');
         if (userData) {
           const currentUser = JSON.parse(userData) as User;
           setUser(currentUser);

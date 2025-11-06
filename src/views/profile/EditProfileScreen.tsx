@@ -61,8 +61,7 @@ const EditProfileScreen: React.FC = () => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await SecureStore.getItemAsync('mercado_mobile_user') || 
-                        await SecureStore.getItemAsync('userInfo');
+        const userData = await SecureStore.getItemAsync('userInfo');
         if (userData) {
           const currentUser = JSON.parse(userData) as User;
           setUser(currentUser);
@@ -108,7 +107,6 @@ const EditProfileScreen: React.FC = () => {
     try {
       const response = await api.put(`/users/${user.id}`, formData);
       const updatedUser = response.data as User;
-      await SecureStore.setItemAsync('mercado_mobile_user', JSON.stringify(updatedUser));
       await SecureStore.setItemAsync('userInfo', JSON.stringify(updatedUser));
       setUser(updatedUser);
       showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', { 

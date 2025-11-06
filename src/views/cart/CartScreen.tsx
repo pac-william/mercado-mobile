@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -17,38 +16,19 @@ import CustomModal from '../../components/ui/CustomModal';
 import { useCart } from '../../contexts/CartContext';
 import { OrderCreateDTO } from "../../domain/orderDomain";
 import { useModal } from '../../hooks/useModal';
+import { useSession } from '../../hooks/useSession';
 import { createOrder } from '../../services/orderService';
-import { User } from '../../types/user';
 
 
 const CartScreen: React.FC = () => {
   const { state: cartState, removeItem, updateQuantity, clearCart } = useCart();
   const { modalState, hideModal, showWarning, showSuccess } = useModal();
+  const { session, isAuthenticated } = useSession();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();   
 
-  const [user, setUser] = useState<User | null>(null);
+  console.log('isAuthenticated', isAuthenticated);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await SecureStore.getItemAsync('mercado_mobile_user') || 
-                        await SecureStore.getItemAsync('userInfo');
-        if (userData) {
-          const currentUser = JSON.parse(userData) as User;
-          setUser(currentUser);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-      }
-    };
-    loadUser();
-  }, []);
-
-  if (!user) {
-    console.error("Usuário não autenticado!");
-    return null;
-  }
 
 
   const handleRemoveItem = (id: string, name: string) => {
@@ -100,7 +80,7 @@ const CartScreen: React.FC = () => {
             hideModal();
 
             const orderData: OrderCreateDTO = {
-              userId: user.id, 
+              userId: session?.user?.sub || "", 
               marketId: cartState.items[0]?.marketId || "",
               items: cartState.items.map((item) => ({
                 productId: item.id,

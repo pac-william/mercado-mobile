@@ -1,16 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import { SettingsStackParamList } from '../../../App';
 import { Header } from "../../components/layout/header";
 import { auth0Domain, clientId, redirectUri } from "../../config/auth0";
 import { useTheme } from "../../contexts/ThemeContext";
-import { User } from "../../types/user";
+import { useSession } from "../../hooks/useSession";
 
 type SettingsStackParamListProp = NativeStackNavigationProp<SettingsStackParamList>;
 
@@ -19,53 +18,19 @@ export default function SettingsScreen() {
     const navigation = useNavigation<SettingsStackParamListProp>();
     const { isDark, toggleTheme } = useTheme();
     const paperTheme = usePaperTheme();
+    const { user, isAuthenticated, isLoading, refreshSession, clearSession } = useSession();
     const [refreshing, setRefreshing] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<User | null>(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-    const loadUser = useCallback(async () => {
-        try {
-            setLoading(true);
-            // Verifica se há token
-            const token = await SecureStore.getItemAsync('mercado_mobile_token') || 
-                         await SecureStore.getItemAsync('authToken');
-            
-            // Busca dados do usuário
-            const userData = await SecureStore.getItemAsync('mercado_mobile_user') || 
-                           await SecureStore.getItemAsync('userInfo');
-            
-            if (token && userData) {
-                const parsedUser = JSON.parse(userData) as User;
-                setUser(parsedUser);
-                setIsAuthenticated(true);
-            } else {
-                setUser(null);
-                setIsAuthenticated(false);
-            }
-        } catch (error) {
-            console.error("Erro ao verificar autenticação:", error);
-            setUser(null);
-            setIsAuthenticated(false);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadUser();
-    }, [loadUser]);
 
     // Verificar autenticação quando a tela ganha foco
     useFocusEffect(
         useCallback(() => {
-            loadUser();
-        }, [loadUser])
+            refreshSession();
+        }, [refreshSession])
     );
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        await loadUser();
+        await refreshSession();
         setRefreshing(false);
     };
 
@@ -83,28 +48,8 @@ export default function SettingsScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            // Limpar todas as chaves do SecureStore
-                            const keysToDelete = [
-                                'authToken',
-                                'userInfo',
-                                'mercado_mobile_token',
-                                'mercado_mobile_id_token',
-                                'mercado_mobile_user'
-                            ];
-
-                            // Deletar todas as chaves em paralelo
-                            await Promise.allSettled(
-                                keysToDelete.map(key => 
-                                    SecureStore.deleteItemAsync(key).catch(err => {
-                                        // Ignora erros se a chave não existir
-                                        console.warn(`Erro ao deletar ${key}:`, err);
-                                    })
-                                )
-                            );
-
-                            // Limpar estado local
-                            setUser(null);
-                            setIsAuthenticated(false);
+                            // Limpar a sessão usando o hook
+                            await clearSession();
 
                             // Tentar fazer logout no Auth0 (opcional, pode falhar se não houver conexão)
                             try {
@@ -134,7 +79,7 @@ export default function SettingsScreen() {
                             }
 
                             // Recarregar para atualizar a UI
-                            await loadUser();
+                            await refreshSession();
                         } catch (error) {
                             console.error("Erro ao fazer logout:", error);
                             Alert.alert("Erro", "Não foi possível sair da conta.");
@@ -161,7 +106,7 @@ export default function SettingsScreen() {
                     />
                 }
             >
-                {loading ? (
+                {isLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={paperTheme.colors.primary} />
                         <Text style={[styles.loadingText, { color: paperTheme.colors.onSurface }]}>
