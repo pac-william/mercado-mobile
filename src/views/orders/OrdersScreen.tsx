@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import * as SecureStore from 'expo-secure-store';
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "../../components/layout/header";
 import { Order } from "../../domain/orderDomain";
+import { useSession } from "../../hooks/useSession";
 import { SettingsStackParamList } from "../../navigation/types";
 import { getOrders } from "../../services/orderService";
 import { User } from "../../types/user";
@@ -61,6 +61,7 @@ export default function OrdersScreen() {
   const navigation = useNavigation<OrdersScreenNavigationProp>();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
+  const { user: sessionUser } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,19 +69,10 @@ export default function OrdersScreen() {
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await SecureStore.getItemAsync('userInfo');
-        if (userData) {
-          const currentUser = JSON.parse(userData) as User;
-          setUser(currentUser);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-      }
-    };
-    loadUser();
-  }, []);
+    if (sessionUser) {
+      setUser(sessionUser);
+    }
+  }, [sessionUser]);
 
   const fetchOrders = useCallback(async () => {
     if (!user) {

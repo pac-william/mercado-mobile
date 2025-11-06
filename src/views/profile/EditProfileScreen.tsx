@@ -1,14 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as SecureStore from 'expo-secure-store';
+import { UserUpdateDTO } from 'dtos/userDTO';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme as usePaperTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SettingsStackParamList } from '../../../App';
 import CustomModal from '../../components/ui/CustomModal';
-import api from '../../services/api';
-import { User } from '../../types/user';
+import { User } from '../../domain/userDomain';
+import { getUserMe, updateUserMe } from '../../services/userService';
 
 type EditProfileScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'EditProfile'>;
 
@@ -71,19 +71,23 @@ const EditProfileScreen: React.FC = () => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await SecureStore.getItemAsync('userInfo');
-        if (userData) {
-          const currentUser = JSON.parse(userData) as User;
-          setUser(currentUser);
-          setFormData({
-            name: currentUser.name || '',
-            email: currentUser.email || '',
-            phone: currentUser.phone || '',
-            birthDate: currentUser.birthDate ? formatDateForInput(currentUser.birthDate) : '',
-          });
-        }
+        const currentUser = await getUserMe();
+        setUser(currentUser);
+        setFormData({
+          name: currentUser.name || '',
+          email: currentUser.email || '',
+          phone: currentUser.phone || '',
+          birthDate: currentUser.birthDate ? formatDateForInput(currentUser.birthDate) : '',
+        });
       } catch (error) {
         console.error('Erro ao carregar usuário:', error);
+        showModal('error', 'Erro', 'Não foi possível carregar os dados do usuário.', {
+          text: 'OK',
+          onPress: () => {
+            setModalVisible(false);
+            navigation.goBack();
+          }
+        });
       }
     };
     loadUser();
@@ -108,26 +112,20 @@ const EditProfileScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!validateForm()) return;
-    if (!user?.id) {
-      showModal('error', 'Erro', 'Usuário não encontrado.', { text: 'OK', onPress: () => setModalVisible(false) });
-      return;
-    }
 
     setIsLoading(true);
     try {
-      const updateData = {
+      const updateData: UserUpdateDTO = {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim() || undefined,
-        birthDate: formatDateForAPI(formData.birthDate),
+        birthDate: formatDateForAPI(formData.birthDate) || undefined,
       };
 
-      const response = await api.patch(`/users/${user.id}`, updateData);
-      const updatedUser = response.data as User;
-      await SecureStore.setItemAsync('userInfo', JSON.stringify(updatedUser));
+      const updatedUser = await updateUserMe(updateData);
       setUser(updatedUser);
-      showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', { 
-        text: 'OK', 
+      showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', {
+        text: 'OK',
         onPress: () => {
           setModalVisible(false);
           navigation.goBack();
@@ -275,7 +273,7 @@ const EditProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -316,7 +314,7 @@ const EditProfileScreen: React.FC = () => {
           <TextInput
             style={[
               styles.input,
-              { 
+              {
                 backgroundColor: paperTheme.colors.surface,
                 color: paperTheme.colors.onSurface,
                 borderColor: errors.name ? paperTheme.colors.error : paperTheme.colors.outline,
@@ -335,7 +333,7 @@ const EditProfileScreen: React.FC = () => {
           <TextInput
             style={[
               styles.input,
-              { 
+              {
                 backgroundColor: paperTheme.colors.surface,
                 color: paperTheme.colors.onSurface,
                 borderColor: errors.email ? paperTheme.colors.error : paperTheme.colors.outline,
@@ -356,7 +354,7 @@ const EditProfileScreen: React.FC = () => {
           <TextInput
             style={[
               styles.input,
-              { 
+              {
                 backgroundColor: paperTheme.colors.surface,
                 color: paperTheme.colors.onSurface,
                 borderColor: paperTheme.colors.outline,
@@ -375,7 +373,7 @@ const EditProfileScreen: React.FC = () => {
           <TextInput
             style={[
               styles.input,
-              { 
+              {
                 backgroundColor: paperTheme.colors.surface,
                 color: paperTheme.colors.onSurface,
                 borderColor: paperTheme.colors.outline,

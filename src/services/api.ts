@@ -17,10 +17,13 @@ api.interceptors.request.use(
       // Busca o session e extrai o idToken
       const sessionString = await SecureStore.getItemAsync('session');
 
+
       if (sessionString) {
         try {
           const session = JSON.parse(sessionString) as Session;
           const idToken = session.tokenSet?.idToken;
+
+          console.log('idToken', idToken);
 
           if (idToken && !config.headers.Authorization) {
             config.headers.Authorization = `Bearer ${idToken}`;

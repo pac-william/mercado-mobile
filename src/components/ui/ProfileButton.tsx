@@ -11,7 +11,6 @@ import { HomeStackParamList } from "../../../App";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import api from "../../services/api";
 import { Session, SessionUser } from "../../types/session";
-import { User } from "../../types/user";
 
 interface ProfileButtonProps {
   buttonStyle?: any;
@@ -36,7 +35,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
   );
 
   const [token, setToken] = useState<string | null>(null);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const processedCodesRef = useRef<Set<string>>(new Set());
 
   const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
@@ -44,9 +43,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       const auth0Id = auth0User.sub;
       
       try {
-        const response = await api.get(`/users/auth0/${auth0Id}`);
-        const backendUser = response.data as User;
-        await SecureStore.setItemAsync('userInfo', JSON.stringify(backendUser));
+        await api.get(`/users/auth0/${auth0Id}`);
       } catch (error: any) {
         if (error.response?.status === 500 || error.response?.status === 404) {
           const createData = {
@@ -56,9 +53,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
             profilePicture: auth0User.picture || undefined,
           };
 
-          const createResponse = await api.post('/users', createData);
-          const newUser = createResponse.data as User;
-          await SecureStore.setItemAsync('userInfo', JSON.stringify(newUser));
+          await api.post('/users', createData);
         } else {
           console.error('Error fetching/creating user:', error);
         }
@@ -77,7 +72,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       });
 
       const userData = response.data as SessionUser;
-      setUserInfo(userData);
 
       if (sessionData) {
         const updatedSession: Session = {
@@ -85,6 +79,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
           user: userData,
         } as Session;
         await SecureStore.setItemAsync('session', JSON.stringify(updatedSession));
+        setSessionUser(userData);
       }
 
       if (userData.sub) {
@@ -116,7 +111,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     if (idToken) {
       setToken(idToken);
       if (user) {
-        setUserInfo(user);
+        setSessionUser(user);
       } else {
         const tokenToUse = accessToken || idToken;
         if (tokenToUse) {
@@ -125,7 +120,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       }
     } else {
       setToken(null);
-      setUserInfo(null);
+      setSessionUser(null);
     }
   }, [fetchUserInfo]);
 
@@ -307,11 +302,11 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       onPress={handlePress}
       disabled={!request}
     >
-      {token && userInfo ? (
+      {token && sessionUser ? (
         <View style={[styles.userAvatar, { backgroundColor: paperTheme.colors.primary }]}>
-          {userInfo.picture ? <Image source={{ uri: userInfo.picture }} style={styles.userAvatar} /> : (
+          {sessionUser.picture ? <Image source={{ uri: sessionUser.picture }} style={styles.userAvatar} /> : (
             <Text style={styles.userAvatarText}>
-              {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
+              {sessionUser.name ? sessionUser.name.charAt(0).toUpperCase() : 'U'}
             </Text>
           )}
         </View>
