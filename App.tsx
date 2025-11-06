@@ -1,5 +1,6 @@
 import React from "react";
 import "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { CartProvider } from './src/contexts/CartContext';
 import { OnboardingProvider } from './src/contexts/OnboardingContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
@@ -23,18 +24,20 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  if (showInitial) {
-    return <InitialLoadingScreen />;
-  }
-
   return (
-    <ThemeProvider>
-      <OnboardingProvider>
-        <CartProvider>
-          <RootNavigator />
-        </CartProvider>
-      </OnboardingProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      {showInitial ? (
+        <InitialLoadingScreen />
+      ) : (
+        <ThemeProvider>
+          <OnboardingProvider>
+            <CartProvider>
+              <RootNavigator />
+            </CartProvider>
+          </OnboardingProvider>
+        </ThemeProvider>
+      )}
+    </SafeAreaProvider>
   );
 };
 
