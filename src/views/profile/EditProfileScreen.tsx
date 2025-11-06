@@ -43,6 +43,16 @@ const EditProfileScreen: React.FC = () => {
     return `${day}/${month}/${year}`;
   };
 
+  const formatDateForAPI = (dateString: string): string | undefined => {
+    if (!dateString || !dateString.trim()) return undefined;
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      return `${year}-${month}-${day}`;
+    }
+    return undefined;
+  };
+
   const showModal = (
     type: 'success' | 'error' | 'warning' | 'info',
     title: string,
@@ -105,7 +115,14 @@ const EditProfileScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await api.put(`/users/${user.id}`, formData);
+      const updateData = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
+        birthDate: formatDateForAPI(formData.birthDate),
+      };
+
+      const response = await api.patch(`/users/${user.id}`, updateData);
       const updatedUser = response.data as User;
       await SecureStore.setItemAsync('userInfo', JSON.stringify(updatedUser));
       setUser(updatedUser);
@@ -116,8 +133,9 @@ const EditProfileScreen: React.FC = () => {
           navigation.goBack();
         }
       });
-    } catch (error) {
-      showModal('error', 'Erro', 'Não foi possível atualizar o perfil.', { text: 'OK', onPress: () => setModalVisible(false) });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Não foi possível atualizar o perfil.';
+      showModal('error', 'Erro', errorMessage, { text: 'OK', onPress: () => setModalVisible(false) });
     } finally {
       setIsLoading(false);
     }

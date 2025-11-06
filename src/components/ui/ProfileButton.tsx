@@ -4,12 +4,14 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import axios from "axios";
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import { HomeStackParamList } from "../../../App";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
+import api from "../../services/api";
 import { Session, SessionUser } from "../../types/session";
+import { User } from "../../types/user";
 
 interface ProfileButtonProps {
   buttonStyle?: any;
@@ -35,9 +37,37 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
   const [token, setToken] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
+  const processedCodesRef = useRef<Set<string>>(new Set());
 
+  const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
+    try {
+      const auth0Id = auth0User.sub;
+      
+      try {
+        const response = await api.get(`/users/auth0/${auth0Id}`);
+        const backendUser = response.data as User;
+        await SecureStore.setItemAsync('userInfo', JSON.stringify(backendUser));
+      } catch (error: any) {
+        if (error.response?.status === 500 || error.response?.status === 404) {
+          const createData = {
+            name: auth0User.name || auth0User.email || '',
+            email: auth0User.email,
+            auth0Id: auth0Id,
+            profilePicture: auth0User.picture || undefined,
+          };
 
-  // Função para buscar informações do usuário e atualizar a sessão
+          const createResponse = await api.post('/users', createData);
+          const newUser = createResponse.data as User;
+          await SecureStore.setItemAsync('userInfo', JSON.stringify(newUser));
+        } else {
+          console.error('Error fetching/creating user:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in fetchOrCreateUser:', error);
+    }
+  }, []);
+
   const fetchUserInfo = useCallback(async (accessToken: string, sessionData?: Partial<Session>) => {
     try {
       const response = await axios.get(`https://${auth0Domain}/userinfo`, {
@@ -49,7 +79,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       const userData = response.data as SessionUser;
       setUserInfo(userData);
 
-      // Se já temos uma sessão parcial, atualiza com os dados do usuário
       if (sessionData) {
         const updatedSession: Session = {
           ...sessionData,
@@ -57,12 +86,15 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
         } as Session;
         await SecureStore.setItemAsync('session', JSON.stringify(updatedSession));
       }
+
+      if (userData.sub) {
+        await fetchOrCreateUser(userData);
+      }
     } catch (error) {
       console.error('Error fetching user info:', error);
     }
-  }, []);
+  }, [fetchOrCreateUser]);
 
-  // Função para carregar token e informações do usuário
   const loadToken = useCallback(async () => {
     const sessionString = await SecureStore.getItemAsync('session');
 
@@ -86,72 +118,71 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       if (user) {
         setUserInfo(user);
       } else {
-        // Buscar informações do usuário se não estiverem salvas
-        // Usa access_token do session se disponível, senão usa o id_token
         const tokenToUse = accessToken || idToken;
         if (tokenToUse) {
           await fetchUserInfo(tokenToUse);
         }
       }
     } else {
-      // Se não há token, limpa o estado e a sessão
       setToken(null);
       setUserInfo(null);
-      // Não chamar clearSession aqui para evitar loops - será detectado pelo hook useSession
     }
   }, [fetchUserInfo]);
 
-  // Carregar token salvo ao iniciar o app
   useEffect(() => {
     loadToken();
   }, [loadToken]);
 
-  // Verificar autenticação quando a tela ganha foco (para detectar logout)
   useFocusEffect(
     useCallback(() => {
       loadToken();
     }, [loadToken])
   );
 
-  // Listener de navegação para detectar mudanças (incluindo após logout)
   useEffect(() => {
     const unsubscribe = navigation.addListener('state', () => {
-      // Verificar autenticação quando há mudanças na navegação
       loadToken();
     });
 
     return unsubscribe;
   }, [navigation, loadToken]);
 
-  // Manipular resposta do login
   useEffect(() => {
-    if (response?.type === 'success') {
+    if (response?.type === 'success' && 'params' in response && response.params && 'code' in response.params) {
+      const code = (response.params as any).code;
+      
+      if (processedCodesRef.current.has(code)) {
+        return;
+      }
+
+      processedCodesRef.current.add(code);
+
       const fetchToken = async () => {
         try {
-          const authResponse = response;
-          const tokenResponse = await axios.post(`https://${auth0Domain}/oauth/token`, {
-            grant_type: 'authorization_code',
-            client_id: clientId,
-            code: authResponse.params.code,
-            redirect_uri: redirectUri,
-            code_verifier: request?.codeVerifier,
-          }, {
-            headers: { 'Content-Type': 'application/json' },
-          });
+          const tokenResponse = await axios.post(
+            `https://${auth0Domain}/oauth/token`,
+            new URLSearchParams({
+              grant_type: 'authorization_code',
+              client_id: clientId,
+              code: code,
+              redirect_uri: redirectUri,
+              code_verifier: request?.codeVerifier || '',
+            }).toString(),
+            {
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            }
+          );
 
           const data = tokenResponse.data;
 
-          if (data.id_token) {
-            setToken(data.id_token);
-
-            // Construir a estrutura de sessão
+          if (data.id_token && data.access_token) {
             const now = Math.floor(Date.now() / 1000);
             const expiresAt = data.expires_in ? now + data.expires_in : now + 3600;
             const sid = data.id_token ? data.id_token.substring(0, 32) : `sid_${now}`;
 
             const session: Partial<Session> = {
               tokenSet: {
-                accessToken: data.access_token || '',
+                accessToken: data.access_token,
                 idToken: data.id_token,
                 scope: data.scope || 'openid profile email offline_access',
                 requestedScope: data.scope || 'openid profile email offline_access',
@@ -165,15 +196,12 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
               exp: expiresAt,
             };
 
-            // Salvar sessão parcial primeiro
             await SecureStore.setItemAsync('session', JSON.stringify(session));
 
-            // Usa access_token para buscar userInfo (Auth0 requer access_token para /userinfo)
-            if (data.access_token) {
-              await fetchUserInfo(data.access_token, session);
-            }
+            await fetchUserInfo(data.access_token, session);
+            setToken(data.id_token);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error fetching token:', error);
         }
       };
@@ -193,7 +221,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
         currentToken = session.tokenSet?.idToken || null;
         currentUser = session.user || null;
       } catch (error) {
-        // Erro ao parsear session
       }
     }
 
@@ -215,30 +242,37 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
         if (result?.type === 'success' && 'params' in result && result.params && 'code' in result.params) {
           const code = (result.params as any).code;
 
+          if (processedCodesRef.current.has(code)) {
+            return;
+          }
+
+          processedCodesRef.current.add(code);
+
           try {
-            const tokenResponse = await axios.post(`https://${auth0Domain}/oauth/token`, {
-              grant_type: 'authorization_code',
-              client_id: clientId,
-              code: code,
-              redirect_uri: redirectUri,
-              code_verifier: request?.codeVerifier,
-            }, {
-              headers: { 'Content-Type': 'application/json' },
-            });
+            const tokenResponse = await axios.post(
+              `https://${auth0Domain}/oauth/token`,
+              new URLSearchParams({
+                grant_type: 'authorization_code',
+                client_id: clientId,
+                code: code,
+                redirect_uri: redirectUri,
+                code_verifier: request?.codeVerifier || '',
+              }).toString(),
+              {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              }
+            );
 
             const data = tokenResponse.data;
 
-            if (data.id_token) {
-              setToken(data.id_token);
-
-              // Construir a estrutura de sessão
+            if (data.id_token && data.access_token) {
               const now = Math.floor(Date.now() / 1000);
               const expiresAt = data.expires_in ? now + data.expires_in : now + 3600;
               const sid = data.id_token ? data.id_token.substring(0, 32) : `sid_${now}`;
 
               const session: Partial<Session> = {
                 tokenSet: {
-                  accessToken: data.access_token || '',
+                  accessToken: data.access_token,
                   idToken: data.id_token,
                   scope: data.scope || 'openid profile email offline_access',
                   requestedScope: data.scope || 'openid profile email offline_access',
@@ -252,15 +286,12 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
                 exp: expiresAt,
               };
 
-              // Salvar sessão parcial primeiro
               await SecureStore.setItemAsync('session', JSON.stringify(session));
 
-              // Usa access_token para buscar userInfo (Auth0 requer access_token para /userinfo)
-              if (data.access_token) {
-                await fetchUserInfo(data.access_token, session);
-              }
+              await fetchUserInfo(data.access_token, session);
+              setToken(data.id_token);
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error fetching token:', error);
           }
         }
