@@ -26,6 +26,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       responseType: AuthSession.ResponseType.Code,
       redirectUri: redirectUri,
       usePKCE: true,
+      extraParams: {
+        prompt: 'login',
+      },
     },
     discovery
   );
