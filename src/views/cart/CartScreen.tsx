@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -17,17 +18,73 @@ import { useCart } from '../../contexts/CartContext';
 import { OrderCreateDTO } from "../../domain/orderDomain";
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
+import { getCart, mapCartItemResponseToCartItem } from '../../services/cartService';
+import { getMarketById } from '../../services/marketService';
 import { createOrder } from '../../services/orderService';
 
 
 const CartScreen: React.FC = () => {
-  const { state: cartState, removeItem, updateQuantity, clearCart } = useCart();
+  const { state: cartState, removeItem, updateQuantity, clearCart, addItem } = useCart();
   const { modalState, hideModal, showWarning, showSuccess } = useModal();
-  const { session, isAuthenticated } = useSession();
+  const { user, isAuthenticated, isLoading: sessionLoading } = useSession();
   const paperTheme = useTheme();
-  const insets = useSafeAreaInsets();   
+  const insets = useSafeAreaInsets();
+  const [loading, setLoading] = useState(true);
 
-  console.log('isAuthenticated', isAuthenticated);
+  const loadCart = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const cartResponse = await getCart();
+      
+      // Limpa o carrinho local primeiro
+      clearCart();
+      
+      // Função auxiliar para buscar nome do mercado
+      const getMarketName = async (marketId: string): Promise<string> => {
+        try {
+          const market = await getMarketById(marketId);
+          return market.name;
+        } catch (error) {
+          console.warn(`Erro ao buscar mercado ${marketId}:`, error);
+          return "Mercado";
+        }
+      };
+      
+      // Adiciona os itens do carrinho da API ao contexto
+      for (const item of cartResponse.items) {
+        const cartItem = await mapCartItemResponseToCartItem(item, getMarketName);
+        // Adiciona o item uma vez (o contexto inicializa com quantidade 1)
+        addItem({
+          id: cartItem.id,
+          name: cartItem.name,
+          price: cartItem.price,
+          image: cartItem.image,
+          marketName: cartItem.marketName,
+          marketId: cartItem.marketId,
+        });
+        // Atualiza a quantidade para o valor correto da API
+        if (item.quantity !== 1) {
+          updateQuantity(cartItem.id, item.quantity);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar carrinho:', error);
+      // Se der erro, continua com o carrinho local
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, clearCart, addItem, updateQuantity]);
+
+  useEffect(() => {
+    if (!sessionLoading) {
+      loadCart();
+    }
+  }, [sessionLoading, isAuthenticated, loadCart]);
 
 
 
@@ -80,7 +137,7 @@ const CartScreen: React.FC = () => {
             hideModal();
 
             const orderData: OrderCreateDTO = {
-              userId: session?.user?.sub || "", 
+              userId: user?.sub || "", 
               marketId: cartState.items[0]?.marketId || "",
               items: cartState.items.map((item) => ({
                 productId: item.id,
@@ -121,6 +178,29 @@ const CartScreen: React.FC = () => {
       }
     );
   };
+
+  if (loading || sessionLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
+        <Header />
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+          <Text style={{
+            marginTop: 16,
+            fontSize: 16,
+            color: paperTheme.colors.onSurface,
+            opacity: 0.7
+          }}>
+            Carregando carrinho...
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   if (cartState.items.length === 0) {
     return (
