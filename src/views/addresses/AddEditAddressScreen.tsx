@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +16,7 @@ import {
 } from 'react-native';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
+import { formatCEP, searchAddressByCEP, validateCEP } from '../../services/cepService';
 import { Address, createAddress, getAddressById, updateAddress } from '../../services/addressService';
 
 type AddEditAddressScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -40,7 +43,10 @@ export default function AddEditAddressScreen() {
     isFavorite: false,
   });
   const [loading, setLoading] = useState(false);
+  const [loadingCEP, setLoadingCEP] = useState(false);
+  const [cepError, setCepError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const cepTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (addressId) {
@@ -48,7 +54,6 @@ export default function AddEditAddressScreen() {
       const loadAddress = async () => {
         try {
           const addressData = await getAddressById(addressId);
-          // Converter null para undefined para compatibilidade de tipos
           const addressWithFixedTypes = {
             ...addressData,
             complement: addressData.complement ?? undefined
@@ -72,6 +77,12 @@ export default function AddEditAddressScreen() {
       };
       loadAddress();
     }
+
+    return () => {
+      if (cepTimeoutRef.current) {
+        clearTimeout(cepTimeoutRef.current);
+      }
+    };
   }, [addressId]);
 
   const handleSave = async () => {
@@ -79,16 +90,28 @@ export default function AddEditAddressScreen() {
 
     setLoading(true);
     try {
+      const addressData = prepareAddressData();
+
       if (isEditing && addressId) {
-        await updateAddress(addressId, formData);
+        await updateAddress(addressId, addressData);
         Alert.alert('Sucesso', 'Endereço atualizado com sucesso!');
       } else {
-        await createAddress(formData);
+        await createAddress(addressData);
         Alert.alert('Sucesso', 'Endereço adicionado com sucesso!');
       }
       navigation.goBack();
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível salvar o endereço.');
+    } catch (error: any) {
+      let errorMessage = 'Não foi possível salvar o endereço.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+
+      Alert.alert('Erro', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -123,14 +146,83 @@ export default function AddEditAddressScreen() {
       Alert.alert('Erro', 'CEP é obrigatório');
       return false;
     }
+    if (!validateCEP(formData.zipCode)) {
+      Alert.alert('Erro', 'CEP deve ter formato válido (00000-000)');
+      return false;
+    }
     return true;
+  };
+
+  const handleCEPChange = (text: string) => {
+    const formatted = formatCEP(text);
+    setFormData({ ...formData, zipCode: formatted });
+    setCepError(null);
+
+    if (cepTimeoutRef.current) {
+      clearTimeout(cepTimeoutRef.current);
+    }
+
+    const cleanZipCode = formatted.replace(/\D/g, '');
+    
+    if (cleanZipCode.length === 8) {
+      cepTimeoutRef.current = setTimeout(async () => {
+        setLoadingCEP(true);
+        setCepError(null);
+        
+        try {
+          const cepData = await searchAddressByCEP(formatted);
+          
+          setFormData(prev => ({
+            ...prev,
+            street: prev.street.trim() ? prev.street : (cepData.street || ''),
+            neighborhood: prev.neighborhood.trim() ? prev.neighborhood : (cepData.neighborhood || ''),
+            city: prev.city.trim() ? prev.city : (cepData.city || ''),
+            state: prev.state.trim() ? prev.state : (cepData.state || ''),
+            complement: (prev.complement && prev.complement.trim()) ? prev.complement : (cepData.complement || ''),
+          }));
+        } catch (error: any) {
+          setCepError(error.message || 'CEP não encontrado');
+        } finally {
+          setLoadingCEP(false);
+        }
+      }, 500);
+    }
+  };
+
+  const prepareAddressData = () => {
+    const cleanZipCode = formData.zipCode.replace(/\D/g, '');
+    const formattedZipCode = cleanZipCode.length === 8 
+      ? `${cleanZipCode.slice(0, 5)}-${cleanZipCode.slice(5)}`
+      : formData.zipCode;
+
+    return {
+      name: formData.name.trim(),
+      street: formData.street.trim(),
+      number: formData.number.trim(),
+      complement: formData.complement.trim() || undefined,
+      neighborhood: formData.neighborhood.trim(),
+      city: formData.city.trim(),
+      state: formData.state.trim().toUpperCase(),
+      zipCode: formattedZipCode,
+      isFavorite: formData.isFavorite,
+    };
   };
 
   return (
     <View style={styles.container}>
       <Header />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View style={styles.header}>
           <Text style={styles.title}>
             {isEditing ? 'Editar Endereço' : 'Novo Endereço'}
@@ -153,13 +245,24 @@ export default function AddEditAddressScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>CEP *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.zipCode}
-              onChangeText={(text) => setFormData({ ...formData, zipCode: text })}
-              placeholder="00000-000"
-              keyboardType="numeric"
-            />
+            <View style={styles.cepContainer}>
+              <TextInput
+                style={[styles.input, cepError && styles.inputError]}
+                value={formData.zipCode}
+                onChangeText={handleCEPChange}
+                placeholder="00000-000"
+                keyboardType="numeric"
+                maxLength={9}
+              />
+              {loadingCEP && (
+                <View style={styles.cepLoading}>
+                  <ActivityIndicator size="small" color="#2E7D32" />
+                </View>
+              )}
+            </View>
+            {cepError && (
+              <Text style={styles.errorText}>{cepError}</Text>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
@@ -261,7 +364,8 @@ export default function AddEditAddressScreen() {
             )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -271,8 +375,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
   },
   header: {
     paddingHorizontal: 16,
@@ -308,6 +418,22 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     backgroundColor: 'white',
+  },
+  inputError: {
+    borderColor: '#d32f2f',
+  },
+  cepContainer: {
+    position: 'relative',
+  },
+  cepLoading: {
+    position: 'absolute',
+    right: 16,
+    top: 12,
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 14,
+    marginTop: 4,
   },
   favoriteToggle: {
     flexDirection: 'row',
