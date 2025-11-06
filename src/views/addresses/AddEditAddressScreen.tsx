@@ -25,7 +25,7 @@ interface RouteParams {
 export default function AddEditAddressScreen() {
   const navigation = useNavigation<AddEditAddressScreenNavigationProp>();
   const route = useRoute();
-  const { addressId } = route.params as RouteParams;
+  const { addressId } = (route.params as RouteParams) || {};
   const [address, setAddress] = useState<Address | null>(null);
 
   const [formData, setFormData] = useState({
