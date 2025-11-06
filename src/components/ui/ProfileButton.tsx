@@ -24,6 +24,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       responseType: AuthSession.ResponseType.Code,
       redirectUri: redirectUri,
       usePKCE: true,
+      extraParams: {
+        prompt: 'login',
+      },
     },
     discovery
   );
@@ -148,7 +151,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
         parentNav.navigate('SettingsStack' as never);
       }
     } else {
-      promptAsync();
+      promptAsync({ showInRecents: true });
     }
   };
 
