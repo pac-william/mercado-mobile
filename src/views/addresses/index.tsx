@@ -1,24 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
+import { useSession } from '../../hooks/useSession';
 import { Address, getUserAddresses } from '../../services/addressService';
 
 type AddressesScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function AddressesScreen() {
   const navigation = useNavigation<AddressesScreenNavigationProp>();
+  const { user, refreshSession } = useSession();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadAddresses();
-  }, []);
-
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     try {
       const response = await getUserAddresses(1, 100);
       // Converter null para undefined para compatibilidade de tipos
@@ -30,10 +28,15 @@ export default function AddressesScreen() {
     } catch (error) {
       console.error('Erro ao carregar endereços:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAddresses();
+  }, [loadAddresses]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    await refreshSession();
     await loadAddresses();
     setRefreshing(false);
   };
@@ -70,6 +73,7 @@ export default function AddressesScreen() {
     </TouchableOpacity>
   );
 
+  // Mostra mensagem se não estiver autenticado
   return (
     <View style={styles.container}>
       <Header />
@@ -77,7 +81,9 @@ export default function AddressesScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Meus Endereços</Text>
-          <Text style={styles.subtitle}>Gerencie seus endereços de entrega</Text>
+          <Text style={styles.subtitle}>
+            {user ? `Olá, ${user.name.split(' ')[0]}! ` : ''}Gerencie seus endereços de entrega
+          </Text>
         </View>
 
         {addresses.length > 0 ? (
@@ -180,6 +186,16 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   },
   floatingButton: {
     position: 'absolute',

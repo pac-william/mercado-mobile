@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as SecureStore from 'expo-secure-store';
+import { Session } from "../types/session";
 import { apiBaseUrl } from "../utils/server";
 
 const api = axios.create({
@@ -13,23 +14,23 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      // Busca ID token primeiro (se disponível)
-      let token = await SecureStore.getItemAsync('mercado_mobile_id_token');
+      // Busca o session e extrai o idToken
+      const sessionString = await SecureStore.getItemAsync('session');
 
-      // Se não tiver ID token, busca o token normal
-      if (!token) {
-        token = await SecureStore.getItemAsync('mercado_mobile_token');
-      }
+      if (sessionString) {
+        try {
+          const session = JSON.parse(sessionString) as Session;
+          const idToken = session.tokenSet?.idToken;
 
-      // Se ainda não tiver, tenta buscar do authToken (compatibilidade com ProfileButton)
-      if (!token) {
-        token = await SecureStore.getItemAsync('authToken');
-      }
-
-      if (token && !config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${token}`;
+          if (idToken && !config.headers.Authorization) {
+            config.headers.Authorization = `Bearer ${idToken}`;
+          }
+        } catch (parseError) {
+          // Erro ao fazer parse do session
+        }
       }
     } catch (error) {
+      // Erro ao buscar session
     }
 
     return config;
