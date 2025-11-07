@@ -1,15 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import axios from "axios";
+import * as AuthSession from 'expo-auth-session';
+import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import { SettingsStackParamList } from '../../../App';
 import { Header } from "../../components/layout/header";
-import { auth0Domain, clientId, redirectUri } from "../../config/auth0";
+import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useSession } from "../../hooks/useSession";
+import api from "../../services/api";
+import { Session, SessionUser } from "../../types/session";
 
 type SettingsStackParamListProp = NativeStackNavigationProp<SettingsStackParamList>;
 
@@ -20,6 +25,129 @@ export default function SettingsScreen() {
     const paperTheme = usePaperTheme();
     const { user, isAuthenticated, isLoading, refreshSession, clearSession } = useSession();
     const [refreshing, setRefreshing] = useState(false);
+
+    const [request, response, promptAsync] = AuthSession.useAuthRequest(
+        {
+            clientId: clientId,
+            scopes: ['openid', 'profile', 'email', 'offline_access'],
+            responseType: AuthSession.ResponseType.Code,
+            redirectUri: redirectUri,
+            usePKCE: true,
+            extraParams: {
+                prompt: 'login',
+            },
+        },
+        discovery
+    );
+
+    const processedCodesRef = useRef<Set<string>>(new Set());
+
+    const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
+        try {
+            const auth0Id = auth0User.sub;
+            
+            try {
+                await api.get(`/users/auth0/${auth0Id}`);
+            } catch (error: any) {
+                if (error.response?.status === 500 || error.response?.status === 404) {
+                    const createData = {
+                        name: auth0User.name || auth0User.email || '',
+                        email: auth0User.email,
+                        auth0Id: auth0Id,
+                        profilePicture: auth0User.picture || undefined,
+                    };
+
+                    await api.post('/users', createData);
+                }
+            }
+        } catch (error) {
+        }
+    }, []);
+
+    const fetchUserInfo = useCallback(async (accessToken: string, sessionData?: Partial<Session>) => {
+        try {
+            const response = await axios.get(`https://${auth0Domain}/userinfo`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+
+            const userData = response.data as SessionUser;
+
+            if (userData.sub) {
+                await fetchOrCreateUser(userData);
+            }
+
+            if (sessionData) {
+                const updatedSession: Session = {
+                    ...sessionData,
+                    user: userData,
+                } as Session;
+                await SecureStore.setItemAsync('session', JSON.stringify(updatedSession));
+            }
+        } catch (error) {
+        }
+    }, [fetchOrCreateUser]);
+
+    useEffect(() => {
+        if (response?.type === 'success' && 'params' in response && response.params && 'code' in response.params) {
+            const code = (response.params as any).code;
+            
+            if (processedCodesRef.current.has(code)) {
+                return;
+            }
+
+            processedCodesRef.current.add(code);
+
+            const fetchToken = async () => {
+                try {
+                    const tokenResponse = await axios.post(
+                        `https://${auth0Domain}/oauth/token`,
+                        new URLSearchParams({
+                            grant_type: 'authorization_code',
+                            client_id: clientId,
+                            code: code,
+                            redirect_uri: redirectUri,
+                            code_verifier: request?.codeVerifier || '',
+                        }).toString(),
+                        {
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        }
+                    );
+
+                    const data = tokenResponse.data;
+
+                    if (data.id_token && data.access_token) {
+                        const now = Math.floor(Date.now() / 1000);
+                        const expiresAt = data.expires_in ? now + data.expires_in : now + 3600;
+                        const sid = data.id_token ? data.id_token.substring(0, 32) : `sid_${now}`;
+
+                        const session: Partial<Session> = {
+                            tokenSet: {
+                                accessToken: data.access_token,
+                                idToken: data.id_token,
+                                scope: data.scope || 'openid profile email offline_access',
+                                requestedScope: data.scope || 'openid profile email offline_access',
+                                refreshToken: data.refresh_token || '',
+                                expiresAt: expiresAt,
+                            },
+                            internal: {
+                                sid: sid,
+                                createdAt: now,
+                            },
+                            exp: expiresAt,
+                        };
+
+                        await fetchUserInfo(data.access_token, session);
+                        await refreshSession();
+                    }
+                } catch (error) {
+                }
+            };
+
+            fetchToken();
+        }
+    }, [response, request?.codeVerifier, fetchUserInfo, refreshSession]);
 
     // Verificar autenticação quando a tela ganha foco
     useFocusEffect(
@@ -32,6 +160,71 @@ export default function SettingsScreen() {
         setRefreshing(true);
         await refreshSession();
         setRefreshing(false);
+    };
+
+    const handleLogin = async () => {
+        if (!request) {
+            return;
+        }
+
+        try {
+            const result = await promptAsync();
+
+            if (result?.type === 'success' && 'params' in result && result.params && 'code' in result.params) {
+                const code = (result.params as any).code;
+
+                if (processedCodesRef.current.has(code)) {
+                    return;
+                }
+
+                processedCodesRef.current.add(code);
+
+                try {
+                    const tokenResponse = await axios.post(
+                        `https://${auth0Domain}/oauth/token`,
+                        new URLSearchParams({
+                            grant_type: 'authorization_code',
+                            client_id: clientId,
+                            code: code,
+                            redirect_uri: redirectUri,
+                            code_verifier: request?.codeVerifier || '',
+                        }).toString(),
+                        {
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        }
+                    );
+
+                    const data = tokenResponse.data;
+
+                    if (data.id_token && data.access_token) {
+                        const now = Math.floor(Date.now() / 1000);
+                        const expiresAt = data.expires_in ? now + data.expires_in : now + 3600;
+                        const sid = data.id_token ? data.id_token.substring(0, 32) : `sid_${now}`;
+
+                        const session: Partial<Session> = {
+                            tokenSet: {
+                                accessToken: data.access_token,
+                                idToken: data.id_token,
+                                scope: data.scope || 'openid profile email offline_access',
+                                requestedScope: data.scope || 'openid profile email offline_access',
+                                refreshToken: data.refresh_token || '',
+                                expiresAt: expiresAt,
+                            },
+                            internal: {
+                                sid: sid,
+                                createdAt: now,
+                            },
+                            exp: expiresAt,
+                        };
+
+                        await fetchUserInfo(data.access_token, session);
+                        await refreshSession();
+                    }
+                } catch (error) {
+                }
+            }
+        } catch (error) {
+        }
     };
 
     const handleLogout = () => {
@@ -211,6 +404,14 @@ export default function SettingsScreen() {
                         <Text style={[styles.notLoggedInText, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
                             Faça login para acessar suas configurações e aproveitar todos os recursos do app.
                         </Text>
+                        <TouchableOpacity
+                            style={[styles.loginButton, { backgroundColor: paperTheme.colors.primary }]}
+                            onPress={handleLogin}
+                            disabled={!request}
+                        >
+                            <Ionicons name="log-in-outline" size={24} color="white" />
+                            <Text style={styles.loginButtonText}>Fazer login</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
             </ScrollView>
@@ -327,6 +528,27 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: "center",
         lineHeight: 20,
+        marginBottom: 24,
+    },
+    loginButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 14,
+        paddingHorizontal: 32,
+        borderRadius: 12,
+        marginTop: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    loginButtonText: {
+        color: "white",
+        fontSize: 16,
+        fontWeight: "bold",
+        marginLeft: 8,
     },
     loadingContainer: {
         flex: 1,

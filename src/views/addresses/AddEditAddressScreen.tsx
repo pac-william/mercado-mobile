@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useTheme as usePaperTheme } from 'react-native-paper';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import { formatCEP, searchAddressByCEP, validateCEP } from '../../services/cepService';
@@ -27,6 +28,7 @@ interface RouteParams {
 
 export default function AddEditAddressScreen() {
   const navigation = useNavigation<AddEditAddressScreenNavigationProp>();
+  const paperTheme = usePaperTheme();
   const route = useRoute();
   const { addressId } = (route.params as RouteParams) || {};
   const [address, setAddress] = useState<Address | null>(null);
@@ -209,7 +211,7 @@ export default function AddEditAddressScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
 
       <KeyboardAvoidingView
@@ -224,39 +226,49 @@ export default function AddEditAddressScreen() {
           keyboardShouldPersistTaps="handled"
         >
         <View style={styles.header}>
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>
             {isEditing ? 'Editar Endereço' : 'Novo Endereço'}
           </Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
             {isEditing ? 'Atualize as informações do endereço' : 'Adicione um novo endereço de entrega'}
           </Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nome do Endereço *</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Nome do Endereço *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: paperTheme.colors.surface,
+                borderColor: paperTheme.colors.outline,
+                color: paperTheme.colors.onSurface
+              }]}
               value={formData.name}
               onChangeText={(text) => setFormData({ ...formData, name: text })}
               placeholder="Ex: Casa, Trabalho, etc."
+              placeholderTextColor={paperTheme.colors.onSurface + '80'}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>CEP *</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>CEP *</Text>
             <View style={styles.cepContainer}>
               <TextInput
-                style={[styles.input, cepError && styles.inputError]}
+                style={[styles.input, cepError && styles.inputError, { 
+                  backgroundColor: paperTheme.colors.surface,
+                  borderColor: cepError ? '#d32f2f' : paperTheme.colors.outline,
+                  color: paperTheme.colors.onSurface
+                }]}
                 value={formData.zipCode}
                 onChangeText={handleCEPChange}
                 placeholder="00000-000"
+                placeholderTextColor={paperTheme.colors.onSurface + '80'}
                 keyboardType="numeric"
                 maxLength={9}
               />
               {loadingCEP && (
                 <View style={styles.cepLoading}>
-                  <ActivityIndicator size="small" color="#2E7D32" />
+                  <ActivityIndicator size="small" color={paperTheme.colors.primary} />
                 </View>
               )}
             </View>
@@ -266,78 +278,113 @@ export default function AddEditAddressScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Rua *</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Rua *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: paperTheme.colors.surface,
+                borderColor: paperTheme.colors.outline,
+                color: paperTheme.colors.onSurface
+              }]}
               value={formData.street}
               onChangeText={(text) => setFormData({ ...formData, street: text })}
               placeholder="Nome da rua"
+              placeholderTextColor={paperTheme.colors.onSurface + '80'}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Número *</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Número *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: paperTheme.colors.surface,
+                borderColor: paperTheme.colors.outline,
+                color: paperTheme.colors.onSurface
+              }]}
               value={formData.number}
               onChangeText={(text) => setFormData({ ...formData, number: text })}
               placeholder="Número"
+              placeholderTextColor={paperTheme.colors.onSurface + '80'}
               keyboardType="numeric"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Complemento</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Complemento</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: paperTheme.colors.surface,
+                borderColor: paperTheme.colors.outline,
+                color: paperTheme.colors.onSurface
+              }]}
               value={formData.complement}
               onChangeText={(text) => setFormData({ ...formData, complement: text })}
               placeholder="Apto, sala, etc."
+              placeholderTextColor={paperTheme.colors.onSurface + '80'}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Bairro *</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Bairro *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: paperTheme.colors.surface,
+                borderColor: paperTheme.colors.outline,
+                color: paperTheme.colors.onSurface
+              }]}
               value={formData.neighborhood}
               onChangeText={(text) => setFormData({ ...formData, neighborhood: text })}
               placeholder="Nome do bairro"
+              placeholderTextColor={paperTheme.colors.onSurface + '80'}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Cidade *</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Cidade *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: paperTheme.colors.surface,
+                borderColor: paperTheme.colors.outline,
+                color: paperTheme.colors.onSurface
+              }]}
               value={formData.city}
               onChangeText={(text) => setFormData({ ...formData, city: text })}
               placeholder="Nome da cidade"
+              placeholderTextColor={paperTheme.colors.onSurface + '80'}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Estado *</Text>
+            <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Estado *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: paperTheme.colors.surface,
+                borderColor: paperTheme.colors.outline,
+                color: paperTheme.colors.onSurface
+              }]}
               value={formData.state}
               onChangeText={(text) => setFormData({ ...formData, state: text })}
               placeholder="UF"
+              placeholderTextColor={paperTheme.colors.onSurface + '80'}
               maxLength={2}
               autoCapitalize="characters"
             />
           </View>
 
           <TouchableOpacity
-            style={[styles.favoriteToggle, formData.isFavorite && styles.favoriteToggleActive]}
+            style={[styles.favoriteToggle, formData.isFavorite && styles.favoriteToggleActive, {
+              backgroundColor: formData.isFavorite ? paperTheme.colors.surfaceVariant : paperTheme.colors.surface,
+              borderColor: formData.isFavorite ? '#FFD700' : paperTheme.colors.outline
+            }]}
             onPress={() => setFormData({ ...formData, isFavorite: !formData.isFavorite })}
           >
             <Ionicons
               name={formData.isFavorite ? "star" : "star-outline"}
               size={24}
-              color={formData.isFavorite ? "#FFD700" : "#666"}
+              color={formData.isFavorite ? "#FFD700" : paperTheme.colors.onSurface}
             />
-            <Text style={[styles.favoriteText, formData.isFavorite && styles.favoriteTextActive]}>
+            <Text style={[styles.favoriteText, formData.isFavorite && styles.favoriteTextActive, {
+              color: formData.isFavorite ? '#8b6914' : paperTheme.colors.onSurface
+            }]}>
               Definir como endereço favorito
             </Text>
           </TouchableOpacity>
@@ -345,15 +392,15 @@ export default function AddEditAddressScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={[styles.cancelButton, { backgroundColor: paperTheme.colors.surfaceVariant }]}
             onPress={() => navigation.goBack()}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Cancelar</Text>
+            <Text style={[styles.cancelButtonText, { color: paperTheme.colors.onSurfaceVariant }]}>Cancelar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+            style={[styles.saveButton, loading && styles.saveButtonDisabled, { backgroundColor: loading ? paperTheme.colors.outline : paperTheme.colors.primary }]}
             onPress={handleSave}
             disabled={loading}
           >
@@ -373,7 +420,6 @@ export default function AddEditAddressScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -391,12 +437,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1a1a1a',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
   },
   form: {
     paddingHorizontal: 16,
@@ -407,17 +451,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    backgroundColor: 'white',
   },
   inputError: {
     borderColor: '#d32f2f',
@@ -440,23 +481,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
     borderRadius: 8,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   favoriteToggleActive: {
-    backgroundColor: '#fff8dc',
-    borderColor: '#FFD700',
   },
   favoriteText: {
     fontSize: 16,
-    color: '#666',
     marginLeft: 12,
   },
   favoriteTextActive: {
-    color: '#8b6914',
     fontWeight: '600',
   },
   buttonContainer: {
@@ -468,24 +503,20 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     paddingVertical: 16,
-    backgroundColor: '#f0f0f0',
     borderRadius: 8,
     alignItems: 'center',
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
   },
   saveButton: {
     flex: 1,
     paddingVertical: 16,
-    backgroundColor: '#2E7D32',
     borderRadius: 8,
     alignItems: 'center',
   },
   saveButtonDisabled: {
-    backgroundColor: '#ccc',
   },
   saveButtonText: {
     fontSize: 16,

@@ -2,16 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme as usePaperTheme } from 'react-native-paper';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import { useSession } from '../../hooks/useSession';
-import { Address, getUserAddresses } from '../../services/addressService';
+import { Address, deleteAddress, getUserAddresses } from '../../services/addressService';
 
 type AddressesScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function AddressesScreen() {
   const navigation = useNavigation<AddressesScreenNavigationProp>();
+  const paperTheme = usePaperTheme();
   const { user, refreshSession } = useSession();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,39 +51,74 @@ export default function AddressesScreen() {
     navigation.navigate('EditAddress', { addressId });
   };
 
+  const handleDeleteAddress = (addressId: string, addressName: string) => {
+    Alert.alert(
+      'Excluir endereço',
+      `Tem certeza que deseja excluir o endereço "${addressName}"?`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAddress(addressId);
+              await loadAddresses();
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível excluir o endereço. Tente novamente.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderAddressItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.addressCard}
-      onPress={() => handleEditAddress(item.id)}
-    >
-      <View style={styles.addressHeader}>
-        <Text style={styles.addressName}>{item.name}</Text>
-        {item.isFavorite && (
-          <Ionicons name="star" size={20} color="#FFD700" />
+    <View style={[styles.addressCard, { backgroundColor: paperTheme.colors.surface }]}>
+      <TouchableOpacity
+        onPress={() => handleEditAddress(item.id)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.addressHeader}>
+          <Text style={[styles.addressName, { color: paperTheme.colors.onSurface }]}>{item.name}</Text>
+          <View style={styles.headerActions}>
+            {item.isFavorite && (
+              <Ionicons name="star" size={20} color="#FFD700" style={styles.favoriteIcon} />
+            )}
+            <TouchableOpacity
+              onPress={() => handleDeleteAddress(item.id, item.name)}
+              style={styles.deleteButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="trash-outline" size={20} color="#d32f2f" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Text style={[styles.addressText, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
+          {item.street}, {item.number}
+        </Text>
+        {item.complement && (
+          <Text style={[styles.addressText, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>{item.complement}</Text>
         )}
-      </View>
-      <Text style={styles.addressText}>
-        {item.street}, {item.number}
-      </Text>
-      {item.complement && (
-        <Text style={styles.addressText}>{item.complement}</Text>
-      )}
-      <Text style={styles.addressText}>
-        {item.neighborhood}, {item.city} - {item.state}
-      </Text>
-      <Text style={styles.addressText}>CEP: {item.zipCode}</Text>
-    </TouchableOpacity>
+        <Text style={[styles.addressText, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
+          {item.neighborhood}, {item.city} - {item.state}
+        </Text>
+        <Text style={[styles.addressText, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>CEP: {item.zipCode}</Text>
+      </TouchableOpacity>
+    </View>
   );
 
-  // Mostra mensagem se não estiver autenticado
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Meus Endereços</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>Meus Endereços</Text>
+          <Text style={[styles.subtitle, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
             {user ? `Olá, ${user.name.split(' ')[0]}! ` : ''}Gerencie seus endereços de entrega
           </Text>
         </View>
@@ -95,23 +132,33 @@ export default function AddressesScreen() {
             onRefresh={handleRefresh}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
+            ListFooterComponent={
+              addresses.length < 3 ? (
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
+                    <Ionicons name="add" size={30} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ) : null
+            }
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons name="location-outline" size={80} color="#ccc" />
-            <Text style={styles.emptyTitle}>Nenhum endereço cadastrado</Text>
-            <Text style={styles.emptyText}>
+            <Ionicons name="location-outline" size={80} color={paperTheme.colors.outline} />
+            <Text style={[styles.emptyTitle, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>Nenhum endereço cadastrado</Text>
+            <Text style={[styles.emptyText, { color: paperTheme.colors.onSurface, opacity: 0.6 }]}>
               Adicione um endereço para facilitar suas entregas
             </Text>
+            {addresses.length < 3 && (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
+                  <Ionicons name="add" size={30} color="white" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
       </View>
-
-      {addresses.length < 3 && (
-        <TouchableOpacity style={styles.floatingButton} onPress={handleAddAddress}>
-          <Ionicons name="add" size={30} color="white" />
-        </TouchableOpacity>
-      )}
     </View>
   );
 }
@@ -119,7 +166,6 @@ export default function AddressesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   content: {
     flex: 1,
@@ -131,18 +177,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1a1a1a',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
   },
   listContent: {
     paddingHorizontal: 16,
   },
   addressCard: {
-    backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -161,11 +204,20 @@ const styles = StyleSheet.create({
   addressName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  favoriteIcon: {
+    marginRight: 8,
+  },
+  deleteButton: {
+    padding: 4,
   },
   addressText: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 2,
   },
   emptyContainer: {
@@ -177,13 +229,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#666',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -197,10 +247,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
+  buttonContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    alignItems: 'flex-end',
+  },
+  addButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -214,4 +266,3 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
 });
-
