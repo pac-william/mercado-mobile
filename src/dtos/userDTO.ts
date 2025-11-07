@@ -6,6 +6,7 @@ export const UserDTO = z.object({
     password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }).optional(),
     phone: z.string().optional(),
     birthDate: z.string().optional(),
+    profilePicture: z.string().optional(),
 });
 
 export type UserDTO = z.infer<typeof UserDTO>;

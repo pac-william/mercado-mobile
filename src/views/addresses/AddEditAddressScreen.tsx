@@ -24,24 +24,34 @@ type AddEditAddressScreenNavigationProp = NativeStackNavigationProp<HomeStackPar
 
 interface RouteParams {
   addressId?: string;
+  initialData?: {
+    name?: string;
+    street?: string;
+    number?: string;
+    complement?: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
 }
 
 export default function AddEditAddressScreen() {
   const navigation = useNavigation<AddEditAddressScreenNavigationProp>();
   const paperTheme = usePaperTheme();
   const route = useRoute();
-  const { addressId } = (route.params as RouteParams) || {};
+  const { addressId, initialData } = (route.params as RouteParams) || {};
   const [address, setAddress] = useState<Address | null>(null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    street: '',
-    number: '',
-    complement: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-    zipCode: '',
+    name: initialData?.name || '',
+    street: initialData?.street || '',
+    number: initialData?.number || '',
+    complement: initialData?.complement || '',
+    neighborhood: initialData?.neighborhood || '',
+    city: initialData?.city || '',
+    state: initialData?.state || '',
+    zipCode: initialData?.zipCode || '',
     isFavorite: false,
   });
   const [loading, setLoading] = useState(false);

@@ -1,13 +1,17 @@
-import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserUpdateDTO } from 'dtos/userDTO';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActionSheetIOS, ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme as usePaperTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SettingsStackParamList } from '../../../App';
 import CustomModal from '../../components/ui/CustomModal';
 import { User } from '../../domain/userDomain';
+import { usePermissions } from '../../hooks/usePermissions';
 import { getUserMe, updateUserMe } from '../../services/userService';
 
 type EditProfileScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'EditProfile'>;
@@ -15,6 +19,7 @@ type EditProfileScreenNavigationProp = NativeStackNavigationProp<SettingsStackPa
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
   const paperTheme = usePaperTheme();
+  const permissions = usePermissions();
   const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -68,6 +73,7 @@ const EditProfileScreen: React.FC = () => {
     setModalVisible(true);
   };
 
+
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -110,20 +116,75 @@ const EditProfileScreen: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const convertImageToBase64 = async (uri: string): Promise<string | null> => {
+    try {
+      setIsUploadingImage(true);
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const mimeType = uri.endsWith('.png') ? 'image/png' : 'image/jpeg';
+      return `data:${mimeType};base64,${base64}`;
+    } catch (error) {
+      return null;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    try {
+      let profilePicture: string | undefined = undefined;
+
+      if (selectedImage) {
+        const base64Image = await convertImageToBase64(selectedImage);
+        if (base64Image) {
+          profilePicture = base64Image;
+        } else {
+          setIsLoading(false);
+          Alert.alert(
+            'Aviso',
+            'Não foi possível processar a imagem. O perfil será salvo sem foto.',
+            [
+              {
+                text: 'Cancelar',
+                style: 'cancel',
+              },
+              {
+                text: 'Continuar sem foto',
+                onPress: async () => {
+                  await saveProfileWithoutImage();
+                }
+              }
+            ]
+          );
+          return;
+        }
+      }
+
+      await saveProfile(profilePicture);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Não foi possível atualizar o perfil.';
+      showModal('error', 'Erro', errorMessage, { text: 'OK', onPress: () => setModalVisible(false) });
+      setIsLoading(false);
+    }
+  };
+
+  const saveProfile = async (profilePicture?: string) => {
     try {
       const updateData: UserUpdateDTO = {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim() || undefined,
         birthDate: formatDateForAPI(formData.birthDate) || undefined,
+        profilePicture,
       };
 
       const updatedUser = await updateUserMe(updateData);
       setUser(updatedUser);
+      setSelectedImage(null);
       showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', {
         text: 'OK',
         onPress: () => {
@@ -139,16 +200,107 @@ const EditProfileScreen: React.FC = () => {
     }
   };
 
+  const saveProfileWithoutImage = async () => {
+    setIsLoading(true);
+    await saveProfile(undefined);
+  };
+
   const handleCancel = () => {
     navigation.goBack();
   };
 
+  const handleTakePhoto = async () => {
+    if (permissions.camera.loading) {
+      return;
+    }
+
+    if (!permissions.camera.granted) {
+      const granted = await permissions.camera.request();
+      if (!granted) {
+        Alert.alert(
+          'Câmera não disponível',
+          'Você pode continuar sem foto de perfil ou escolher uma foto da galeria.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      showModal('error', 'Erro', 'Não foi possível abrir a câmera.');
+    }
+  };
+
+  const handleChooseFromGallery = async () => {
+    if (permissions.mediaLibrary.loading) {
+      return;
+    }
+
+    if (!permissions.mediaLibrary.granted) {
+      const granted = await permissions.mediaLibrary.request();
+      if (!granted) {
+        Alert.alert(
+          'Galeria não disponível',
+          'Você pode continuar sem foto de perfil ou tirar uma foto com a câmera.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      showModal('error', 'Erro', 'Não foi possível abrir a galeria.');
+    }
+  };
+
   const handleImageUpload = () => {
-    Alert.alert(
-      'Selecionar Imagem',
-      'Funcionalidade de upload de imagem em desenvolvimento.',
-      [{ text: 'OK', style: 'default' }]
-    );
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancelar', 'Tirar Foto', 'Escolher da Galeria'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleTakePhoto();
+          } else if (buttonIndex === 2) {
+            handleChooseFromGallery();
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        'Selecionar Imagem',
+        'Escolha uma opção',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Tirar Foto', onPress: handleTakePhoto },
+          { text: 'Escolher da Galeria', onPress: handleChooseFromGallery },
+        ]
+      );
+    }
   };
 
   const styles = StyleSheet.create({

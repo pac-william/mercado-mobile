@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme as usePaperTheme } from 'react-native-paper';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
+import { usePermissions } from '../../hooks/usePermissions';
 import { useSession } from '../../hooks/useSession';
+import { formatCEP } from '../../services/cepService';
 import { Address, deleteAddress, getUserAddresses } from '../../services/addressService';
 
 type AddressesScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -15,8 +18,10 @@ export default function AddressesScreen() {
   const navigation = useNavigation<AddressesScreenNavigationProp>();
   const paperTheme = usePaperTheme();
   const { user, refreshSession } = useSession();
+  const permissions = usePermissions();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const loadAddresses = useCallback(async () => {
     try {
@@ -36,6 +41,7 @@ export default function AddressesScreen() {
     loadAddresses();
   }, [loadAddresses]);
 
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await refreshSession();
@@ -45,6 +51,67 @@ export default function AddressesScreen() {
 
   const handleAddAddress = () => {
     navigation.navigate('AddAddress');
+  };
+
+  const handleUseLocation = async () => {
+    if (permissions.location.granted) {
+      await getCurrentLocation();
+    } else {
+      const granted = await permissions.location.request();
+      if (granted) {
+        await getCurrentLocation();
+      } else {
+        Alert.alert(
+          'Localização não disponível',
+          'Você pode adicionar um endereço manualmente clicando no botão "+" abaixo.',
+          [{ text: 'OK' }]
+        );
+      }
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    setLoadingLocation(true);
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (reverseGeocode && reverseGeocode.length > 0) {
+        const addressData = reverseGeocode[0];
+        
+        const street = addressData.street || addressData.name || '';
+        const neighborhood = addressData.district || addressData.subregion || '';
+        const city = addressData.city || '';
+        const state = addressData.region || '';
+        const rawZipCode = addressData.postalCode || '';
+        const zipCode = rawZipCode ? formatCEP(rawZipCode) : '';
+        
+        navigation.navigate('AddAddress', {
+          initialData: {
+            street,
+            neighborhood,
+            city,
+            state,
+            zipCode,
+            number: '',
+            complement: '',
+            name: 'Minha Localização',
+          },
+        });
+      } else {
+        Alert.alert('Erro', 'Não foi possível obter o endereço da sua localização.');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível obter sua localização. Verifique se o GPS está ativado.');
+    } finally {
+      setLoadingLocation(false);
+    }
   };
 
   const handleEditAddress = (addressId: string) => {
@@ -121,6 +188,21 @@ export default function AddressesScreen() {
           <Text style={[styles.subtitle, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
             {user ? `Olá, ${user.name.split(' ')[0]}! ` : ''}Gerencie seus endereços de entrega
           </Text>
+          <TouchableOpacity
+            style={[styles.locationButton, { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline }]}
+            onPress={handleUseLocation}
+            disabled={loadingLocation || permissions.location.loading}
+            activeOpacity={0.7}
+          >
+            {(loadingLocation || permissions.location.loading) ? (
+              <ActivityIndicator size="small" color={paperTheme.colors.primary} />
+            ) : (
+              <Ionicons name="location" size={20} color={paperTheme.colors.primary} />
+            )}
+            <Text style={[styles.locationButtonText, { color: paperTheme.colors.onSurface }]}>
+              {loadingLocation ? 'Buscando localização...' : permissions.location.loading ? 'Solicitando permissão...' : 'Usar minha localização'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {addresses.length > 0 ? (
@@ -181,6 +263,21 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
+    marginBottom: 12,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  locationButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 12,
   },
   listContent: {
     paddingHorizontal: 16,

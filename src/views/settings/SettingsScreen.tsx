@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from 'expo-notifications';
 import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import axios from "axios";
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { useTheme as usePaperTheme } from "react-native-paper";
@@ -12,6 +14,7 @@ import { SettingsStackParamList } from '../../../App';
 import { Header } from "../../components/layout/header";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import { useTheme } from "../../contexts/ThemeContext";
+import { usePermissions } from "../../hooks/usePermissions";
 import { useSession } from "../../hooks/useSession";
 import api from "../../services/api";
 import { Session, SessionUser } from "../../types/session";
@@ -24,7 +27,9 @@ export default function SettingsScreen() {
     const { isDark, toggleTheme } = useTheme();
     const paperTheme = usePaperTheme();
     const { user, isAuthenticated, isLoading, refreshSession, clearSession } = useSession();
+    const permissions = usePermissions();
     const [refreshing, setRefreshing] = useState(false);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
     const [request, response, promptAsync] = AuthSession.useAuthRequest(
         {
@@ -149,7 +154,78 @@ export default function SettingsScreen() {
         }
     }, [response, request?.codeVerifier, fetchUserInfo, refreshSession]);
 
-    // Verificar autenticação quando a tela ganha foco
+    const NOTIFICATION_PREFERENCE_KEY = '@notification_preference';
+
+    const loadNotificationPreference = useCallback(async () => {
+        try {
+            const savedPreference = await AsyncStorage.getItem(NOTIFICATION_PREFERENCE_KEY);
+            if (savedPreference !== null) {
+                const preference = JSON.parse(savedPreference);
+                return preference.enabled === true;
+            }
+        } catch (error) {
+        }
+        return false;
+    }, []);
+
+    const saveNotificationPreference = useCallback(async (enabled: boolean) => {
+        try {
+            await AsyncStorage.setItem(NOTIFICATION_PREFERENCE_KEY, JSON.stringify({ enabled }));
+        } catch (error) {
+        }
+    }, []);
+
+    const checkNotificationStatus = useCallback(async () => {
+        const permissionResult = await permissions.notifications.check();
+        const userPreference = await loadNotificationPreference();
+        
+        if (permissionResult.granted && userPreference) {
+            setNotificationsEnabled(true);
+        } else {
+            setNotificationsEnabled(false);
+        }
+    }, [permissions.notifications, loadNotificationPreference]);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            checkNotificationStatus();
+        }
+    }, [isAuthenticated, checkNotificationStatus]);
+
+    const registerNotificationToken = async (token: string) => {
+        try {
+            await api.post('/users/notification-token', { token });
+        } catch (error) {
+        }
+    };
+
+    const handleToggleNotifications = async () => {
+        if (notificationsEnabled) {
+            setNotificationsEnabled(false);
+            await saveNotificationPreference(false);
+        } else {
+            setNotificationsEnabled(true);
+            
+            const granted = await permissions.notifications.request();
+            if (granted) {
+                try {
+                    const tokenData = await Notifications.getExpoPushTokenAsync();
+                    if (tokenData.data) {
+                        await registerNotificationToken(tokenData.data);
+                    }
+                    await saveNotificationPreference(true);
+                } catch (error) {
+                    setNotificationsEnabled(false);
+                    await saveNotificationPreference(false);
+                    Alert.alert('Erro', 'Não foi possível registrar o token de notificações.');
+                }
+            } else {
+                setNotificationsEnabled(false);
+                await saveNotificationPreference(false);
+            }
+        }
+    };
+
     useFocusEffect(
         useCallback(() => {
             refreshSession();
@@ -241,15 +317,13 @@ export default function SettingsScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            // Limpar a sessão usando o hook
+                            await AsyncStorage.removeItem(NOTIFICATION_PREFERENCE_KEY);
                             await clearSession();
 
-                            // Tentar fazer logout no Auth0 (opcional, pode falhar se não houver conexão)
                             try {
                                 const logoutUrl = `https://${auth0Domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(redirectUri)}`;
                                 await WebBrowser.openBrowserAsync(logoutUrl);
                             } catch (logoutError) {
-                                // Ignora erro do logout do Auth0, o importante é limpar localmente
                                 console.warn("Erro ao fazer logout no Auth0:", logoutError);
                             }
 
@@ -330,10 +404,29 @@ export default function SettingsScreen() {
                                 <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}>
-                                <Ionicons name="notifications-outline" size={24} color={paperTheme.colors.onSurface} />
+                            <TouchableOpacity 
+                                style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
+                                onPress={handleToggleNotifications}
+                                activeOpacity={0.7}
+                                disabled={permissions.notifications.loading}
+                            >
+                                {permissions.notifications.loading ? (
+                                    <ActivityIndicator size="small" color={paperTheme.colors.primary} />
+                                ) : (
+                                    <Ionicons 
+                                        name={notificationsEnabled ? "notifications" : "notifications-outline"} 
+                                        size={24} 
+                                        color={paperTheme.colors.onSurface} 
+                                    />
+                                )}
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Notificações</Text>
-                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                                <Switch
+                                    value={notificationsEnabled}
+                                    onValueChange={handleToggleNotifications}
+                                    trackColor={{ false: paperTheme.colors.outline, true: paperTheme.colors.primary }}
+                                    thumbColor={paperTheme.colors.surface}
+                                    disabled={permissions.notifications.loading}
+                                />
                             </TouchableOpacity>
 
                             <TouchableOpacity

@@ -16,7 +16,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mercado.mobile"
+      "bundleIdentifier": "com.mercado.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para encontrar mercados próximos.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Precisamos da sua localização para encontrar mercados próximos.",
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para escolher imagem de perfil.",
+        "NSCameraUsageDescription": "Precisamos da câmera para tirar foto de perfil."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -53,7 +59,28 @@
     },
     "plugins": [
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Precisamos da sua localização para encontrar mercados próximos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Precisamos acessar suas fotos para escolher imagem de perfil.",
+          "cameraPermission": "Precisamos da câmera para tirar foto de perfil."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2E7D32",
+          "sounds": []
+        }
+      ]
     ],
     "owner": "rissong"
   }
