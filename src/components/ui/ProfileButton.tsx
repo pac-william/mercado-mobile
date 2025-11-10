@@ -10,7 +10,9 @@ import { useTheme as usePaperTheme } from "react-native-paper";
 import { HomeStackParamList } from "../../../App";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import api from "../../services/api";
+import { getUserMe } from "../../services/userService";
 import { Session, SessionUser } from "../../types/session";
+import { User as UserType } from "../../types/user";
 
 interface ProfileButtonProps {
   buttonStyle?: any;
@@ -36,7 +38,10 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
   const [token, setToken] = useState<string | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [userFromBackend, setUserFromBackend] = useState<UserType | null>(null);
   const processedCodesRef = useRef<Set<string>>(new Set());
+  const isLoadingUserRef = useRef<boolean>(false);
+  const lastLoadedRef = useRef<{ token: string | null; userId: string | null }>({ token: null, userId: null });
 
   const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
     try {
@@ -54,12 +59,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
           };
 
           await api.post('/users', createData);
-        } else {
-          console.error('Error fetching/creating user:', error);
         }
       }
     } catch (error) {
-      console.error('Error in fetchOrCreateUser:', error);
     }
   }, []);
 
@@ -86,9 +88,31 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
         await fetchOrCreateUser(userData);
       }
     } catch (error) {
-      console.error('Error fetching user info:', error);
     }
   }, [fetchOrCreateUser]);
+
+  const loadUserFromBackend = useCallback(async () => {
+    if (!token || !sessionUser || isLoadingUserRef.current) {
+      return;
+    }
+
+    const userId = sessionUser.sub;
+    if (lastLoadedRef.current.token === token && lastLoadedRef.current.userId === userId) {
+      return;
+    }
+
+    try {
+      isLoadingUserRef.current = true;
+      const backendUser = await getUserMe();
+      setUserFromBackend(backendUser as UserType);
+      lastLoadedRef.current = { token, userId };
+    } catch (error) {
+      setUserFromBackend(null);
+      lastLoadedRef.current = { token, userId };
+    } finally {
+      isLoadingUserRef.current = false;
+    }
+  }, [token, sessionUser]);
 
   const loadToken = useCallback(async () => {
     const sessionString = await SecureStore.getItemAsync('session');
@@ -104,7 +128,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
         accessToken = session.tokenSet?.accessToken || null;
         user = session.user || null;
       } catch (error) {
-        console.error('Erro ao parsear session:', error);
       }
     }
 
@@ -121,6 +144,8 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     } else {
       setToken(null);
       setSessionUser(null);
+      setUserFromBackend(null);
+      lastLoadedRef.current = { token: null, userId: null };
     }
   }, [fetchUserInfo]);
 
@@ -128,10 +153,28 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     loadToken();
   }, [loadToken]);
 
+  useEffect(() => {
+    if (token && sessionUser) {
+      loadUserFromBackend();
+    } else {
+      setUserFromBackend(null);
+    }
+  }, [token, sessionUser]);
+
   useFocusEffect(
     useCallback(() => {
       loadToken();
     }, [loadToken])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (token && sessionUser) {
+        lastLoadedRef.current = { token: null, userId: null };
+        setUserFromBackend(null);
+        loadUserFromBackend();
+      }
+    }, [token, sessionUser])
   );
 
   useEffect(() => {
@@ -197,7 +240,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
             setToken(data.id_token);
           }
         } catch (error: any) {
-          console.error('Error fetching token:', error);
         }
       };
 
@@ -287,11 +329,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
               setToken(data.id_token);
             }
           } catch (error: any) {
-            console.error('Error fetching token:', error);
           }
         }
       } catch (error) {
-        console.error('Error calling promptAsync:', error);
       }
     }
   };
@@ -304,7 +344,13 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     >
       {token && sessionUser ? (
         <View style={[styles.userAvatar, { backgroundColor: paperTheme.colors.primary }]}>
-          {sessionUser.picture ? <Image source={{ uri: sessionUser.picture }} style={styles.userAvatar} /> : (
+          {(userFromBackend?.profilePicture || sessionUser.picture) ? (
+            <Image
+              source={{ uri: userFromBackend?.profilePicture || sessionUser.picture || '' }}
+              style={styles.userAvatar}
+              resizeMode="cover"
+            />
+          ) : (
             <Text style={styles.userAvatarText}>
               {sessionUser.name ? sessionUser.name.charAt(0).toUpperCase() : 'U'}
             </Text>
@@ -330,6 +376,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   userAvatarText: {
     color: 'white',

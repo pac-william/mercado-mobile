@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +30,7 @@ const EditProfileScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalConfig, setModalConfig] = useState({
@@ -74,30 +75,40 @@ const EditProfileScreen: React.FC = () => {
   };
 
 
+  const loadUser = useCallback(async () => {
+    try {
+      setIsLoadingUser(true);
+      const currentUser = await getUserMe();
+      setUser(currentUser);
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        birthDate: currentUser.birthDate ? formatDateForInput(currentUser.birthDate) : '',
+      });
+    } catch (error) {
+      console.error('Erro ao carregar usuário:', error);
+      showModal('error', 'Erro', 'Não foi possível carregar os dados do usuário.', {
+        text: 'OK',
+        onPress: () => {
+          setModalVisible(false);
+          navigation.goBack();
+        }
+      });
+    } finally {
+      setIsLoadingUser(false);
+    }
+  }, [navigation]);
+
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const currentUser = await getUserMe();
-        setUser(currentUser);
-        setFormData({
-          name: currentUser.name || '',
-          email: currentUser.email || '',
-          phone: currentUser.phone || '',
-          birthDate: currentUser.birthDate ? formatDateForInput(currentUser.birthDate) : '',
-        });
-      } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-        showModal('error', 'Erro', 'Não foi possível carregar os dados do usuário.', {
-          text: 'OK',
-          onPress: () => {
-            setModalVisible(false);
-            navigation.goBack();
-          }
-        });
-      }
-    };
     loadUser();
-  }, []);
+  }, [loadUser]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [loadUser])
+  );
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -120,11 +131,12 @@ const EditProfileScreen: React.FC = () => {
     try {
       setIsUploadingImage(true);
       const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64',
       });
       const mimeType = uri.endsWith('.png') ? 'image/png' : 'image/jpeg';
       return `data:${mimeType};base64,${base64}`;
     } catch (error) {
+      console.error('Erro ao converter imagem para base64:', error);
       return null;
     } finally {
       setIsUploadingImage(false);
@@ -182,7 +194,8 @@ const EditProfileScreen: React.FC = () => {
         profilePicture,
       };
 
-      const updatedUser = await updateUserMe(updateData);
+      await updateUserMe(updateData);
+      const updatedUser = await getUserMe();
       setUser(updatedUser);
       setSelectedImage(null);
       showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', {
@@ -422,6 +435,16 @@ const EditProfileScreen: React.FC = () => {
       fontWeight: '600',
     },
   });
+
+  if (isLoadingUser) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
