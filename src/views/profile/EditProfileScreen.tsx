@@ -42,11 +42,44 @@ const EditProfileScreen: React.FC = () => {
 
   const formatDateForInput = (date: string | Date): string => {
     if (!date) return '';
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    const day = dateObj.getDate().toString().padStart(2, '0');
-    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-    const year = dateObj.getFullYear();
-    return `${day}/${month}/${year}`;
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) return '';
+      const day = dateObj.getUTCDate().toString().padStart(2, '0');
+      const month = (dateObj.getUTCMonth() + 1).toString().padStart(2, '0');
+      const year = dateObj.getUTCFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return '';
+    }
+  };
+
+  const formatBirthDateInput = (text: string): string => {
+    const numbers = text.replace(/\D/g, '');
+    
+    if (numbers.length === 0) return '';
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+    return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+  };
+
+  const isValidDate = (dateString: string): boolean => {
+    if (!dateString || dateString.length !== 10) return false;
+    
+    const parts = dateString.split('/');
+    if (parts.length !== 3) return false;
+    
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    if (year < 1900 || year > new Date().getFullYear()) return false;
+    
+    const date = new Date(year, month - 1, day);
+    return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
   };
 
   const formatDateForAPI = (dateString: string): string | undefined => {
@@ -54,7 +87,12 @@ const EditProfileScreen: React.FC = () => {
     const parts = dateString.split('/');
     if (parts.length === 3) {
       const [day, month, year] = parts;
-      return `${year}-${month}-${day}`;
+      const paddedDay = day.padStart(2, '0');
+      const paddedMonth = month.padStart(2, '0');
+      const dateStr = `${year}-${paddedMonth}-${paddedDay}`;
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return undefined;
+      return date.toISOString();
     }
     return undefined;
   };
@@ -123,6 +161,10 @@ const EditProfileScreen: React.FC = () => {
       newErrors.email = 'Email inválido';
     }
 
+    if (formData.birthDate && formData.birthDate.trim() && !isValidDate(formData.birthDate)) {
+      newErrors.birthDate = 'Data de nascimento inválida';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -186,11 +228,12 @@ const EditProfileScreen: React.FC = () => {
 
   const saveProfile = async (profilePicture?: string) => {
     try {
+      const formattedBirthDate = formatDateForAPI(formData.birthDate);
       const updateData: UserUpdateDTO = {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim() || undefined,
-        birthDate: formatDateForAPI(formData.birthDate) || undefined,
+        birthDate: formattedBirthDate || undefined,
         profilePicture,
       };
 
@@ -551,15 +594,20 @@ const EditProfileScreen: React.FC = () => {
               {
                 backgroundColor: paperTheme.colors.surface,
                 color: paperTheme.colors.onSurface,
-                borderColor: paperTheme.colors.outline,
+                borderColor: errors.birthDate ? paperTheme.colors.error : paperTheme.colors.outline,
               }
             ]}
             value={formData.birthDate}
-            onChangeText={(text) => setFormData({ ...formData, birthDate: text })}
+            onChangeText={(text) => {
+              const formatted = formatBirthDateInput(text);
+              setFormData({ ...formData, birthDate: formatted });
+            }}
             placeholder="DD/MM/AAAA"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}
             keyboardType="numeric"
+            maxLength={10}
           />
+          {errors.birthDate && <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>{errors.birthDate}</Text>}
         </View>
 
         <View style={styles.buttonContainer}>
