@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import { Text, ActivityIndicator, useTheme } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../../App';
 import ProductCard from "../../components/ui/ProductCard";
 import FilterButton from "../../components/ui/FilterButton";
+import FilterModal from "../../components/ui/FilterModal";
 import HeroBanner from "../../components/ui/Hero";
 import { Header } from "../../components/layout/header";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
@@ -14,6 +15,7 @@ import { getProducts } from "../../services/productService";
 import { getMarkets, getMarketById } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
 import { isNetworkError } from "../../utils/networkUtils";
+import { isValidImageUri } from "../../utils/imageUtils";
 
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -26,8 +28,13 @@ export default function Home() {
   const [error, setError] = useState(false);
   const [offline, setOffline] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filters, setFilters] = useState<{
+    minPrice?: number;
+    maxPrice?: number;
+  }>({});
 
-  const fetchMarketsWithProducts = async () => {
+  const fetchMarketsWithProducts = useCallback(async () => {
     try {
       const resMarkets = await getMarkets(1, 20);
       const marketsWithDetails = await Promise.all(
@@ -35,7 +42,14 @@ export default function Home() {
           try {
             setLoading(true);
             const marketDetails = await getMarketById(marketFromList.id);
-            const resProducts = await getProducts(1, 20, marketDetails.id);
+            const resProducts = await getProducts(
+              1,
+              20,
+              marketDetails.id,
+              undefined,
+              filters.minPrice,
+              filters.maxPrice
+            );
             return {
               ...marketDetails,
               products: resProducts.products
@@ -62,17 +76,27 @@ export default function Home() {
         setOffline(true);
       }
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchMarketsWithProducts();
-  }, []);
+  }, [fetchMarketsWithProducts]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchMarketsWithProducts();
     setRefreshing(false);
   };
+
+  const handleApplyFilters = (newFilters: { minPrice?: number; maxPrice?: number }) => {
+    setFilters(newFilters);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+  };
+
+  const hasActiveFilters = filters.minPrice !== undefined || filters.maxPrice !== undefined;
 
     if (loading) {
         return (
@@ -113,7 +137,8 @@ export default function Home() {
         >
           <FilterButton
             title="Filtra por..."
-            onPress={() => console.log("Botão de filtro pressionado")}
+            onPress={() => setFilterModalVisible(true)}
+            hasActiveFilters={hasActiveFilters}
           />
         </View>
 
@@ -129,10 +154,16 @@ export default function Home() {
                   marginBottom: 12,
                 }}
               >
-                <Image
-                  source={{ uri: market.profilePicture }}
-                  style={styles.marketImage}
-                />
+                {isValidImageUri(market.profilePicture) ? (
+                  <Image
+                    source={{ uri: market.profilePicture }}
+                    style={styles.marketImage}
+                  />
+                ) : (
+                  <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
+                  </View>
+                )}
                 <View style={{ marginLeft: 10, flex: 1 }}>
 
                   <Text
@@ -178,6 +209,14 @@ export default function Home() {
             </View>
           ))}
       </ScrollView>
+
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+        currentFilters={filters}
+      />
     </View>
   );
 }

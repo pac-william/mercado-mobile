@@ -1,0 +1,212 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Modal,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
+import PriceFilter from './PriceFilter';
+
+interface FilterModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onApply: (filters: { minPrice?: number; maxPrice?: number }) => void;
+  onClear: () => void;
+  currentFilters: {
+    minPrice?: number;
+    maxPrice?: number;
+  };
+}
+
+export default function FilterModal({
+  visible,
+  onClose,
+  onApply,
+  onClear,
+  currentFilters,
+}: FilterModalProps) {
+  const paperTheme = useTheme();
+  const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
+
+  useEffect(() => {
+    setMinPrice(currentFilters.minPrice);
+    setMaxPrice(currentFilters.maxPrice);
+  }, [currentFilters]);
+
+  const handleApply = () => {
+    onApply({ minPrice, maxPrice });
+    onClose();
+  };
+
+  const handleClear = () => {
+    setMinPrice(undefined);
+    setMaxPrice(undefined);
+    onClear();
+    onClose();
+  };
+
+  const hasActiveFilters = minPrice !== undefined || maxPrice !== undefined;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+              style={{ flex: 1, justifyContent: 'flex-end' }}
+            >
+              <View
+                style={[
+                  styles.modalContent,
+                  { backgroundColor: paperTheme.colors.surface },
+                ]}
+              >
+                <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { color: paperTheme.colors.onSurface },
+                    ]}
+                  >
+                    Filtros
+                  </Text>
+                  <TouchableOpacity onPress={onClose}>
+                    <Ionicons
+                      name="close"
+                      size={24}
+                      color={paperTheme.colors.onSurface}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                  style={styles.modalBody}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <PriceFilter
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                    onMinPriceChange={setMinPrice}
+                    onMaxPriceChange={setMaxPrice}
+                  />
+                </ScrollView>
+
+                <View style={[styles.modalFooter, { borderTopColor: paperTheme.colors.outline }]}>
+                  {hasActiveFilters && (
+                    <TouchableOpacity
+                      style={[
+                        styles.clearButton,
+                        { backgroundColor: paperTheme.colors.surfaceVariant },
+                      ]}
+                      onPress={handleClear}
+                    >
+                      <Text
+                        style={[
+                          styles.clearButtonText,
+                          { color: paperTheme.colors.onSurfaceVariant },
+                        ]}
+                      >
+                        Limpar
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={[
+                      styles.applyButton,
+                      { backgroundColor: paperTheme.colors.primary },
+                    ]}
+                    onPress={handleApply}
+                  >
+                    <Text
+                      style={[
+                        styles.applyButtonText,
+                        { color: paperTheme.colors.onPrimary },
+                      ]}
+                    >
+                      Aplicar
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  modalBody: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+  },
+  clearButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  applyButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  applyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
