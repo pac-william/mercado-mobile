@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, ViewStyle } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import { isValidImageUri } from "../../utils/imageUtils";
 
 const { width } = Dimensions.get("window"); // pega largura da tela
 const CARD_WIDTH = width * 0.45;
@@ -44,7 +45,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
       onPress={onPress}
     >
       <View style={styles.header}>
-        <Image source={{ uri: marketLogo }} style={styles.logo} />
+        {isValidImageUri(marketLogo) ? (
+          <Image source={{ uri: marketLogo }} style={styles.logo} />
+        ) : (
+          <View style={[styles.logo, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 10 }}>Sem logo</Text>
+          </View>
+        )}
         <View style={{ marginLeft: 10, flex: 1 }}>
           <Text 
             style={[styles.marketName, { color: paperTheme.colors.onSurface }]} 
@@ -64,7 +71,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </View>
 
       <View style={styles.productImageContainer}>
-        <Image source={{ uri: imageUrl }} style={styles.productImage} />
+        {isValidImageUri(imageUrl) ? (
+          <Image source={{ uri: imageUrl }} style={styles.productImage} />
+        ) : (
+          <View style={[styles.productImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.footer}>
