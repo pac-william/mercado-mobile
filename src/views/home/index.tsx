@@ -29,11 +29,11 @@ export default function Home() {
 
   const fetchMarketsWithProducts = async () => {
     try {
+      setLoading(true);
       const resMarkets = await getMarkets(1, 20);
       const marketsWithDetails = await Promise.all(
         resMarkets.markets.map(async (marketFromList: Market) => {
           try {
-            setLoading(true);
             const marketDetails = await getMarketById(marketFromList.id);
             const resProducts = await getProducts(1, 20, marketDetails.id);
             return {
@@ -48,8 +48,6 @@ export default function Home() {
               setError(true);
             }
             return { ...marketFromList, products: [] };
-          }finally {
-            setLoading(false); 
           }
         })
       );
@@ -61,6 +59,8 @@ export default function Home() {
       if (isNetworkError(error)) {
         setOffline(true);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -129,10 +129,19 @@ export default function Home() {
                   marginBottom: 12,
                 }}
               >
-                <Image
-                  source={{ uri: market.profilePicture }}
-                  style={styles.marketImage}
-                />
+                {market.profilePicture && !market.profilePicture.startsWith('blob:') ? (
+                  <Image
+                    source={{ uri: market.profilePicture }}
+                    style={styles.marketImage}
+                    onError={(e) => {
+                      console.warn('Erro ao carregar imagem do mercado:', market.profilePicture);
+                    }}
+                  />
+                ) : (
+                  <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 24 }}>🏪</Text>
+                  </View>
+                )}
                 <View style={{ marginLeft: 10, flex: 1 }}>
 
                   <Text

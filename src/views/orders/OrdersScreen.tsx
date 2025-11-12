@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -62,59 +62,95 @@ export default function OrdersScreen() {
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
   const { user: sessionUser } = useSession();
-  const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offline, setOffline] = useState(false);
+  const isFetchingRef = useRef(false);
+  const hasLoadedRef = useRef(false);
+  const lastProcessedUserIdRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (sessionUser) {
-      setUser(sessionUser);
-    }
-  }, [sessionUser]);
-
-  const fetchOrders = useCallback(async () => {
-    if (!user) {
+  const fetchOrders = useCallback(async (userId: string, forceRefresh: boolean = false) => {
+    if (!userId) {
       setLoading(false);
       return;
     }
 
+    // Previne múltiplas chamadas simultâneas
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    // Se já carregou e não é refresh forçado, não busca novamente
+    if (!forceRefresh && hasLoadedRef.current) {
+      setLoading(false);
+      return;
+    }
+
+    isFetchingRef.current = true;
     setLoading(true);
     setOffline(false);
 
     try {
-      const response = await getOrders(1, 50, { userId: user.id });
+      const response = await getOrders(1, 50, { userId });
       setOrders(response.orders);
       setOffline(false);
+      hasLoadedRef.current = true;
     } catch (error: any) {
       console.warn("⚠️ Erro ao buscar pedidos:", error);
       
       // Tenta carregar apenas dos dados locais diretamente
       try {
         const { getOrders: getOrdersLocal } = await import("../../domain/order/orderStorage");
-        const localOrders = await getOrdersLocal(user.id);
+        const localOrders = await getOrdersLocal(userId);
         setOrders(localOrders);
         setOffline(true);
+        hasLoadedRef.current = true;
       } catch (localError) {
         console.error("❌ Erro ao carregar pedidos locais:", localError);
         setOrders([]);
         setOffline(true);
+        hasLoadedRef.current = true;
       }
     } finally {
       setLoading(false);
       setRefreshing(false);
+      isFetchingRef.current = false;
     }
-  }, [user]);
+  }, []);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  // Carrega pedidos sempre que a tela ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      const userId = sessionUser?.id || null;
+      
+      if (userId) {
+        // Se o userId mudou, reseta as refs
+        if (userId !== lastProcessedUserIdRef.current) {
+          hasLoadedRef.current = false;
+          lastProcessedUserIdRef.current = userId;
+        }
+        // Sempre recarrega quando a tela ganha foco para pegar novos pedidos
+        fetchOrders(userId, true);
+      } else {
+        setLoading(false);
+        setOrders([]);
+        hasLoadedRef.current = false;
+        lastProcessedUserIdRef.current = null;
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sessionUser?.id])
+  );
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
+    if (!sessionUser?.id) {
+      setRefreshing(false);
+      return;
+    }
     setRefreshing(true);
-    await fetchOrders();
-  };
+    hasLoadedRef.current = false; // Reseta para permitir nova busca
+    await fetchOrders(sessionUser.id, true);
+  }, [sessionUser?.id, fetchOrders]);
 
   const renderItem = ({ item }: { item: Order }) => {
     const statusColor = getStatusColor(item.status || 'PENDENTE');

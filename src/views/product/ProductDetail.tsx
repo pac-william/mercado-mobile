@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Image, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { Text, Button, Divider, useTheme } from "react-native-paper";
 import { RouteProp, useNavigation } from "@react-navigation/native";
@@ -7,6 +7,8 @@ import { Header } from "../../components/layout/header";
 import { useCart } from "../../contexts/CartContext";
 import CustomModal from "../../components/ui/CustomModal";
 import { useModal } from "../../hooks/useModal";
+import { useSession } from "../../hooks/useSession";
+import { addItemToCart } from "../../services/cartService";
 import { Ionicons } from "@expo/vector-icons";
 
 type ProductDetailRouteProp = RouteProp<HomeStackParamList, "ProductDetail">;
@@ -20,37 +22,99 @@ const { width } = Dimensions.get('window');
 export default function ProductDetail({ route }: Props) {
   const { product } = route.params;
   const { addItem } = useCart();
-  const { modalState, hideModal, showSuccess } = useModal();
+  const { modalState, hideModal, showSuccess, showWarning } = useModal();
+  const { isAuthenticated } = useSession();
   const navigation = useNavigation();
   const paperTheme = useTheme();
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleAddToCart = () => {
-
-    addItem({
-      id: product.id.toString(),
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      marketName: product.marketName,
-      marketId: product.marketId,
-    });
+  const handleAddToCart = async () => {
+    if (isAdding) return; // Previne múltiplas chamadas
     
-    showSuccess(
-      'Produto Adicionado! 🎉',
-      `${product.name} foi adicionado ao seu carrinho com sucesso!`,
-      {
-        text: 'Ver Carrinho',
-        onPress: () => {
-          hideModal();
-          navigation.navigate('Cart' as never);
-        },
-        style: 'success',
-      },
-      {
-        text: 'Continuar Comprando',
-        onPress: hideModal,
+    try {
+      setIsAdding(true);
+
+      // Se estiver autenticado, sincroniza com a API primeiro
+      if (isAuthenticated) {
+        try {
+          const response = await addItemToCart({
+            productId: product.id,
+            quantity: 1,
+          });
+          // Se adicionou na API com sucesso, adiciona também no contexto local
+          // com o cartItemId para sincronização futura
+          addItem({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            marketName: product.marketName,
+            marketId: product.marketId,
+            cartItemId: response.id, // Armazena o ID do item no carrinho da API
+          });
+        } catch (apiError: any) {
+          console.error("Erro ao adicionar item ao carrinho na API:", apiError);
+          // Se der erro na API, ainda adiciona localmente
+          addItem({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            marketName: product.marketName,
+            marketId: product.marketId,
+          });
+          
+          showWarning(
+            'Aviso',
+            'O produto foi adicionado ao carrinho localmente, mas houve um problema ao sincronizar com o servidor.',
+            {
+              text: 'OK',
+              onPress: hideModal,
+            }
+          );
+          return;
+        }
+      } else {
+        // Se não estiver autenticado, adiciona apenas no contexto local
+        addItem({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          marketName: product.marketName,
+          marketId: product.marketId,
+        });
       }
-    );
+      
+      showSuccess(
+        'Produto Adicionado! 🎉',
+        `${product.name} foi adicionado ao seu carrinho com sucesso!`,
+        {
+          text: 'Ver Carrinho',
+          onPress: () => {
+            hideModal();
+            navigation.navigate('Cart' as never);
+          },
+          style: 'success',
+        },
+        {
+          text: 'Continuar Comprando',
+          onPress: hideModal,
+        }
+      );
+    } catch (error) {
+      console.error("Erro ao adicionar item ao carrinho:", error);
+      showWarning(
+        'Erro',
+        'Não foi possível adicionar o produto ao carrinho. Tente novamente.',
+        {
+          text: 'OK',
+          onPress: hideModal,
+        }
+      );
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
@@ -193,6 +257,8 @@ export default function ProductDetail({ route }: Props) {
           <Button
             mode="contained"
             onPress={handleAddToCart}
+            disabled={isAdding}
+            loading={isAdding}
             style={{ 
               borderRadius: 16, 
               paddingVertical: 8,
@@ -206,7 +272,7 @@ export default function ProductDetail({ route }: Props) {
             labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
             icon={() => <Ionicons name="cart" size={20} color={paperTheme.colors.onPrimary} />}
           >
-            Adicionar ao Carrinho
+            {isAdding ? 'Adicionando...' : 'Adicionar ao Carrinho'}
           </Button>
         </View>
 

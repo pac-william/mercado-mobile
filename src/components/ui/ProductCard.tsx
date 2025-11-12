@@ -44,7 +44,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
       onPress={onPress}
     >
       <View style={styles.header}>
-        <Image source={{ uri: marketLogo }} style={styles.logo} />
+        {marketLogo && !marketLogo.startsWith('blob:') ? (
+          <Image 
+            source={{ uri: marketLogo }} 
+            style={styles.logo}
+            onError={(e) => {
+              console.warn('Erro ao carregar logo do mercado:', marketLogo);
+            }}
+          />
+        ) : (
+          <View style={[styles.logo, { backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ fontSize: 16 }}>🏪</Text>
+          </View>
+        )}
         <View style={{ marginLeft: 10, flex: 1 }}>
           <Text 
             style={[styles.marketName, { color: paperTheme.colors.onSurface }]} 
@@ -64,7 +76,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </View>
 
       <View style={styles.productImageContainer}>
-        <Image source={{ uri: imageUrl }} style={styles.productImage} />
+        {imageUrl && !imageUrl.startsWith('blob:') ? (
+          <Image 
+            source={{ uri: imageUrl }} 
+            style={styles.productImage}
+            onError={(e) => {
+              console.warn('Erro ao carregar imagem do produto:', imageUrl);
+            }}
+          />
+        ) : (
+          <View style={[styles.productImage, { backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ fontSize: 40, opacity: 0.3 }}>📦</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.footer}>

@@ -21,7 +21,16 @@ const HeroBanner = () => {
         activeDotStyle={styles.activeDot}
       >
         {banners.map((banner, index) => (
-          <Image key={index} source={{ uri: banner }} style={styles.image} />
+          banner && !banner.startsWith('blob:') ? (
+            <Image 
+              key={index} 
+              source={{ uri: banner }} 
+              style={styles.image}
+              onError={(e) => {
+                console.warn('Erro ao carregar banner:', banner);
+              }}
+            />
+          ) : null
         ))}
       </Swiper>
     </View>

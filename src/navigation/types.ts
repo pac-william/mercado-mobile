@@ -3,10 +3,11 @@ export type HomeStackParamList = {
   HomeMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
+  Checkout: undefined;
   MarketDetails: { marketId: string };
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: undefined;
+  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
 };
 
@@ -14,10 +15,11 @@ export type SearchStackParamList = {
   SearchMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
+  Checkout: undefined;
   MarketDetails: { marketId: string };
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: undefined;
+  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
 };
 
@@ -25,9 +27,10 @@ export type SettingsStackParamList = {
   SettingsMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
+  Checkout: undefined;
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: undefined;
+  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
   Orders: undefined;
   OrderDetail: { orderId: string };
@@ -39,10 +42,11 @@ export type AIStackParamList = {
   AIMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
+  Checkout: undefined;
   MarketDetails: { marketId: string };
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: undefined;
+  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
 };
 

@@ -5,6 +5,7 @@ import AddEditAddressScreen from '../views/addresses/AddEditAddressScreen';
 import AddressesScreen from '../views/addresses/index';
 import AISearch from '../views/ai/index';
 import CartScreen from '../views/cart/CartScreen';
+import CheckoutScreen from '../views/checkout/CheckoutScreen';
 import Home from '../views/home/index';
 import MarketDetailsScreen from '../views/market/index';
 import OrderDetailScreen from '../views/orders/OrderDetailScreen';
@@ -18,6 +19,7 @@ import SettingsScreen from '../views/settings/SettingsScreen';
 export const sharedRoutes = [
   { name: 'ProductDetail', component: ProductDetail },
   { name: 'Cart', component: CartScreen },
+  { name: 'Checkout', component: CheckoutScreen },
   { name: 'EditProfile', component: EditProfileScreen },
   { name: 'AddressesMain', component: AddressesScreen },
   { name: 'AddAddress', component: AddEditAddressScreen },

@@ -118,6 +118,7 @@ export const mapCartItemResponseToCartItem = async (
     marketName,
     quantity: item.quantity,
     marketId: item.product.marketId,
+    cartItemId: item.id, // Armazena o ID do item no carrinho da API
   };
 };
 

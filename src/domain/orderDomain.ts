@@ -37,7 +37,11 @@ export interface OrderCreateDTO {
   items: {
     productId: string;
     quantity: number;
+    price: number;
   }[];
+  addressId?: string;
+  paymentMethod?: string;
+  couponCode?: string;
 }
 
 export interface OrderUpdateDTO {

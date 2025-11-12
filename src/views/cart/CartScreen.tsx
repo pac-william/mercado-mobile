@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,28 +14,37 @@ import {
 } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import CustomModal from '../../components/ui/CustomModal';
 import { useCart } from '../../contexts/CartContext';
-import { OrderCreateDTO } from "../../domain/orderDomain";
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
-import { getCart, mapCartItemResponseToCartItem } from '../../services/cartService';
+import { getCart, mapCartItemResponseToCartItem, removeCartItem, clearCart as clearCartAPI, updateCartItem } from '../../services/cartService';
 import { getMarketById } from '../../services/marketService';
-import { createOrder } from '../../services/orderService';
 
+
+type CartScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 const CartScreen: React.FC = () => {
+  const navigation = useNavigation<CartScreenNavigationProp>();
   const { state: cartState, removeItem, updateQuantity, clearCart, addItem } = useCart();
   const { modalState, hideModal, showWarning, showSuccess } = useModal();
   const { user, isAuthenticated, isLoading: sessionLoading } = useSession();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const loadCart = useCallback(async () => {
     if (!isAuthenticated) {
       setLoading(false);
+      return;
+    }
+
+    // Se já carregou uma vez, não recarrega automaticamente
+    // Isso evita que itens removidos/limpos voltem
+    if (hasLoadedOnce) {
       return;
     }
 
@@ -56,20 +67,33 @@ const CartScreen: React.FC = () => {
       };
       
       // Adiciona os itens do carrinho da API ao contexto
+      // Como já limpamos o carrinho, podemos adicionar todos os itens diretamente
+      // Usa um Set para evitar duplicações baseadas no ID
+      const addedIds = new Set<string>();
+      
       for (const item of cartResponse.items) {
         const cartItem = await mapCartItemResponseToCartItem(item, getMarketName);
-        // Adiciona o item uma vez (o contexto inicializa com quantidade 1)
-        addItem({
-          id: cartItem.id,
-          name: cartItem.name,
-          price: cartItem.price,
-          image: cartItem.image,
-          marketName: cartItem.marketName,
-          marketId: cartItem.marketId,
-        });
-        // Atualiza a quantidade para o valor correto da API
-        if (item.quantity !== 1) {
-          updateQuantity(cartItem.id, item.quantity);
+        const itemId = String(cartItem.id);
+        
+        // Verifica se já adicionamos este item (evita duplicações na API)
+        if (!addedIds.has(itemId)) {
+          addedIds.add(itemId);
+          
+          // Adiciona o item com o cartItemId para sincronização
+          addItem({
+            id: itemId,
+            name: cartItem.name,
+            price: cartItem.price,
+            image: cartItem.image,
+            marketName: cartItem.marketName,
+            marketId: cartItem.marketId,
+            cartItemId: cartItem.cartItemId, // Preserva o cartItemId
+          });
+          
+          // Atualiza a quantidade para o valor correto da API
+          if (item.quantity !== 1) {
+            updateQuantity(itemId, item.quantity);
+          }
         }
       }
     } catch (error) {
@@ -77,26 +101,49 @@ const CartScreen: React.FC = () => {
       // Se der erro, continua com o carrinho local
     } finally {
       setLoading(false);
+      setHasLoadedOnce(true);
     }
-  }, [isAuthenticated, clearCart, addItem, updateQuantity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!sessionLoading) {
+    if (!sessionLoading && isAuthenticated && !hasLoadedOnce) {
       loadCart();
+    } else if (!sessionLoading && !isAuthenticated) {
+      setLoading(false);
     }
-  }, [sessionLoading, isAuthenticated, loadCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionLoading, isAuthenticated]);
 
 
 
-  const handleRemoveItem = (id: string, name: string) => {
+  const handleRemoveItem = async (id: string, name: string) => {
     showWarning(
       'Remover Item',
       `Deseja remover "${name}" do seu carrinho?`,
       {
         text: 'Remover',
-        onPress: () => {
-          removeItem(id);
-          hideModal();
+        onPress: async () => {
+          try {
+            // Remove do contexto local primeiro para feedback imediato
+            const item = cartState.items.find(i => String(i.id) === String(id));
+            
+            // Se estiver autenticado e tiver cartItemId, remove da API também
+            if (isAuthenticated && item?.cartItemId) {
+              try {
+                await removeCartItem(item.cartItemId);
+              } catch (apiError) {
+                console.error("Erro ao remover item da API:", apiError);
+                // Continua removendo localmente mesmo se der erro na API
+              }
+            }
+            
+            removeItem(id);
+            hideModal();
+          } catch (error) {
+            console.error("Erro ao remover item:", error);
+            hideModal();
+          }
         },
         style: 'danger',
       },
@@ -107,15 +154,32 @@ const CartScreen: React.FC = () => {
     );
   };
 
-  const handleClearCart = () => {
+  const handleClearCart = async () => {
     showWarning(
       'Limpar Carrinho',
       'Deseja remover todos os itens do seu carrinho? Esta ação não pode ser desfeita.',
       {
         text: 'Limpar Tudo',
-        onPress: () => {
-          clearCart();
-          hideModal();
+        onPress: async () => {
+          try {
+            // Se estiver autenticado, limpa na API também
+            if (isAuthenticated) {
+              try {
+                await clearCartAPI();
+              } catch (apiError) {
+                console.error("Erro ao limpar carrinho na API:", apiError);
+                // Continua limpando localmente mesmo se der erro na API
+              }
+            }
+            
+            clearCart();
+            // Reseta o flag para permitir recarregar na próxima vez que a tela for montada
+            setHasLoadedOnce(false);
+            hideModal();
+          } catch (error) {
+            console.error("Erro ao limpar carrinho:", error);
+            hideModal();
+          }
         },
         style: 'danger',
       },
@@ -126,57 +190,9 @@ const CartScreen: React.FC = () => {
     );
   };
 
-  const handleCheckout = async () => {
-    showSuccess(
-      'Finalizar Compra',
-      `Total: R$ ${cartState.total.toFixed(2)}\n\nDeseja finalizar sua compra?`,
-      {
-        text: 'Finalizar Compra',
-        onPress: async () => {
-          try {
-            hideModal();
-
-            const orderData: OrderCreateDTO = {
-              userId: user?.sub || "", 
-              marketId: cartState.items[0]?.marketId || "",
-              items: cartState.items.map((item) => ({
-                productId: item.id,
-                quantity: item.quantity,
-              })),
-            };
-            
-            const newOrder = await createOrder(orderData);
-
-            clearCart();
-
-            showSuccess(
-              'Compra Finalizada!',
-              `Pedido #${newOrder.id} criado com sucesso!`,
-              {
-                text: 'Continuar Comprando',
-                onPress: hideModal,
-                style: 'success',
-              }
-            );
-          } catch (error) {
-            console.error('Erro ao criar pedido:', error);
-            showWarning(
-              'Erro ao finalizar',
-              'Não foi possível processar seu pedido. Tente novamente.',
-              {
-                text: 'OK',
-                onPress: hideModal,
-              }
-            );
-          }
-        },
-        style: 'success',
-      },
-      {
-        text: 'Cancelar',
-        onPress: hideModal,
-      }
-    );
+  const handleCheckout = () => {
+    // Navega para a tela de checkout
+    navigation.navigate('Checkout' as never);
   };
 
   if (loading || sessionLoading) {
@@ -404,7 +420,19 @@ const CartScreen: React.FC = () => {
                   paddingVertical: 4,
                 }}>
                   <TouchableOpacity
-                    onPress={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                    onPress={async () => {
+                      const newQuantity = Math.max(1, item.quantity - 1);
+                      updateQuantity(item.id, newQuantity);
+                      
+                      // Sincroniza com a API se autenticado
+                      if (isAuthenticated && item.cartItemId) {
+                        try {
+                          await updateCartItem(item.cartItemId, newQuantity);
+                        } catch (apiError) {
+                          console.error("Erro ao atualizar quantidade na API:", apiError);
+                        }
+                      }
+                    }}
                     style={{
                       width: 44,
                       height: 44,
@@ -442,7 +470,19 @@ const CartScreen: React.FC = () => {
                   </View>
 
                   <TouchableOpacity
-                    onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                    onPress={async () => {
+                      const newQuantity = item.quantity + 1;
+                      updateQuantity(item.id, newQuantity);
+                      
+                      // Sincroniza com a API se autenticado
+                      if (isAuthenticated && item.cartItemId) {
+                        try {
+                          await updateCartItem(item.cartItemId, newQuantity);
+                        } catch (apiError) {
+                          console.error("Erro ao atualizar quantidade na API:", apiError);
+                        }
+                      }
+                    }}
                     style={{
                       width: 44,
                       height: 44,
@@ -499,14 +539,14 @@ const CartScreen: React.FC = () => {
           backgroundColor: paperTheme.colors.surface,
           paddingHorizontal: 20,
           paddingTop: 20,
-          paddingBottom: Math.max(insets.bottom + 10, 20),
+          paddingBottom: Math.max(insets.bottom + 20, 30),
           borderTopWidth: 1,
           borderTopColor: paperTheme.colors.outline,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          elevation: 10,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 8,
         }}>
           <View style={{
             flexDirection: 'row',
@@ -514,7 +554,11 @@ const CartScreen: React.FC = () => {
             alignItems: 'center',
             marginBottom: 16,
           }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
+            <Text style={{ 
+              fontSize: 18, 
+              fontWeight: '600', 
+              color: paperTheme.colors.onSurface,
+            }}>
               Total
             </Text>
             <Text style={{
@@ -530,14 +574,19 @@ const CartScreen: React.FC = () => {
             mode="contained"
             onPress={handleCheckout}
             style={{
-              borderRadius: 16,
+              borderRadius: 14,
               minHeight: 56,
               backgroundColor: paperTheme.colors.primary,
             }}
             contentStyle={{
-              paddingVertical: 12,
+              paddingVertical: 14,
+              paddingHorizontal: 24,
             }}
-            labelStyle={{ fontSize: 18, fontWeight: 'bold' }}
+            labelStyle={{ 
+              fontSize: 17, 
+              fontWeight: 'bold',
+              color: paperTheme.colors.onPrimary,
+            }}
             icon={() => <Ionicons name="card" size={22} color={paperTheme.colors.onPrimary} />}
           >
             Finalizar Compra

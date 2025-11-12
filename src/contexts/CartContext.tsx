@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
 export interface CartItem {
-  id: string;
+  id: string; // productId
   name: string;
   price: number;
   image: string;
   marketName: string;
   quantity: number;
   marketId: string;
+  cartItemId?: string; // ID do item no carrinho da API (opcional)
 }
 
 interface CartState {
@@ -31,12 +32,20 @@ const initialState: CartState = {
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const existingItem = state.items.find(item => item.id === action.payload.id);
+      // Normaliza os IDs para string para garantir comparação correta
+      const payloadId = String(action.payload.id);
+      const existingItem = state.items.find(item => String(item.id) === payloadId);
       
       if (existingItem) {
+        // Se o item já existe, apenas incrementa a quantidade
+        // Preserva o cartItemId existente se o novo não tiver
         const updatedItems = state.items.map(item =>
-          item.id === action.payload.id
-            ? { ...item, quantity: item.quantity + 1 }
+          String(item.id) === payloadId
+            ? { 
+                ...item, 
+                quantity: item.quantity + 1,
+                cartItemId: action.payload.cartItemId || item.cartItemId // Preserva cartItemId existente
+              }
             : item
         );
         
@@ -49,7 +58,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           itemCount,
         };
       } else {
-        const newItem = { ...action.payload, quantity: 1 };
+        // Se o item não existe, adiciona com quantidade 1
+        const newItem = { ...action.payload, quantity: 1, id: payloadId };
         const updatedItems = [...state.items, newItem];
         const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -63,7 +73,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
     
     case 'REMOVE_ITEM': {
-      const updatedItems = state.items.filter(item => item.id !== action.payload);
+      const payloadId = String(action.payload);
+      const updatedItems = state.items.filter(item => String(item.id) !== payloadId);
       const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
       
@@ -75,8 +86,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
     
     case 'UPDATE_QUANTITY': {
+      const payloadId = String(action.payload.id);
       const updatedItems = state.items.map(item =>
-        item.id === action.payload.id
+        String(item.id) === payloadId
           ? { ...item, quantity: action.payload.quantity }
           : item
       ).filter(item => item.quantity > 0);

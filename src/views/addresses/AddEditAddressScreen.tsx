@@ -34,13 +34,14 @@ interface RouteParams {
     state?: string;
     zipCode?: string;
   };
+  onAddressAdded?: (address: any) => void;
 }
 
 export default function AddEditAddressScreen() {
   const navigation = useNavigation<AddEditAddressScreenNavigationProp>();
   const paperTheme = usePaperTheme();
   const route = useRoute();
-  const { addressId, initialData } = (route.params as RouteParams) || {};
+  const { addressId, initialData, onAddressAdded } = (route.params as RouteParams) || {};
   const [address, setAddress] = useState<Address | null>(null);
 
   const [formData, setFormData] = useState({
@@ -105,13 +106,19 @@ export default function AddEditAddressScreen() {
       const addressData = prepareAddressData();
 
       if (isEditing && addressId) {
-        await updateAddress(addressId, addressData);
+        const updatedAddress = await updateAddress(addressId, addressData);
         Alert.alert('Sucesso', 'Endereço atualizado com sucesso!');
+        navigation.goBack();
       } else {
-        await createAddress(addressData);
+        const newAddress = await createAddress(addressData);
         Alert.alert('Sucesso', 'Endereço adicionado com sucesso!');
+        
+        // Se tiver callback, chama antes de voltar
+        if (onAddressAdded) {
+          onAddressAdded(newAddress);
+        }
+        navigation.goBack();
       }
-      navigation.goBack();
     } catch (error: any) {
       let errorMessage = 'Não foi possível salvar o endereço.';
       
