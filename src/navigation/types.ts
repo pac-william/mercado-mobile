@@ -9,6 +9,8 @@ export type HomeStackParamList = {
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
+  History: undefined;
+  SuggestionDetail: { suggestionId: string };
 };
 
 export type SearchStackParamList = {

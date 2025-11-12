@@ -5,7 +5,8 @@ export interface Product {
   name: string;
   price: number;
   marketId: string;
-  image: string;
+  image?: string;
+  unit?: string;
 }
 
 interface ProductResponse {
@@ -19,7 +20,8 @@ export const getProducts = async (
   marketId?: string,    
   name?: string,
   minPrice?: number,
-  maxPrice?: number
+  maxPrice?: number,
+  categoryId?: string
 ): Promise<ProductResponse> => {
   try {
     const response = await api.get<ProductResponse>("/products", {
@@ -30,6 +32,7 @@ export const getProducts = async (
         name,
         minPrice,
         maxPrice,
+        categoryId,
       },
     });
 
