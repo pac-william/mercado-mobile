@@ -1,9 +1,15 @@
-import { AntDesign } from '@expo/vector-icons'; // Certifique-se de ter @expo/vector-icons instalado
+import { AntDesign } from '@expo/vector-icons';
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
-export default function FilterButton({ title, onPress }: { title: string, onPress: () => void }) {
+interface FilterButtonProps {
+  title: string;
+  onPress: () => void;
+  hasActiveFilters?: boolean;
+}
+
+export default function FilterButton({ title, onPress, hasActiveFilters = false }: FilterButtonProps) {
   const { colors } = useTheme();
 
   return (
@@ -13,6 +19,9 @@ export default function FilterButton({ title, onPress }: { title: string, onPres
         <Text style={[styles.text, { color: colors.primary }]}>
           {title}
         </Text>
+        {hasActiveFilters && (
+          <View style={[styles.badge, { backgroundColor: colors.error }]} />
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -35,5 +44,11 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  badge: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginLeft: 8,
   },
 });

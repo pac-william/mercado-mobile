@@ -5,7 +5,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import axios from "axios";
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
@@ -367,25 +366,16 @@ export default function SettingsScreen() {
                             await AsyncStorage.removeItem(NOTIFICATION_PREFERENCE_KEY);
                             await clearSession();
 
-                            try {
-                                const logoutUrl = `https://${auth0Domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(redirectUri)}`;
-                                await WebBrowser.openBrowserAsync(logoutUrl);
-                            } catch (logoutError) {
-                            }
-
-                            try {
-                                const tabNavigator = navigation.getParent();
-                                if (tabNavigator) {
-                                    tabNavigator.dispatch(
-                                        CommonActions.navigate({
-                                            name: 'HomeStack',
-                                            params: {
-                                                screen: 'HomeMain',
-                                            },
-                                        })
-                                    );
-                                }
-                            } catch (navError) {
+                            const tabNavigator = navigation.getParent();
+                            if (tabNavigator) {
+                                tabNavigator.dispatch(
+                                    CommonActions.navigate({
+                                        name: 'SettingsStack',
+                                        params: {
+                                            screen: 'SettingsMain',
+                                        },
+                                    })
+                                );
                             }
 
                             await refreshSession();

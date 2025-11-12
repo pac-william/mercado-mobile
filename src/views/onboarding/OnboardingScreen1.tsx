@@ -80,9 +80,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   description: {
-    color: "#666",
+    color: "#FFFFFF",
     textAlign: "center",
     lineHeight: 24,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   footer: {
     alignItems: "center",
