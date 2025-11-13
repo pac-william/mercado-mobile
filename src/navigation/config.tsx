@@ -26,6 +26,8 @@ export const sharedRoutes = [
   { name: 'AddressesMain', component: AddressesScreen },
   { name: 'AddAddress', component: AddEditAddressScreen },
   { name: 'EditAddress', component: AddEditAddressScreen },
+  { name: 'History', component: HistoryScreen },
+  { name: 'SuggestionDetail', component: SuggestionDetailScreen },
 ] as const;
 
 // Configuração das rotas do HomeStack
@@ -33,8 +35,6 @@ export const homeStackRoutes = [
   { name: 'HomeMain', component: Home },
   ...sharedRoutes,
   { name: 'MarketDetails', component: MarketDetailsScreen },
-  { name: 'History', component: HistoryScreen },
-  { name: 'SuggestionDetail', component: SuggestionDetailScreen },
 ] as const;
 
 // Configuração das rotas do SearchStack

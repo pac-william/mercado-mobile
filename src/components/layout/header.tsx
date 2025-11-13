@@ -1,23 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { HomeStackParamList } from "../../../App";
 import { useCart } from "../../contexts/CartContext";
 import { ProfileButton } from "../ui/ProfileButton";
 
 import Logo from "../../assets/logo1.jpg";
 
 interface HeaderProps {
-  onPressHistory?: () => void;
   onPressCart?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onPressHistory }) => {
-  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+export const Header: React.FC<HeaderProps> = () => {
+  const navigation = useNavigation<any>();
   const { state: cartState } = useCart();
   const paperTheme = usePaperTheme();
 
@@ -31,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ onPressHistory }) => {
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]}
-            onPress={onPressHistory}
+            onPress={() => navigation.navigate("History")}
           >
             <Ionicons name="time-outline" size={24} color={paperTheme.colors.tertiary} />
           </TouchableOpacity>

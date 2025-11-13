@@ -23,6 +23,8 @@ export type SearchStackParamList = {
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
+  History: undefined;
+  SuggestionDetail: { suggestionId: string };
 };
 
 export type SettingsStackParamList = {
@@ -36,6 +38,8 @@ export type SettingsStackParamList = {
   EditAddress: { addressId: string };
   Orders: undefined;
   OrderDetail: { orderId: string };
+  History: undefined;
+  SuggestionDetail: { suggestionId: string };
 };
 
 export type AuthStackParamList = {};
@@ -50,6 +54,8 @@ export type AIStackParamList = {
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
+  History: undefined;
+  SuggestionDetail: { suggestionId: string };
 };
 
 export type TabParamList = {

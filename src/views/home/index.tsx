@@ -109,7 +109,7 @@ export default function Home() {
   
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-      <Header onPressHistory={() => navigation.navigate("History")} />
+      <Header />
       {offline && (
         <OfflineBanner message="Sem conexão com a internet. Alguns recursos podem estar limitados." />
       )}
