@@ -5,7 +5,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserUpdateDTO } from 'dtos/userDTO';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActionSheetIOS, ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme as usePaperTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SettingsStackParamList } from '../../../App';
@@ -265,6 +265,7 @@ const EditProfileScreen: React.FC = () => {
     navigation.goBack();
   };
 
+
   const handleTakePhoto = async () => {
     if (permissions.camera.loading) {
       return;
@@ -364,11 +365,15 @@ const EditProfileScreen: React.FC = () => {
       flex: 1,
       backgroundColor: paperTheme.colors.background,
     },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
     scrollView: {
       flex: 1,
     },
     scrollContent: {
       padding: 16,
+      paddingBottom: 100,
     },
     title: {
       fontSize: 28,
@@ -491,11 +496,18 @@ const EditProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        enabled={Platform.OS === 'ios'}
       >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>Editar Perfil</Text>
 
         <View style={styles.profileSection}>
@@ -635,6 +647,7 @@ const EditProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <CustomModal
         visible={modalVisible}

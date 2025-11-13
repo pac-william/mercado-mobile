@@ -266,7 +266,7 @@ const CartScreen: React.FC = () => {
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{
-              paddingBottom: 10,
+              paddingBottom: Math.max(insets.bottom + 200, 220),
               paddingTop: 10
             }}
             showsVerticalScrollIndicator={false}
@@ -539,7 +539,7 @@ const CartScreen: React.FC = () => {
           backgroundColor: paperTheme.colors.surface,
           paddingHorizontal: 20,
           paddingTop: 20,
-          paddingBottom: Math.max(insets.bottom + 20, 30),
+          paddingBottom: Math.max(insets.bottom + 80, 100),
           borderTopWidth: 1,
           borderTopColor: paperTheme.colors.outline,
           shadowColor: '#000',

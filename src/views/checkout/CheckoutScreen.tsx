@@ -264,7 +264,7 @@ export default function CheckoutScreen() {
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
-            paddingBottom: Math.max(insets.bottom + 20, 20),
+            paddingBottom: Math.max(insets.bottom + 200, 220),
             paddingTop: 10
           }}
           showsVerticalScrollIndicator={false}
@@ -559,7 +559,7 @@ export default function CheckoutScreen() {
           backgroundColor: paperTheme.colors.surface,
           paddingHorizontal: 20,
           paddingTop: 20,
-          paddingBottom: Math.max(insets.bottom + 20, 30),
+          paddingBottom: Math.max(insets.bottom + 80, 100),
           borderTopWidth: 1,
           borderTopColor: paperTheme.colors.outline,
           shadowColor: '#000',
@@ -628,4 +628,3 @@ export default function CheckoutScreen() {
     </View>
   );
 }
-

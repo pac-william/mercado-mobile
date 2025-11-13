@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabParamList } from './types';
 import { HomeStackNavigator } from './stacks/HomeStack';
 import { SearchStackNavigator } from './stacks/SearchStack';
@@ -14,6 +15,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 export const TabNavigator: React.FC = () => {
   const paperTheme = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -22,12 +24,13 @@ export const TabNavigator: React.FC = () => {
         tabBarShowLabel: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 1,
+          bottom: 0,
           left: 15,
           right: 15,
           elevation: 5,
           backgroundColor: paperTheme.colors.surface,
-          height: Platform.OS === 'ios' ? 70 : 50,
+          height: Platform.OS === 'ios' ? 70 + Math.max(insets.bottom - 25, 0) : 50 + Math.max(insets.bottom - 25, 0),
+          paddingBottom: Math.max(insets.bottom - 25, 2),
           shadowColor: '#000',
           shadowOpacity: 0.06,
           shadowOffset: { width: 0, height: 10 },
@@ -132,4 +135,3 @@ export const TabNavigator: React.FC = () => {
     </Tab.Navigator>
   );
 };
-
