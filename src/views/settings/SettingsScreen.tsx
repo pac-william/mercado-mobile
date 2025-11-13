@@ -394,7 +394,8 @@ export default function SettingsScreen() {
             <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator={true}
+                indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}

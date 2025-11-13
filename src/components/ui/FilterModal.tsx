@@ -95,7 +95,8 @@ export default function FilterModal({
 
                 <ScrollView
                   style={styles.modalBody}
-                  showsVerticalScrollIndicator={false}
+                  showsVerticalScrollIndicator={true}
+                  indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                   keyboardShouldPersistTaps="handled"
                 >
                   <PriceFilter

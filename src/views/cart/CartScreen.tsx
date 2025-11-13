@@ -269,19 +269,19 @@ const CartScreen: React.FC = () => {
               paddingBottom: Math.max(insets.bottom + 200, 220),
               paddingTop: 10
             }}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
             bounces={true}
+            indicatorStyle={paperTheme.dark ? 'white' : 'default'}
           >
-          {/* Header do carrinho */}
           <View style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingHorizontal: 20,
-            paddingVertical: 16,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
             backgroundColor: paperTheme.colors.surface,
             marginHorizontal: 16,
-            marginTop: 16,
+            marginTop: 8,
             borderRadius: 16,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
@@ -289,7 +289,7 @@ const CartScreen: React.FC = () => {
             shadowRadius: 8,
             elevation: 4,
           }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
               Meu Carrinho ({cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'})
             </Text>
             <TouchableOpacity
@@ -297,13 +297,13 @@ const CartScreen: React.FC = () => {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                paddingHorizontal: 12,
-                paddingVertical: 6,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
                 backgroundColor: '#ffebee',
                 borderRadius: 20,
               }}
             >
-              <Ionicons name="trash-outline" size={16} color="#d32f2f" />
+              <Ionicons name="trash-outline" size={14} color="#d32f2f" />
               <Text style={{ color: '#d32f2f', fontSize: 12, marginLeft: 4, fontWeight: '600' }}>
                 Limpar
               </Text>
@@ -311,11 +311,11 @@ const CartScreen: React.FC = () => {
           </View>
 
           {/* Lista de itens */}
-          {cartState.items.map((item, index) => (
+          {cartState.items.map((item) => (
             <View key={item.id} style={{
               backgroundColor: paperTheme.colors.surface,
               marginHorizontal: 16,
-              marginTop: 12,
+              marginTop: 8,
               borderRadius: 20,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
@@ -324,52 +324,49 @@ const CartScreen: React.FC = () => {
               elevation: 6,
               overflow: 'hidden',
             }}>
-              {/* Header do item com botão remover */}
               <View style={{
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
-                padding: 20,
-                paddingBottom: 16,
+                padding: 14,
+                paddingBottom: 10,
               }}>
                 <View style={{ flex: 1, flexDirection: 'row' }}>
-                  {/* Imagem do produto */}
                   <Image
                     source={{ uri: item.image }}
                     style={{
-                      width: 90,
-                      height: 90,
-                      borderRadius: 16,
+                      width: 65,
+                      height: 65,
+                      borderRadius: 10,
                       backgroundColor: '#f5f5f5',
                     }}
                     resizeMode="contain"
                   />
 
-                  {/* Informações do produto */}
-                  <View style={{ flex: 1, marginLeft: 16, justifyContent: 'space-between' }}>
+                  <View style={{ flex: 1, marginLeft: 10, justifyContent: 'space-between' }}>
                     <View>
                       <Text style={{
-                        fontSize: 17,
+                        fontSize: 15,
                         fontWeight: 'bold',
                         color: paperTheme.colors.onSurface,
-                        marginBottom: 6,
-                        lineHeight: 24
+                        marginBottom: 3,
+                        lineHeight: 20
                       }}>
                         {item.name}
                       </Text>
 
                       <Text style={{
-                        fontSize: 14,
+                        fontSize: 13,
                         color: paperTheme.colors.onSurface,
                         opacity: 0.7,
-                        marginBottom: 8
+                        marginBottom: 4
                       }}>
                         {item.marketName}
                       </Text>
                     </View>
 
                     <Text style={{
-                      fontSize: 20,
+                      fontSize: 17,
                       fontWeight: 'bold',
                       color: paperTheme.colors.primary
                     }}>
@@ -378,33 +375,31 @@ const CartScreen: React.FC = () => {
                   </View>
                 </View>
 
-                {/* Botão remover */}
                 <TouchableOpacity
                   onPress={() => handleRemoveItem(item.id, item.name)}
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 30,
+                    height: 30,
                     backgroundColor: '#ffebee',
-                    borderRadius: 18,
+                    borderRadius: 15,
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginLeft: 12,
+                    marginLeft: 6,
                   }}
                 >
-                  <Ionicons name="close" size={18} color="#d32f2f" />
+                  <Ionicons name="close" size={15} color="#d32f2f" />
                 </TouchableOpacity>
               </View>
 
-              {/* Controles de quantidade */}
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                paddingHorizontal: 20,
-                paddingBottom: 16,
+                paddingHorizontal: 14,
+                paddingBottom: 10,
               }}>
                 <Text style={{
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: '600',
                   color: paperTheme.colors.onSurface
                 }}>
@@ -416,15 +411,14 @@ const CartScreen: React.FC = () => {
                   alignItems: 'center',
                   backgroundColor: paperTheme.colors.surfaceVariant,
                   borderRadius: 30,
-                  paddingHorizontal: 6,
-                  paddingVertical: 4,
+                  paddingHorizontal: 5,
+                  paddingVertical: 3,
                 }}>
                   <TouchableOpacity
                     onPress={async () => {
                       const newQuantity = Math.max(1, item.quantity - 1);
                       updateQuantity(item.id, newQuantity);
                       
-                      // Sincroniza com a API se autenticado
                       if (isAuthenticated && item.cartItemId) {
                         try {
                           await updateCartItem(item.cartItemId, newQuantity);
@@ -434,9 +428,9 @@ const CartScreen: React.FC = () => {
                       }
                     }}
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
                       backgroundColor: item.quantity <= 1 ? '#e0e0e0' : '#FF4500',
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -450,18 +444,18 @@ const CartScreen: React.FC = () => {
                   >
                     <Ionicons
                       name="remove"
-                      size={22}
+                      size={18}
                       color={item.quantity <= 1 ? '#999' : 'white'}
                     />
                   </TouchableOpacity>
 
                   <View style={{
-                    minWidth: 50,
+                    minWidth: 40,
                     alignItems: 'center',
-                    marginHorizontal: 16,
+                    marginHorizontal: 10,
                   }}>
                     <Text style={{
-                      fontSize: 20,
+                      fontSize: 17,
                       fontWeight: 'bold',
                       color: paperTheme.colors.onSurface,
                     }}>
@@ -474,7 +468,6 @@ const CartScreen: React.FC = () => {
                       const newQuantity = item.quantity + 1;
                       updateQuantity(item.id, newQuantity);
                       
-                      // Sincroniza com a API se autenticado
                       if (isAuthenticated && item.cartItemId) {
                         try {
                           await updateCartItem(item.cartItemId, newQuantity);
@@ -484,9 +477,9 @@ const CartScreen: React.FC = () => {
                       }
                     }}
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
                       backgroundColor: '#FF4500',
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -497,32 +490,31 @@ const CartScreen: React.FC = () => {
                       elevation: 3,
                     }}
                   >
-                    <Ionicons name="add" size={22} color="white" />
+                    <Ionicons name="add" size={18} color="white" />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Subtotal do item */}
               <View style={{
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                paddingHorizontal: 20,
-                paddingBottom: 20,
-                paddingTop: 16,
+                paddingHorizontal: 14,
+                paddingBottom: 14,
+                paddingTop: 10,
                 borderTopWidth: 1,
                 borderTopColor: paperTheme.colors.outline,
                 backgroundColor: paperTheme.colors.surfaceVariant,
               }}>
                 <Text style={{
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: '600',
                   color: paperTheme.colors.onSurface
                 }}>
                   Subtotal
                 </Text>
                 <Text style={{
-                  fontSize: 20,
+                  fontSize: 17,
                   fontWeight: 'bold',
                   color: paperTheme.colors.primary
                 }}>
@@ -534,12 +526,11 @@ const CartScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        {/* Resumo do pedido - fixo na parte inferior */}
         <View style={{
           backgroundColor: paperTheme.colors.surface,
-          paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: Math.max(insets.bottom + 80, 100),
+          paddingHorizontal: 14,
+          paddingTop: 12,
+          paddingBottom: Math.max(insets.bottom + 50, 70),
           borderTopWidth: 1,
           borderTopColor: paperTheme.colors.outline,
           shadowColor: '#000',
@@ -552,17 +543,17 @@ const CartScreen: React.FC = () => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: 16,
+            marginBottom: 12,
           }}>
             <Text style={{ 
-              fontSize: 18, 
+              fontSize: 15, 
               fontWeight: '600', 
               color: paperTheme.colors.onSurface,
             }}>
               Total
             </Text>
             <Text style={{
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: 'bold',
               color: paperTheme.colors.primary
             }}>
@@ -575,19 +566,19 @@ const CartScreen: React.FC = () => {
             onPress={handleCheckout}
             style={{
               borderRadius: 14,
-              minHeight: 56,
+              minHeight: 46,
               backgroundColor: paperTheme.colors.primary,
             }}
             contentStyle={{
-              paddingVertical: 14,
+              paddingVertical: 10,
               paddingHorizontal: 24,
             }}
             labelStyle={{ 
-              fontSize: 17, 
+              fontSize: 15, 
               fontWeight: 'bold',
               color: paperTheme.colors.onPrimary,
             }}
-            icon={() => <Ionicons name="card" size={22} color={paperTheme.colors.onPrimary} />}
+            icon={() => <Ionicons name="card" size={19} color={paperTheme.colors.onPrimary} />}
           >
             Finalizar Compra
           </Button>

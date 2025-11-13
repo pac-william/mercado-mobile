@@ -56,7 +56,8 @@ export default function AISearch() {
       
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
         <View style={styles.searchSection}>
           <View style={styles.titleContainer}>

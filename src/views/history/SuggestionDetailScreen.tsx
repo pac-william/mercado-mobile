@@ -135,6 +135,8 @@ export default function SuggestionDetailScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
         <View
           style={[

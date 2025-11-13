@@ -239,7 +239,8 @@ export default function AddEditAddressScreen() {
         <ScrollView
           style={styles.content}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
+          indicatorStyle={paperTheme.dark ? 'white' : 'default'}
           keyboardShouldPersistTaps="handled"
         >
         <View style={styles.header}>

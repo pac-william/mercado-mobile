@@ -126,7 +126,8 @@ export default function ProductDetail({ route }: Props) {
           paddingBottom: 100, 
           paddingTop: 10 
         }}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
         
         <View style={{

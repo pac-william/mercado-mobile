@@ -116,6 +116,8 @@ export default function Home() {
       <ScrollView
         style={styles.scrollViewFlex}
         contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle={paperTheme.dark ? 'white' : 'default'}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

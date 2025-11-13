@@ -267,7 +267,8 @@ export default function CheckoutScreen() {
             paddingBottom: Math.max(insets.bottom + 200, 220),
             paddingTop: 10
           }}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
+          indicatorStyle={paperTheme.dark ? 'white' : 'default'}
         >
           {/* Resumo do Pedido */}
           <View style={{

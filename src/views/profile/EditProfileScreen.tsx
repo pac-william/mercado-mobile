@@ -505,7 +505,8 @@ const EditProfileScreen: React.FC = () => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
+          indicatorStyle={paperTheme.dark ? 'white' : 'default'}
           keyboardShouldPersistTaps="handled"
         >
         <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>Editar Perfil</Text>

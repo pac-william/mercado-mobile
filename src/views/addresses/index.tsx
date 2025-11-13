@@ -212,7 +212,7 @@ export default function AddressesScreen() {
             renderItem={renderAddressItem}
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
             contentContainerStyle={styles.listContent}
             ListFooterComponent={
               addresses.length < 3 ? (

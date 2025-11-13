@@ -165,6 +165,7 @@ export default function OrderDetailScreen() {
           paddingTop: 10,
         }}
         showsVerticalScrollIndicator={true}
+        indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
         {/* Card de informações do pedido */}
         <View style={[styles.orderInfoCard, { backgroundColor: paperTheme.colors.surface }]}>
