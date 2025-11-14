@@ -1,3 +1,5 @@
+import { Product } from "../services/productService";
+
 // Tipos de navegação para todas as stacks
 export type HomeStackParamList = {
   HomeMain: undefined;
@@ -11,7 +13,7 @@ export type HomeStackParamList = {
   EditAddress: { addressId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
-  MarketProducts: { suggestionId: string; marketId: string };
+  MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
 
 export type SearchStackParamList = {
@@ -26,7 +28,7 @@ export type SearchStackParamList = {
   EditAddress: { addressId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
-  MarketProducts: { suggestionId: string; marketId: string };
+  MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
 
 export type SettingsStackParamList = {
@@ -42,7 +44,7 @@ export type SettingsStackParamList = {
   OrderDetail: { orderId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
-  MarketProducts: { suggestionId: string; marketId: string };
+  MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
 
 export type AuthStackParamList = {};
@@ -59,7 +61,7 @@ export type AIStackParamList = {
   EditAddress: { addressId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
-  MarketProducts: { suggestionId: string; marketId: string };
+  MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
 
 export type TabParamList = {

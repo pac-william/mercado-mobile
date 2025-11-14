@@ -19,6 +19,7 @@ import { Header } from "../../components/layout/header";
 import { getSuggestionById } from "../../services/suggestionService";
 import { getProducts, Product } from "../../services/productService";
 import { getMarketById } from "../../services/marketService";
+import { Suggestion } from "../../types/suggestion";
 import { useCart } from "../../contexts/CartContext";
 import { useSession } from "../../hooks/useSession";
 import { addItemToCart, updateCartItem, removeCartItem } from "../../services/cartService";
@@ -37,7 +38,11 @@ export default function MarketProductsScreen() {
   const route = useRoute();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
-  const { suggestionId, marketId } = route.params as { suggestionId: string; marketId: string };
+  const { suggestionId, marketId, products: cachedProducts } = route.params as { 
+    suggestionId: string; 
+    marketId: string; 
+    products?: Product[] 
+  };
   const { addItem, updateQuantity, removeItem, state: cartState } = useCart();
   const { isAuthenticated } = useSession();
 
@@ -69,7 +74,11 @@ export default function MarketProductsScreen() {
         logo: marketData.profilePicture,
       });
 
-      await loadProducts(suggestionData, marketId, marketData.name);
+      if (cachedProducts && cachedProducts.length > 0) {
+        await loadProductsFromCache(suggestionData, cachedProducts, marketId, marketData.name);
+      } else {
+        await loadProducts(suggestionData, marketId, marketData.name);
+      }
     } catch (err: any) {
       setError(err.message || "Erro ao carregar dados");
     } finally {
@@ -77,10 +86,105 @@ export default function MarketProductsScreen() {
     }
   };
 
-  const loadProducts = async (suggestionData: any, targetMarketId: string, marketName: string) => {
+  const buildProductsMap = (suggestionItems: Suggestion["data"]["items"], products: Product[]) => {
+    const productsMap = new Map<string, { categoryId: string; type: "essential" | "common" | "utensil" }>();
+    for (const item of suggestionItems) {
+      products.forEach((p) => {
+        if (!productsMap.has(p.id) && p.name.toLowerCase().includes(item.name.toLowerCase())) {
+          productsMap.set(p.id, { categoryId: item.categoryId, type: item.type });
+        }
+      });
+    }
+    return productsMap;
+  };
+
+  const mapProductsWithQuantity = (
+    products: Product[],
+    productsMap: Map<string, { categoryId: string; type: "essential" | "common" | "utensil" }>,
+    targetMarketId: string
+  ): ProductWithQuantity[] => {
+    return products.map((p) => {
+      const cartItem = cartState.items.find((i) => i.id === p.id && i.marketId === targetMarketId);
+      const productInfo = productsMap.get(p.id);
+      const initialQuantity = cartItem?.quantity || 1;
+      return {
+        ...p,
+        quantity: initialQuantity,
+        cartItemId: cartItem?.cartItemId,
+        categoryId: productInfo?.categoryId,
+        type: productInfo?.type,
+      };
+    });
+  };
+
+  const removeSuggestionProductsFromOtherMarkets = async (suggestionProducts: Product[], currentMarketId: string) => {
+    const suggestionProductIds = new Set(suggestionProducts.map((p) => p.id));
+    
+    const itemsToRemove = cartState.items.filter(
+      (item) => suggestionProductIds.has(item.id) && item.marketId !== currentMarketId
+    );
+
+    for (const item of itemsToRemove) {
+      removeItem(item.id);
+      if (isAuthenticated && item.cartItemId) {
+        try {
+          await removeCartItem(item.cartItemId);
+        } catch {
+          continue;
+        }
+      }
+    }
+  };
+
+  const addProductsToCart = async (products: ProductWithQuantity[], targetMarketId: string, marketName: string) => {
+    for (const product of products) {
+      if (!cartState.items.find((i) => i.id === product.id && i.marketId === targetMarketId)) {
+        addItem({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image || "",
+          marketName: marketName,
+          marketId: product.marketId,
+        });
+        if (isAuthenticated) {
+          addItemToCart({ productId: product.id, quantity: 1 })
+            .then((response) => {
+              setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, cartItemId: response.id } : p)));
+            })
+            .catch(() => {
+              setProducts((prev) => prev.map((p) => {
+                const cartItem = cartState.items.find((i) => i.id === p.id && i.marketId === targetMarketId);
+                return p.id === product.id ? { ...p, quantity: cartItem?.quantity || 1, cartItemId: cartItem?.cartItemId } : p;
+              }));
+            });
+        }
+      }
+    }
+  };
+
+  const loadProductsFromCache = async (
+    suggestionData: Suggestion,
+    cachedProducts: Product[],
+    targetMarketId: string,
+    marketName: string
+  ) => {
+    try {
+      await removeSuggestionProductsFromOtherMarkets(cachedProducts, targetMarketId);
+      const productsMap = buildProductsMap(suggestionData.data.items, cachedProducts);
+      const productsWithQuantity = mapProductsWithQuantity(cachedProducts, productsMap, targetMarketId);
+      await addProductsToCart(productsWithQuantity, targetMarketId, marketName);
+      setProducts(productsWithQuantity);
+    } catch {
+      setProducts([]);
+    }
+  };
+
+  const loadProducts = async (suggestionData: Suggestion, targetMarketId: string, marketName: string) => {
     try {
       const allProducts: Product[] = [];
       const productsMap = new Map<string, { categoryId: string; type: "essential" | "common" | "utensil" }>();
+
       for (const item of suggestionData.data.items) {
         try {
           const response = await getProducts(1, 50, targetMarketId, item.name, undefined, undefined, item.categoryId);
@@ -96,45 +200,11 @@ export default function MarketProductsScreen() {
           continue;
         }
       }
+
       const uniqueProducts = allProducts.filter((p, i, self) => i === self.findIndex((x) => x.id === p.id));
-      const productsWithQuantity = uniqueProducts.map((p) => {
-        const cartItem = cartState.items.find((i) => i.id === p.id && i.marketId === targetMarketId);
-        const productInfo = productsMap.get(p.id);
-        const initialQuantity = cartItem?.quantity || 1;
-        return {
-          ...p,
-          quantity: initialQuantity,
-          cartItemId: cartItem?.cartItemId,
-          categoryId: productInfo?.categoryId,
-          type: productInfo?.type,
-        };
-      });
-
-      for (const product of productsWithQuantity) {
-        if (!cartState.items.find((i) => i.id === product.id && i.marketId === targetMarketId)) {
-          addItem({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image || "",
-            marketName: marketName,
-            marketId: product.marketId,
-          });
-          if (isAuthenticated) {
-            addItemToCart({ productId: product.id, quantity: 1 })
-              .then((response) => {
-                setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, cartItemId: response.id } : p)));
-              })
-              .catch(() => {
-                setProducts((prev) => prev.map((p) => {
-                  const cartItem = cartState.items.find((i) => i.id === p.id && i.marketId === targetMarketId);
-                  return p.id === product.id ? { ...p, quantity: cartItem?.quantity || 1, cartItemId: cartItem?.cartItemId } : p;
-                }));
-              });
-          }
-        }
-      }
-
+      await removeSuggestionProductsFromOtherMarkets(uniqueProducts, targetMarketId);
+      const productsWithQuantity = mapProductsWithQuantity(uniqueProducts, productsMap, targetMarketId);
+      await addProductsToCart(productsWithQuantity, targetMarketId, marketName);
       setProducts(productsWithQuantity);
     } catch {
       setProducts([]);

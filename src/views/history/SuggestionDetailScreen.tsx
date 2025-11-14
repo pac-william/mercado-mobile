@@ -16,7 +16,7 @@ import { Header } from "../../components/layout/header";
 import { getSuggestionById } from "../../services/suggestionService";
 import { Suggestion } from "../../types/suggestion";
 import { getProducts, Product } from "../../services/productService";
-import { getMarketById } from "../../services/marketService";
+import { getMarkets } from "../../services/marketService";
 
 type SuggestionDetailScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -38,6 +38,7 @@ export default function SuggestionDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
+  const [productsCache, setProductsCache] = useState<Map<string, Product[]>>(new Map());
 
   useEffect(() => {
     loadData();
@@ -61,30 +62,19 @@ export default function SuggestionDetailScreen() {
     if (suggestionData.data.items.length === 0) return;
 
     try {
-      const allProducts: Product[] = [];
-      const marketIdsSet = new Set<string>();
+      const marketsResponse = await getMarkets(1, 100);
+      const allMarkets = marketsResponse.markets || [];
 
-      for (const item of suggestionData.data.items) {
-        try {
-          const response = await getProducts(1, 50, undefined, item.name, undefined, undefined, item.categoryId);
-          if (response.products?.length > 0) {
-            allProducts.push(...response.products);
-            response.products.forEach((p) => marketIdsSet.add(p.marketId));
-          }
-        } catch {
-          continue;
-        }
-      }
+      const newProductsCache = new Map<string, Product[]>();
 
       const marketsInfo = await Promise.all(
-        Array.from(marketIdsSet).map(async (marketId): Promise<MarketInfo | null> => {
+        allMarkets.map(async (market): Promise<MarketInfo | null> => {
           try {
-            const market = await getMarketById(marketId);
             const marketProducts: Product[] = [];
 
             for (const item of suggestionData.data.items) {
               try {
-                const response = await getProducts(1, 50, marketId, item.name, undefined, undefined, item.categoryId);
+                const response = await getProducts(1, 50, market.id, item.name, undefined, undefined, item.categoryId);
                 if (response.products?.length > 0) {
                   marketProducts.push(...response.products);
                 }
@@ -97,6 +87,12 @@ export default function SuggestionDetailScreen() {
               (product, index, self) =>
                 index === self.findIndex((p) => p.id === product.id)
             );
+
+            if (uniqueProducts.length === 0) {
+              return null;
+            }
+
+            newProductsCache.set(market.id, uniqueProducts);
 
             const totalPrice = uniqueProducts.reduce((sum, product) => sum + product.price, 0);
 
@@ -114,6 +110,7 @@ export default function SuggestionDetailScreen() {
         })
       );
 
+      setProductsCache(newProductsCache);
       setMarkets(marketsInfo.filter((m): m is MarketInfo => m !== null));
     } catch {
       setMarkets([]);
@@ -218,6 +215,7 @@ export default function SuggestionDetailScreen() {
                   navigation.navigate("MarketProducts", {
                     suggestionId: suggestionId,
                     marketId: market.id,
+                    products: productsCache.get(market.id),
                   });
                 }}
               >
