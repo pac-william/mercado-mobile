@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Searchbar, useTheme } from "react-native-paper";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { getSuggestions, SuggestionResponse } from "../../services/suggestionService";
@@ -12,16 +12,19 @@ interface SearchItensProps {
 const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digite sua receita ou produto" }) => {
   const paperTheme = useTheme();
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() || loading) return;
 
+    setLoading(true);
     try {
       const data = await getSuggestions(searchQuery);
       onResult(data);
     } catch (err: any) {
-      console.error(err);
       onResult({ essential_products: [], common_products: [], utensils: [] });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,15 +44,21 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
         />
         <TouchableOpacity
           onPress={handleSearch}
+          disabled={loading}
           style={[
             styles.searchButton,
             {
               backgroundColor: paperTheme.colors.primary,
+              opacity: loading ? 0.6 : 1,
             }
           ]}
           activeOpacity={0.7}
         >
-          <Ionicons name="search" size={20} color={paperTheme.colors.onPrimary} />
+          {loading ? (
+            <ActivityIndicator size="small" color={paperTheme.colors.onPrimary} />
+          ) : (
+            <Ionicons name="search" size={20} color={paperTheme.colors.onPrimary} />
+          )}
         </TouchableOpacity>
       </View>
     </View>

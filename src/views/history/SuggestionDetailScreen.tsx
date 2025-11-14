@@ -15,19 +15,9 @@ import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
 import { getSuggestionById } from "../../services/suggestionService";
 import { Suggestion } from "../../types/suggestion";
-import { getProducts, Product } from "../../services/productService";
-import { getMarkets } from "../../services/marketService";
+import { useMarketLoader } from "../../hooks/useMarketLoader";
 
 type SuggestionDetailScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
-
-interface MarketInfo {
-  id: string;
-  name: string;
-  address: string;
-  logo?: string;
-  productCount: number;
-  totalPrice: number;
-}
 
 export default function SuggestionDetailScreen() {
   const navigation = useNavigation<SuggestionDetailScreenNavigationProp>();
@@ -37,8 +27,7 @@ export default function SuggestionDetailScreen() {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [markets, setMarkets] = useState<MarketInfo[]>([]);
-  const [productsCache, setProductsCache] = useState<Map<string, Product[]>>(new Map());
+  const { markets, productsCache, loadMarkets } = useMarketLoader();
 
   useEffect(() => {
     loadData();
@@ -55,65 +44,6 @@ export default function SuggestionDetailScreen() {
       setError(err.message || "Erro ao carregar sugestão");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadMarkets = async (suggestionData: Suggestion) => {
-    if (suggestionData.data.items.length === 0) return;
-
-    try {
-      const marketsResponse = await getMarkets(1, 100);
-      const allMarkets = marketsResponse.markets || [];
-
-      const newProductsCache = new Map<string, Product[]>();
-
-      const marketsInfo = await Promise.all(
-        allMarkets.map(async (market): Promise<MarketInfo | null> => {
-          try {
-            const marketProducts: Product[] = [];
-
-            for (const item of suggestionData.data.items) {
-              try {
-                const response = await getProducts(1, 50, market.id, item.name, undefined, undefined, item.categoryId);
-                if (response.products?.length > 0) {
-                  marketProducts.push(...response.products);
-                }
-              } catch {
-                continue;
-              }
-            }
-
-            const uniqueProducts = marketProducts.filter(
-              (product, index, self) =>
-                index === self.findIndex((p) => p.id === product.id)
-            );
-
-            if (uniqueProducts.length === 0) {
-              return null;
-            }
-
-            newProductsCache.set(market.id, uniqueProducts);
-
-            const totalPrice = uniqueProducts.reduce((sum, product) => sum + product.price, 0);
-
-            return {
-              id: market.id,
-              name: market.name,
-              address: market.address || "",
-              logo: market.profilePicture,
-              productCount: uniqueProducts.length,
-              totalPrice: totalPrice,
-            };
-          } catch {
-            return null;
-          }
-        })
-      );
-
-      setProductsCache(newProductsCache);
-      setMarkets(marketsInfo.filter((m): m is MarketInfo => m !== null));
-    } catch {
-      setMarkets([]);
     }
   };
 

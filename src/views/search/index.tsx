@@ -76,7 +76,6 @@ export default function Search() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor será aplicado dinamicamente via props
   },
   searchSection: {
     marginTop: 16, 
@@ -97,8 +96,6 @@ const styles = StyleSheet.create({
     marginVertical: 6,
     padding: 16,
     borderRadius: 12,
-    // backgroundColor será aplicado dinamicamente via props
-    // borderWidth e borderColor serão aplicados dinamicamente via props
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -108,6 +105,5 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 16,
     fontWeight: "500",
-    // color será aplicado dinamicamente via props
   },
 });

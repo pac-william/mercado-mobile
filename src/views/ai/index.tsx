@@ -1,17 +1,23 @@
-import React, { useState, useMemo } from "react";
-import { View, FlatList, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useMemo, useEffect } from "react";
+import { View, FlatList, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Header } from "../../components/layout/header";
 import SearchItens from "../../components/ui/SearchItens";
-import { SuggestionResponse } from "../../services/suggestionService";
+import { SuggestionResponse, getSuggestionById } from "../../services/suggestionService";
+import { useMarketLoader } from "../../hooks/useMarketLoader";
+import { AIStackParamList } from "../../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 
+type AISearchNavigationProp = NativeStackNavigationProp<AIStackParamList>;
+
 export default function AISearch() {
+  const navigation = useNavigation<AISearchNavigationProp>();
   const paperTheme = useTheme();
   const [results, setResults] = useState<SuggestionResponse | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { markets, productsCache, loading: loadingMarkets, loadMarkets } = useMarketLoader();
 
-  // Sugestões iniciais para inspirar o usuário
   const recipeSuggestions = [
     "Receita de bolo de chocolate",
     "Pizza caseira",
@@ -42,13 +48,20 @@ export default function AISearch() {
     return data;
   }, [results]);
 
-  const handleSuggestionPress = (suggestion: string) => {
-    setSearchQuery(suggestion);
-    // Simula uma busca com a sugestão
-    setTimeout(() => {
-      // Aqui você pode fazer a busca automaticamente se quiser
-    }, 100);
-  };
+  useEffect(() => {
+    const fetchSuggestionAndMarkets = async () => {
+      if (!results?.suggestionId) return;
+
+      try {
+        const suggestionData = await getSuggestionById(results.suggestionId);
+        await loadMarkets(suggestionData);
+      } catch {
+        return;
+      }
+    };
+
+    fetchSuggestionAndMarkets();
+  }, [results?.suggestionId, loadMarkets]);
 
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
@@ -70,7 +83,7 @@ export default function AISearch() {
             </Text>
           </View>
           
-          <View style={{ marginTop: 20 }}>
+          <View style={styles.searchInputContainer}>
             <SearchItens 
               onResult={setResults} 
               placeholder="Ex: Bolo de chocolate, Pizza"
@@ -99,7 +112,6 @@ export default function AISearch() {
                     }
                   ]}
                   activeOpacity={0.7}
-                  onPress={() => handleSuggestionPress(suggestion)}
                 >
                   <Ionicons 
                     name="restaurant-outline" 
@@ -119,47 +131,122 @@ export default function AISearch() {
         )}
 
         {results && flatListData.length > 0 && (
-          <View style={styles.resultsContainer}>
-            <View style={styles.resultsHeader}>
-              <Ionicons name="checkmark-circle" size={24} color={paperTheme.colors.primary} />
-              <Text style={[styles.resultsTitle, { color: paperTheme.colors.onBackground }]}>
-                Ingredientes Encontrados
-              </Text>
+          <>
+            <View style={styles.resultsContainer}>
+              <View style={styles.resultsHeader}>
+                <Ionicons name="checkmark-circle" size={24} color={paperTheme.colors.primary} />
+                <Text style={[styles.resultsTitle, { color: paperTheme.colors.onBackground }]}>
+                  Ingredientes Encontrados
+                </Text>
+              </View>
+
+              <FlatList
+                data={flatListData}
+                keyExtractor={(item, index) => `${item.type}-${index}`}
+                scrollEnabled={false}
+                renderItem={({ item }) => (
+                  <View
+                    style={[
+                      styles.resultItem,
+                      {
+                        backgroundColor: paperTheme.colors.surface,
+                        borderColor: paperTheme.colors.outline,
+                      }
+                    ]}
+                  >
+                    <Ionicons 
+                      name={
+                        item.type === "essential" 
+                          ? "star" 
+                          : item.type === "common" 
+                          ? "cube-outline" 
+                          : "restaurant-outline"
+                      }
+                      size={18}
+                      color={paperTheme.colors.primary}
+                      style={styles.resultIcon}
+                    />
+                    <Text style={[styles.itemText, { color: paperTheme.colors.onSurface }]}>
+                      {item.value}
+                    </Text>
+                  </View>
+                )}
+              />
             </View>
 
-            <FlatList
-              data={flatListData}
-              keyExtractor={(item, index) => `${item.type}-${index}`}
-              scrollEnabled={false}
-              renderItem={({ item }) => (
-                <View
-                  style={[
-                    styles.resultItem,
-                    {
-                      backgroundColor: paperTheme.colors.surface,
-                      borderColor: paperTheme.colors.outline,
-                    }
-                  ]}
-                >
-                  <Ionicons 
-                    name={
-                      item.type === "essential" 
-                        ? "star" 
-                        : item.type === "common" 
-                        ? "cube-outline" 
-                        : "restaurant-outline"
-                    }
-                    size={18}
-                    color={paperTheme.colors.primary}
-                    style={styles.resultIcon}
-                  />
-                  <Text style={[styles.itemText, { color: paperTheme.colors.onSurface }]}>
-                    {item.value}
-                  </Text>
-                </View>
-              )}
-            />
-          </View>
+            {loadingMarkets ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+                <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                  Buscando mercados...
+                </Text>
+              </View>
+            ) : markets.length > 0 ? (
+              <View style={styles.marketsContainer}>
+                <Text style={[styles.marketsTitle, { color: paperTheme.colors.onBackground }]}>
+                  Mercados Disponíveis
+                </Text>
+                {markets.map((market) => (
+                  <TouchableOpacity
+                    key={market.id}
+                    style={[
+                      styles.marketCard,
+                      { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                    ]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      navigation.navigate("MarketProducts", {
+                        suggestionId: results.suggestionId,
+                        marketId: market.id,
+                        products: productsCache.get(market.id),
+                      });
+                    }}
+                  >
+                    <View style={styles.marketCardContent}>
+                      {market.logo ? (
+                        <Image source={{ uri: market.logo }} style={styles.marketLogo} />
+                      ) : (
+                        <View style={[styles.marketLogoPlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                          <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
+                        </View>
+                      )}
+                      <View style={styles.marketInfo}>
+                        <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
+                          {market.name}
+                        </Text>
+                        {market.address && (
+                          <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                            {market.address}
+                          </Text>
+                        )}
+                        <View style={styles.marketBadges}>
+                          <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                            <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
+                            <Text style={[styles.marketBadgeText, { color: paperTheme.colors.primary }]}>
+                              {market.productCount} {market.productCount === 1 ? "produto" : "produtos"}
+                            </Text>
+                          </View>
+                          <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.primaryContainer }]}>
+                            <Text style={[styles.marketPriceText, { color: paperTheme.colors.onPrimaryContainer }]}>
+                              R$ {market.totalPrice.toFixed(2)}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : markets.length === 0 && !loadingMarkets ? (
+              <View style={styles.emptyMarketsContainer}>
+                <Ionicons name="storefront-outline" size={48} color={paperTheme.colors.onSurfaceVariant} />
+                <Text style={[styles.emptyMarketsText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                  Nenhum mercado encontrado com estes produtos
+                </Text>
+              </View>
+            ) : null}
+          </>
         )}
 
         {results && flatListData.length === 0 && (
@@ -188,6 +275,9 @@ const styles = StyleSheet.create({
   searchSection: {
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  searchInputContainer: {
+    marginTop: 20,
   },
   titleContainer: {
     alignItems: "center",
@@ -295,6 +385,94 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
     lineHeight: 20,
+  },
+  loadingContainer: {
+    paddingVertical: 32,
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+  },
+  marketsContainer: {
+    paddingHorizontal: 16,
+    marginTop: 24,
+  },
+  marketsTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  marketCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  marketCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+  },
+  marketLogo: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 12,
+  },
+  marketLogoPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  marketInfo: {
+    flex: 1,
+  },
+  marketName: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  marketAddress: {
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  marketBadges: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  marketBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  marketBadgeText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  marketPriceText: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  emptyMarketsContainer: {
+    paddingVertical: 48,
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  emptyMarketsText: {
+    fontSize: 14,
+    marginTop: 12,
+    textAlign: "center",
   },
 });
 
