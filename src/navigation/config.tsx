@@ -8,6 +8,7 @@ import CartScreen from '../views/cart/CartScreen';
 import CheckoutScreen from '../views/checkout/CheckoutScreen';
 import HistoryScreen from '../views/history/index';
 import SuggestionDetailScreen from '../views/history/SuggestionDetailScreen';
+import MarketProductsScreen from '../views/history/MarketProductsScreen';
 import Home from '../views/home/index';
 import MarketDetailsScreen from '../views/market/index';
 import OrderDetailScreen from '../views/orders/OrderDetailScreen';
@@ -28,6 +29,7 @@ export const sharedRoutes = [
   { name: 'EditAddress', component: AddEditAddressScreen },
   { name: 'History', component: HistoryScreen },
   { name: 'SuggestionDetail', component: SuggestionDetailScreen },
+  { name: 'MarketProducts', component: MarketProductsScreen },
 ] as const;
 
 // Configuração das rotas do HomeStack

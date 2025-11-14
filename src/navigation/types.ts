@@ -11,6 +11,7 @@ export type HomeStackParamList = {
   EditAddress: { addressId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
+  MarketProducts: { suggestionId: string; marketId: string };
 };
 
 export type SearchStackParamList = {
@@ -25,6 +26,7 @@ export type SearchStackParamList = {
   EditAddress: { addressId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
+  MarketProducts: { suggestionId: string; marketId: string };
 };
 
 export type SettingsStackParamList = {
@@ -40,6 +42,7 @@ export type SettingsStackParamList = {
   OrderDetail: { orderId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
+  MarketProducts: { suggestionId: string; marketId: string };
 };
 
 export type AuthStackParamList = {};
@@ -56,6 +59,7 @@ export type AIStackParamList = {
   EditAddress: { addressId: string };
   History: undefined;
   SuggestionDetail: { suggestionId: string };
+  MarketProducts: { suggestionId: string; marketId: string };
 };
 
 export type TabParamList = {
