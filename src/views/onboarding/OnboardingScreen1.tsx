@@ -13,9 +13,9 @@ export default function OnboardingScreen1({ onNext }: OnboardingScreen1Props) {
     <ImageBackground 
       source={RelaOnboarding1} 
       style={styles.backgroundImage}
-      resizeMode="stretch"
+      resizeMode="cover"
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, styles.overlay]}>
         <View style={styles.content}>
           <View style={styles.spacer} />
 
@@ -54,6 +54,9 @@ export default function OnboardingScreen1({ onNext }: OnboardingScreen1Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   backgroundImage: {
     flex: 1,

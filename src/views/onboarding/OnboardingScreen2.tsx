@@ -14,9 +14,9 @@ export default function OnboardingScreen2({ onNext, onBack }: OnboardingScreen2P
     <ImageBackground
       source={TelaOnboarding2}
       style={styles.backgroundImage}
-      resizeMode="stretch"
+      resizeMode="cover"
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, styles.overlay]}>
         <View style={styles.content}>
           
           <View style={styles.spacer} /> 
@@ -65,6 +65,9 @@ export default function OnboardingScreen2({ onNext, onBack }: OnboardingScreen2P
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   backgroundImage: {
     flex: 1,
