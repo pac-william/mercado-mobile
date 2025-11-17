@@ -10,6 +10,7 @@ import { useTheme as usePaperTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SettingsStackParamList } from '../../../App';
 import CustomModal from '../../components/ui/CustomModal';
+import { useUserProfile } from '../../contexts/UserProfileContext';
 import { User } from '../../domain/userDomain';
 import { usePermissions } from '../../hooks/usePermissions';
 import { getUserMe, updateUserMe } from '../../services/userService';
@@ -20,6 +21,7 @@ const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
   const paperTheme = usePaperTheme();
   const permissions = usePermissions();
+  const { setLocalPhoto: setProfilePhoto, applyProfileUpdate, localPhoto } = useUserProfile();
   const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -124,6 +126,7 @@ const EditProfileScreen: React.FC = () => {
         phone: currentUser.phone || '',
         birthDate: currentUser.birthDate ? formatDateForInput(currentUser.birthDate) : '',
       });
+      await applyProfileUpdate(currentUser);
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
       showModal('error', 'Erro', 'Não foi possível carregar os dados do usuário.', {
@@ -189,6 +192,8 @@ const EditProfileScreen: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    const previousLocalPhoto = localPhoto;
+    let pendingLocalPhoto: string | null = null;
     try {
       let profilePicture: string | undefined = undefined;
 
@@ -196,6 +201,8 @@ const EditProfileScreen: React.FC = () => {
         const base64Image = await convertImageToBase64(selectedImage);
         if (base64Image) {
           profilePicture = base64Image;
+          pendingLocalPhoto = base64Image;
+          await setProfilePhoto(base64Image);
         } else {
           setIsLoading(false);
           Alert.alert(
@@ -218,15 +225,22 @@ const EditProfileScreen: React.FC = () => {
         }
       }
 
-      await saveProfile(profilePicture);
+      const success = await saveProfile(profilePicture);
+      if (!success && pendingLocalPhoto) {
+        await setProfilePhoto(previousLocalPhoto || null);
+      }
+      setIsLoading(false);
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Não foi possível atualizar o perfil.';
       showModal('error', 'Erro', errorMessage, { text: 'OK', onPress: () => setModalVisible(false) });
+      if (pendingLocalPhoto) {
+        await setProfilePhoto(previousLocalPhoto || null);
+      }
       setIsLoading(false);
     }
   };
 
-  const saveProfile = async (profilePicture?: string) => {
+  const saveProfile = async (profilePicture?: string): Promise<boolean> => {
     try {
       const formattedBirthDate = formatDateForAPI(formData.birthDate);
       const updateData: UserUpdateDTO = {
@@ -240,6 +254,7 @@ const EditProfileScreen: React.FC = () => {
       await updateUserMe(updateData);
       const updatedUser = await getUserMe();
       setUser(updatedUser);
+      await applyProfileUpdate(updatedUser);
       setSelectedImage(null);
       showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', {
         text: 'OK',
@@ -248,9 +263,11 @@ const EditProfileScreen: React.FC = () => {
           navigation.goBack();
         }
       });
+      return true;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Não foi possível atualizar o perfil.';
       showModal('error', 'Erro', errorMessage, { text: 'OK', onPress: () => setModalVisible(false) });
+      return false;
     } finally {
       setIsLoading(false);
     }

@@ -8,11 +8,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import { HomeStackParamList } from "../../../App";
+import { useUserProfile } from "../../contexts/UserProfileContext";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import api from "../../services/api";
-import { getUserMe } from "../../services/userService";
 import { Session, SessionUser } from "../../types/session";
-import { User as UserType } from "../../types/user";
 
 interface ProfileButtonProps {
   buttonStyle?: any;
@@ -38,10 +37,8 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
   const [token, setToken] = useState<string | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
-  const [userFromBackend, setUserFromBackend] = useState<UserType | null>(null);
   const processedCodesRef = useRef<Set<string>>(new Set());
-  const isLoadingUserRef = useRef<boolean>(false);
-  const lastLoadedRef = useRef<{ token: string | null; userId: string | null }>({ token: null, userId: null });
+  const { displayPhoto, refreshProfile } = useUserProfile();
 
   const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
     try {
@@ -91,29 +88,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     }
   }, [fetchOrCreateUser]);
 
-  const loadUserFromBackend = useCallback(async () => {
-    if (!token || !sessionUser || isLoadingUserRef.current) {
-      return;
-    }
-
-    const userId = sessionUser.sub;
-    if (lastLoadedRef.current.token === token && lastLoadedRef.current.userId === userId) {
-      return;
-    }
-
-    try {
-      isLoadingUserRef.current = true;
-      const backendUser = await getUserMe();
-      setUserFromBackend(backendUser as UserType);
-      lastLoadedRef.current = { token, userId };
-    } catch (error) {
-      setUserFromBackend(null);
-      lastLoadedRef.current = { token, userId };
-    } finally {
-      isLoadingUserRef.current = false;
-    }
-  }, [token, sessionUser]);
-
   const loadToken = useCallback(async () => {
     const sessionString = await SecureStore.getItemAsync('session');
 
@@ -144,8 +118,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     } else {
       setToken(null);
       setSessionUser(null);
-      setUserFromBackend(null);
-      lastLoadedRef.current = { token: null, userId: null };
     }
   }, [fetchUserInfo]);
 
@@ -153,28 +125,16 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     loadToken();
   }, [loadToken]);
 
-  useEffect(() => {
-    if (token && sessionUser) {
-      loadUserFromBackend();
-    } else {
-      setUserFromBackend(null);
-    }
-  }, [token, sessionUser]);
+useEffect(() => {
+  if (token && sessionUser) {
+    refreshProfile(false);
+  }
+}, [token, sessionUser, refreshProfile]);
 
   useFocusEffect(
     useCallback(() => {
       loadToken();
     }, [loadToken])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (token && sessionUser) {
-        lastLoadedRef.current = { token: null, userId: null };
-        setUserFromBackend(null);
-        loadUserFromBackend();
-      }
-    }, [token, sessionUser])
   );
 
   useEffect(() => {
@@ -238,6 +198,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
             await fetchUserInfo(data.access_token, session);
             setToken(data.id_token);
+            await refreshProfile(true);
           }
         } catch (error: any) {
         }
@@ -245,7 +206,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
       fetchToken();
     }
-  }, [response, request?.codeVerifier, fetchUserInfo]);
+  }, [response, request?.codeVerifier, fetchUserInfo, refreshProfile]);
 
   const handlePress = async () => {
     const sessionString = await SecureStore.getItemAsync('session');
@@ -327,6 +288,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
               await fetchUserInfo(data.access_token, session);
               setToken(data.id_token);
+              await refreshProfile(true);
             }
           } catch (error: any) {
           }
@@ -344,9 +306,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     >
       {token && sessionUser ? (
         <View style={[styles.userAvatar, { backgroundColor: paperTheme.colors.primary }]}>
-          {(userFromBackend?.profilePicture || sessionUser.picture) ? (
+          {displayPhoto || sessionUser.picture ? (
             <Image
-              source={{ uri: userFromBackend?.profilePicture || sessionUser.picture || '' }}
+              source={{ uri: displayPhoto || sessionUser.picture || '' }}
               style={styles.userAvatar}
               resizeMode="cover"
             />

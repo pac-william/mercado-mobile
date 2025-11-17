@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { CartProvider } from './src/contexts/CartContext';
 import { OnboardingProvider } from './src/contexts/OnboardingContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
+import { UserProfileProvider } from './src/contexts/UserProfileContext';
 import { RootNavigator } from './src/navigation';
 import { InitialLoadingScreen } from './src/views/splash/SplashScreen';
 
@@ -32,7 +33,9 @@ const App: React.FC = () => {
         <ThemeProvider>
           <OnboardingProvider>
             <CartProvider>
-              <RootNavigator />
+              <UserProfileProvider>
+                <RootNavigator />
+              </UserProfileProvider>
             </CartProvider>
           </OnboardingProvider>
         </ThemeProvider>

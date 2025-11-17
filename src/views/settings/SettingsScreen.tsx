@@ -13,12 +13,11 @@ import { SettingsStackParamList } from '../../../App';
 import { Header } from "../../components/layout/header";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useUserProfile } from "../../contexts/UserProfileContext";
 import { usePermissions } from "../../hooks/usePermissions";
 import { useSession } from "../../hooks/useSession";
 import api from "../../services/api";
-import { getUserMe } from "../../services/userService";
 import { Session, SessionUser } from "../../types/session";
-import { User } from "../../types/user";
 
 type SettingsStackParamListProp = NativeStackNavigationProp<SettingsStackParamList>;
 
@@ -28,13 +27,10 @@ export default function SettingsScreen() {
     const { isDark, toggleTheme } = useTheme();
     const paperTheme = usePaperTheme();
     const { user, isAuthenticated, isLoading, refreshSession, clearSession } = useSession();
+    const { profile, displayPhoto, loading: loadingProfile, refreshProfile } = useUserProfile();
     const permissions = usePermissions();
     const [refreshing, setRefreshing] = useState(false);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-    const [userFromBackend, setUserFromBackend] = useState<User | null>(null);
-    const [loadingUser, setLoadingUser] = useState(false);
-    const isLoadingUserRef = useRef<boolean>(false);
-    const lastLoadedRef = useRef<number>(0);
 
     const [request, response, promptAsync] = AuthSession.useAuthRequest(
         {
@@ -191,43 +187,12 @@ export default function SettingsScreen() {
         }
     }, [permissions.notifications, loadNotificationPreference]);
 
-    const loadUserFromBackend = useCallback(async (forceRefresh: boolean = false) => {
-        if (!isAuthenticated) {
-            setUserFromBackend(null);
-            lastLoadedRef.current = 0;
-            return;
-        }
-
-        if (isLoadingUserRef.current) {
-            return;
-        }
-
-        const now = Date.now();
-        if (!forceRefresh && lastLoadedRef.current > 0 && (now - lastLoadedRef.current) < 1000) {
-            return;
-        }
-
-        try {
-            isLoadingUserRef.current = true;
-            setLoadingUser(true);
-            const backendUser = await getUserMe();
-            setUserFromBackend(backendUser);
-            lastLoadedRef.current = now;
-        } catch (error) {
-            setUserFromBackend(null);
-            lastLoadedRef.current = 0;
-        } finally {
-            setLoadingUser(false);
-            isLoadingUserRef.current = false;
-        }
-    }, [isAuthenticated]);
-
     useEffect(() => {
         if (isAuthenticated) {
             checkNotificationStatus();
-            loadUserFromBackend();
+            refreshProfile(false);
         }
-    }, [isAuthenticated, checkNotificationStatus, loadUserFromBackend]);
+    }, [isAuthenticated, checkNotificationStatus, refreshProfile]);
 
     const registerNotificationToken = async (token: string) => {
         try {
@@ -267,19 +232,16 @@ export default function SettingsScreen() {
         useCallback(() => {
             refreshSession();
             if (isAuthenticated) {
-                lastLoadedRef.current = 0;
-                setUserFromBackend(null);
-                loadUserFromBackend(true);
+                refreshProfile(false);
             }
-        }, [refreshSession, isAuthenticated])
+        }, [refreshSession, isAuthenticated, refreshProfile])
     );
 
     const handleRefresh = async () => {
         setRefreshing(true);
         await refreshSession();
         if (isAuthenticated) {
-            lastLoadedRef.current = 0;
-            await loadUserFromBackend(true);
+            await refreshProfile(true);
         }
         setRefreshing(false);
     };
@@ -365,6 +327,7 @@ export default function SettingsScreen() {
                         try {
                             await AsyncStorage.removeItem(NOTIFICATION_PREFERENCE_KEY);
                             await clearSession();
+                            await refreshProfile(true);
 
                             const tabNavigator = navigation.getParent();
                             if (tabNavigator) {
@@ -416,20 +379,31 @@ export default function SettingsScreen() {
                     <>
                         <View style={[styles.profileSection, { backgroundColor: paperTheme.colors.surface }]}>
                             <View style={[styles.avatarLarge, { backgroundColor: paperTheme.colors.primary }]}>
-                                {(userFromBackend?.profilePicture || user?.profilePicture) ? (
+                                {displayPhoto ? (
                                     <Image
-                                        source={{ uri: userFromBackend?.profilePicture || user?.profilePicture || '' }}
+                                        source={{ uri: displayPhoto }}
                                         style={styles.avatarImage}
                                         resizeMode="cover"
                                     />
                                 ) : (
                                     <Text style={styles.avatarLargeText}>
-                                        {user.name.charAt(0).toUpperCase()}
+                                        {(profile?.name || user.name).charAt(0).toUpperCase()}
                                     </Text>
                                 )}
                             </View>
-                            <Text style={[styles.userName, { color: paperTheme.colors.onSurface }]}>{user.name}</Text>
-                            <Text style={[styles.userEmail, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>{user.email}</Text>
+                            <Text style={[styles.userName, { color: paperTheme.colors.onSurface }]}>
+                                {profile?.name || user.name}
+                            </Text>
+                            <Text style={[styles.userEmail, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
+                                {profile?.email || user.email}
+                            </Text>
+                            {loadingProfile && (
+                                <ActivityIndicator
+                                    style={{ marginTop: 12 }}
+                                    size="small"
+                                    color={paperTheme.colors.primary}
+                                />
+                            )}
                         </View>
 
                         <View style={[styles.section, { backgroundColor: paperTheme.colors.surface }]}>
