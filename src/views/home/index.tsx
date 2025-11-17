@@ -96,6 +96,78 @@ export default function Home() {
 
   const hasActiveFilters = filters.minPrice !== undefined || filters.maxPrice !== undefined;
 
+  const handleSearchResult = useCallback((results: any) => {
+    navigation.navigate("SearchMain", { initialResults: results });
+  }, [navigation]);
+
+  const filteredMarkets = useMemo(() => 
+    markets
+      .filter((market) => market.products && market.products.length > 0)
+      .map((market) => (
+        <View key={market.id} style={{ marginBottom: 5 }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("MarketDetails", { marketId: market.id })}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 12,
+            }}
+          >
+            {isValidImageUri(market.profilePicture) ? (
+              <Image
+                source={{ uri: market.profilePicture }}
+                style={styles.marketImage}
+              />
+            ) : (
+              <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
+                <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
+              </View>
+            )}
+            <View style={{ marginLeft: 10, flex: 1 }}>
+
+              <Text
+                variant="titleMedium"
+                style={{ fontWeight: "bold", fontSize: 18, color: paperTheme.colors.onBackground }}
+              >
+                {market.name}
+              </Text>
+              
+              <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurface, opacity: 0.7 }]} numberOfLines={1} ellipsizeMode="tail">
+                {market.address}
+              </Text>
+
+            </View>
+          </TouchableOpacity>
+
+          <FlatList
+            data={market.products}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.productList}
+            renderItem={({ item, index }) => (
+              <ProductCard
+                marketLogo={market.profilePicture}
+                marketName={market.name}
+                marketAddress={market.address}
+                title={item.name}
+                subtitle=""
+                price={item.price}
+                imageUrl={item.image}
+                onPress={() =>
+                  navigation.navigate("ProductDetail", { product: { ...item, marketName: market.name } })
+                }
+                style={{
+                  marginRight:
+                    index === market.products.length - 1 ? 0 : 12,
+                }}
+              />
+            )}
+            contentContainerStyle={{ paddingLeft: 4, paddingRight: 16 }}
+          />
+        </View>
+      )), [markets, navigation, paperTheme.colors]);
+
     if (loading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: paperTheme.colors.background }]}>
@@ -130,9 +202,7 @@ export default function Home() {
         </View>
         <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
           <SearchItens 
-            onResult={useCallback((results) => {
-              navigation.navigate("SearchMain", { initialResults: results });
-            }, [navigation])}
+            onResult={handleSearchResult}
             placeholder="Digite produto ou mercado"
           />
         </View>
@@ -150,73 +220,7 @@ export default function Home() {
           />
         </View>
 
-        {useMemo(() => 
-          markets
-            .filter((market) => market.products && market.products.length > 0)
-            .map((market) => (
-              <View key={market.id} style={{ marginBottom: 5 }}>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("MarketDetails", { marketId: market.id })}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 12,
-                  }}
-                >
-                  {isValidImageUri(market.profilePicture) ? (
-                    <Image
-                      source={{ uri: market.profilePicture }}
-                      style={styles.marketImage}
-                    />
-                  ) : (
-                    <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
-                      <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
-                    </View>
-                  )}
-                  <View style={{ marginLeft: 10, flex: 1 }}>
-
-                    <Text
-                      variant="titleMedium"
-                      style={{ fontWeight: "bold", fontSize: 18, color: paperTheme.colors.onBackground }}
-                    >
-                      {market.name}
-                    </Text>
-                    
-                    <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurface, opacity: 0.7 }]} numberOfLines={1} ellipsizeMode="tail">
-                      {market.address}
-                    </Text>
-
-                  </View>
-                </TouchableOpacity>
-
-                <FlatList
-                  data={market.products}
-                  keyExtractor={(item) => item.id.toString()}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.productList}
-                  renderItem={({ item, index }) => (
-                    <ProductCard
-                      marketLogo={market.profilePicture}
-                      marketName={market.name}
-                      marketAddress={market.address}
-                      title={item.name}
-                      subtitle=""
-                      price={item.price}
-                      imageUrl={item.image}
-                      onPress={() =>
-                        navigation.navigate("ProductDetail", { product: { ...item, marketName: market.name } })
-                      }
-                      style={{
-                        marginRight:
-                          index === market.products.length - 1 ? 0 : 12,
-                      }}
-                    />
-                  )}
-                  contentContainerStyle={{ paddingLeft: 4, paddingRight: 16 }}
-                />
-              </View>
-            )), [markets, navigation, paperTheme.colors])}
+        {filteredMarkets}
       </ScrollView>
 
       <FilterModal
