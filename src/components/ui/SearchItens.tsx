@@ -2,14 +2,20 @@ import * as React from "react";
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Searchbar, useTheme } from "react-native-paper";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { getSuggestions, SuggestionResponse } from "../../services/suggestionService";
+import { getProducts } from "../../services/productService";
+import { getMarkets } from "../../services/marketService";
+
+export interface SearchResults {
+  products: any[];
+  markets: any[];
+}
 
 interface SearchItensProps {
-  onResult: (data: SuggestionResponse) => void;
+  onResult: (data: SearchResults) => void;
   placeholder?: string;
 }
 
-const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digite sua receita ou produto" }) => {
+const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digite produto ou mercado" }) => {
   const paperTheme = useTheme();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -19,10 +25,17 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
 
     setLoading(true);
     try {
-      const data = await getSuggestions(searchQuery);
-      onResult(data);
+      const [productsResponse, marketsResponse] = await Promise.all([
+        getProducts(1, 20, undefined, searchQuery.trim()).catch(() => ({ products: [] })),
+        getMarkets(1, 20, searchQuery.trim()).catch(() => ({ markets: [] })),
+      ]);
+
+      onResult({
+        products: productsResponse.products || [],
+        markets: marketsResponse.markets || [],
+      });
     } catch (err: any) {
-      onResult({ essential_products: [], common_products: [], utensils: [] });
+      onResult({ products: [], markets: [] });
     } finally {
       setLoading(false);
     }

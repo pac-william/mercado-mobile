@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import { Text, ActivityIndicator, useTheme } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,7 @@ import FilterModal from "../../components/ui/FilterModal";
 import HeroBanner from "../../components/ui/Hero";
 import { Header } from "../../components/layout/header";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
+import SearchItens from "../../components/ui/SearchItens";
 import { getProducts } from "../../services/productService";
 import { getMarkets, getMarketById } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
@@ -25,7 +26,6 @@ export default function Home() {
   const paperTheme = useTheme();
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(false);
   const [offline, setOffline] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -58,8 +58,6 @@ export default function Home() {
             console.error(`Erro ao buscar dados completos do mercado ${marketFromList.name}:`, err);
             if (isNetworkError(err)) {
               setOffline(true);
-            } else {
-              setError(true);
             }
             return { ...marketFromList, products: [] };
           }
@@ -130,6 +128,14 @@ export default function Home() {
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <HeroBanner />
         </View>
+        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+          <SearchItens 
+            onResult={useCallback((results) => {
+              navigation.navigate("SearchMain", { initialResults: results });
+            }, [navigation])}
+            placeholder="Digite produto ou mercado"
+          />
+        </View>
         <View
           style={{
             alignItems: "flex-end",
@@ -144,72 +150,73 @@ export default function Home() {
           />
         </View>
 
-        {markets
-          .filter((market) => market.products && market.products.length > 0)
-          .map((market) => (
-            <View key={market.id} style={{ marginBottom: 5 }}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("MarketDetails", { marketId: market.id })}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: 12,
-                }}
-              >
-                {isValidImageUri(market.profilePicture) ? (
-                  <Image
-                    source={{ uri: market.profilePicture }}
-                    style={styles.marketImage}
-                  />
-                ) : (
-                  <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
-                    <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
+        {useMemo(() => 
+          markets
+            .filter((market) => market.products && market.products.length > 0)
+            .map((market) => (
+              <View key={market.id} style={{ marginBottom: 5 }}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("MarketDetails", { marketId: market.id })}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: 12,
+                  }}
+                >
+                  {isValidImageUri(market.profilePicture) ? (
+                    <Image
+                      source={{ uri: market.profilePicture }}
+                      style={styles.marketImage}
+                    />
+                  ) : (
+                    <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
+                      <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
+                    </View>
+                  )}
+                  <View style={{ marginLeft: 10, flex: 1 }}>
+
+                    <Text
+                      variant="titleMedium"
+                      style={{ fontWeight: "bold", fontSize: 18, color: paperTheme.colors.onBackground }}
+                    >
+                      {market.name}
+                    </Text>
+                    
+                    <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurface, opacity: 0.7 }]} numberOfLines={1} ellipsizeMode="tail">
+                      {market.address}
+                    </Text>
+
                   </View>
-                )}
-                <View style={{ marginLeft: 10, flex: 1 }}>
+                </TouchableOpacity>
 
-                  <Text
-                    variant="titleMedium"
-                    style={{ fontWeight: "bold", fontSize: 18, color: paperTheme.colors.onBackground }}
-                  >
-                    {market.name}
-                  </Text>
-                  
-                  <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurface, opacity: 0.7 }]} numberOfLines={1} ellipsizeMode="tail">
-                    {market.address}
-                  </Text>
-
-                </View>
-              </TouchableOpacity>
-
-              <FlatList
-                data={market.products}
-                keyExtractor={(item) => item.id.toString()}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.productList}
-                renderItem={({ item, index }) => (
-                  <ProductCard
-                    marketLogo={market.profilePicture}
-                    marketName={market.name}
-                    marketAddress={market.address}
-                    title={item.name}
-                    subtitle={item.name}
-                    price={item.price}
-                    imageUrl={item.image}
-                    onPress={() =>
-                      navigation.navigate("ProductDetail", { product: { ...item, marketName: market.name } })
-                    }
-                    style={{
-                      marginRight:
-                        index === market.products.length - 1 ? 0 : 12,
-                    }}
-                  />
-                )}
-                contentContainerStyle={{ paddingLeft: 4, paddingRight: 16 }}
-              />
-            </View>
-          ))}
+                <FlatList
+                  data={market.products}
+                  keyExtractor={(item) => item.id.toString()}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.productList}
+                  renderItem={({ item, index }) => (
+                    <ProductCard
+                      marketLogo={market.profilePicture}
+                      marketName={market.name}
+                      marketAddress={market.address}
+                      title={item.name}
+                      subtitle=""
+                      price={item.price}
+                      imageUrl={item.image}
+                      onPress={() =>
+                        navigation.navigate("ProductDetail", { product: { ...item, marketName: market.name } })
+                      }
+                      style={{
+                        marginRight:
+                          index === market.products.length - 1 ? 0 : 12,
+                      }}
+                    />
+                  )}
+                  contentContainerStyle={{ paddingLeft: 4, paddingRight: 16 }}
+                />
+              </View>
+            )), [markets, navigation, paperTheme.colors])}
       </ScrollView>
 
       <FilterModal

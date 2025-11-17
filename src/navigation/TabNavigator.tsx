@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabParamList } from './types';
 import { HomeStackNavigator } from './stacks/HomeStack';
-import { SearchStackNavigator } from './stacks/SearchStack';
 import { AIStackNavigator } from './stacks/AIStack';
 import { SettingsStackNavigator } from './stacks/SettingsStack';
 
@@ -39,13 +38,10 @@ export const TabNavigator: React.FC = () => {
         },
         tabBarIcon: ({ focused, size }) => {
           let iconName: string;
-          let iconSize = size;
+          const iconSize = 28;
 
           if (route.name === 'HomeStack') {
             iconName = focused ? 'home' : 'home-outline';
-            iconSize = focused ? 35 : 25;
-          } else if (route.name === 'SearchStack') {
-            iconName = focused ? 'search' : 'search-outline';
           } else if (route.name === 'AIStack') {
             iconName = focused ? 'sparkles' : 'sparkles-outline';
           } else if (route.name === 'SettingsStack') {
@@ -76,23 +72,6 @@ export const TabNavigator: React.FC = () => {
               e.preventDefault();
               navigation.navigate('HomeStack', {
                 screen: 'HomeMain',
-              } as any);
-            }
-          },
-        })}
-      />
-      <Tab.Screen 
-        name="SearchStack" 
-        component={SearchStackNavigator}
-        listeners={({ navigation, route }) => ({
-          tabPress: (e) => {
-            const focusedRouteName = getFocusedRouteNameFromRoute(route) ?? 'SearchMain';
-            
-            // Se não estamos na tela inicial do Search, navega para ela
-            if (focusedRouteName !== 'SearchMain') {
-              e.preventDefault();
-              navigation.navigate('SearchStack', {
-                screen: 'SearchMain',
               } as any);
             }
           },
