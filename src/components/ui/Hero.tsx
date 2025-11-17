@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { View, Image, StyleSheet, Dimensions, Text } from "react-native";
 import Swiper from "react-native-swiper";
 import { getActiveCampaignsForCarousel, Campaign } from "../../services/campaignService";
+import { getMarketById } from "../../services/marketService";
 
 const { width } = Dimensions.get("window");
 
 const HeroBanner = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [marketNames, setMarketNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,6 +18,23 @@ const HeroBanner = () => {
 
         const sortedCampaigns = activeCampaigns.sort((a, b) => a.slot - b.slot);
         setCampaigns(sortedCampaigns);
+
+        const uniqueMarketIds = [...new Set(sortedCampaigns.map(c => c.marketId))];
+        const marketNamesMap: Record<string, string> = {};
+        
+        await Promise.all(
+          uniqueMarketIds.map(async (marketId) => {
+            try {
+              const market = await getMarketById(marketId);
+              marketNamesMap[marketId] = market.name;
+            } catch (error) {
+              console.error(`Erro ao buscar mercado ${marketId}:`, error);
+              marketNamesMap[marketId] = "Mercado";
+            }
+          })
+        );
+        
+        setMarketNames(marketNamesMap);
       } catch (error) {
         console.error("Erro ao buscar campanhas:", error);
         setCampaigns([]);
@@ -42,7 +61,7 @@ const HeroBanner = () => {
           }}
         />
         <View style={styles.overlayText}>
-          <Text style={styles.overlayTextContent}>Promovido por Mercado</Text>
+          <Text style={styles.overlayTextContent}>Promovido por {marketNames[campaigns[0].marketId] || "Mercado"}</Text>
         </View>
       </View>
     );
@@ -69,7 +88,7 @@ const HeroBanner = () => {
                   }}
                 />
                 <View style={styles.overlayText}>
-                  <Text style={styles.overlayTextContent}>Promovido por Mercado</Text>
+                  <Text style={styles.overlayTextContent}>Promovido por {marketNames[campaign.marketId] || "Mercado"}</Text>
                 </View>
               </>
             ) : null}
