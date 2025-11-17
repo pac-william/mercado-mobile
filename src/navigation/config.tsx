@@ -35,6 +35,7 @@ export const sharedRoutes = [
 // Configuração das rotas do HomeStack
 export const homeStackRoutes = [
   { name: 'HomeMain', component: Home },
+  { name: 'SearchMain', component: Search },
   ...sharedRoutes,
   { name: 'MarketDetails', component: MarketDetailsScreen },
 ] as const;

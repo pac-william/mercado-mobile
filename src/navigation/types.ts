@@ -1,8 +1,10 @@
 import { Product } from "../services/productService";
+import { SearchResults } from "../components/ui/SearchItens";
 
 // Tipos de navegação para todas as stacks
 export type HomeStackParamList = {
   HomeMain: undefined;
+  SearchMain: { initialResults?: SearchResults } | undefined;
   ProductDetail: { product: any };
   Cart: undefined;
   Checkout: undefined;
@@ -17,7 +19,7 @@ export type HomeStackParamList = {
 };
 
 export type SearchStackParamList = {
-  SearchMain: undefined;
+  SearchMain: { initialResults?: SearchResults } | undefined;
   ProductDetail: { product: any };
   Cart: undefined;
   Checkout: undefined;
