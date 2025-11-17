@@ -38,6 +38,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
   const [token, setToken] = useState<string | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const processedCodesRef = useRef<Set<string>>(new Set());
+  const lastRefreshRef = useRef<{ token: string | null; userId: string | null }>({ token: null, userId: null });
   const { displayPhoto, refreshProfile } = useUserProfile();
 
   const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
@@ -125,25 +126,35 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
     loadToken();
   }, [loadToken]);
 
-useEffect(() => {
-  if (token && sessionUser) {
-    refreshProfile(false);
-  }
-}, [token, sessionUser, refreshProfile]);
+  useEffect(() => {
+    if (token && sessionUser) {
+      const userId = sessionUser.sub;
+      if (lastRefreshRef.current.token !== token || lastRefreshRef.current.userId !== userId) {
+        lastRefreshRef.current = { token, userId };
+        refreshProfile(false);
+      }
+    }
+  }, [token, sessionUser, refreshProfile]);
 
   useFocusEffect(
     useCallback(() => {
-      loadToken();
-    }, [loadToken])
+      const checkAndLoad = async () => {
+        const sessionString = await SecureStore.getItemAsync('session');
+        if (sessionString) {
+          try {
+            const session = JSON.parse(sessionString) as Session;
+            const currentToken = session.tokenSet?.idToken || null;
+            if (currentToken !== token) {
+              loadToken();
+            }
+          } catch {
+            loadToken();
+          }
+        }
+      };
+      checkAndLoad();
+    }, [loadToken, token])
   );
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('state', () => {
-      loadToken();
-    });
-
-    return unsubscribe;
-  }, [navigation, loadToken]);
 
   useEffect(() => {
     if (response?.type === 'success' && 'params' in response && response.params && 'code' in response.params) {

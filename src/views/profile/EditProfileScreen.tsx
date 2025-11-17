@@ -139,11 +139,7 @@ const EditProfileScreen: React.FC = () => {
     } finally {
       setIsLoadingUser(false);
     }
-  }, [navigation]);
-
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
+  }, [navigation, applyProfileUpdate]);
 
   useFocusEffect(
     useCallback(() => {
