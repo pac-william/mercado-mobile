@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { Animated, Image, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Text } from "react-native-paper";
+import { Animated, Image, Platform, StatusBar, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Text, useTheme } from "react-native-paper";
+import { useTheme as useAppTheme } from "../../contexts/ThemeContext";
 
 export default function SplashScreen() {
+  const paperTheme = useTheme();
+  const { isDark } = useAppTheme();
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
 
@@ -23,7 +26,12 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={paperTheme.colors.background}
+        translucent={Platform.OS === 'android'}
+      />
       <Animated.View
         style={[
           styles.logoContainer,
@@ -41,11 +49,11 @@ export default function SplashScreen() {
       </Animated.View>
 
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-        <Text variant="bodyLarge" style={styles.loadingText}>
+        <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+        <Text variant="bodyLarge" style={[styles.loadingText, { color: paperTheme.colors.primary }]}>
           Carregando...
         </Text>
-        <Text variant="bodyMedium" style={styles.subtitleText}>
+        <Text variant="bodyMedium" style={[styles.subtitleText, { color: isDark ? '#FFFFFF' : paperTheme.colors.primary }]}>
           Preparando as melhores ofertas e ajustando sua experiência de compras
         </Text>
       </View>
@@ -54,6 +62,8 @@ export default function SplashScreen() {
 }
 
 export function InitialLoadingScreen() {
+  const paperTheme = useTheme();
+  const { isDark } = useAppTheme();
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
 
@@ -74,7 +84,12 @@ export function InitialLoadingScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={paperTheme.colors.background}
+        translucent={Platform.OS === 'android'}
+      />
       <Animated.View
         style={[
           styles.logoContainer,
@@ -92,11 +107,11 @@ export function InitialLoadingScreen() {
       </Animated.View>
 
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-        <Text variant="bodyLarge" style={styles.loadingText}>
+        <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+        <Text variant="bodyLarge" style={[styles.loadingText, { color: paperTheme.colors.primary }]}>
           Carregando...
         </Text>
-        <Text variant="bodyMedium" style={styles.subtitleText}>
+        <Text variant="bodyMedium" style={[styles.subtitleText, { color: isDark ? '#FFFFFF' : paperTheme.colors.primary }]}>
           Preparando as melhores ofertas e ajustando sua experiência de compras
         </Text>
       </View>
@@ -109,7 +124,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8f9fa",
     paddingHorizontal: 24,
   },
   logoContainer: {
@@ -124,12 +138,10 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    color: "#2E7D32",
     fontWeight: "600",
   },
   subtitleText: {
     marginTop: 8,
-    color: "#6b7280",
     textAlign: "center",
   },
 });

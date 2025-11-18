@@ -27,10 +27,10 @@ const App: React.FC = () => {
 
   return (
     <SafeAreaProvider>
-      {showInitial ? (
-        <InitialLoadingScreen />
-      ) : (
-        <ThemeProvider>
+      <ThemeProvider>
+        {showInitial ? (
+          <InitialLoadingScreen />
+        ) : (
           <OnboardingProvider>
             <CartProvider>
               <UserProfileProvider>
@@ -38,8 +38,8 @@ const App: React.FC = () => {
               </UserProfileProvider>
             </CartProvider>
           </OnboardingProvider>
-        </ThemeProvider>
-      )}
+        )}
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 };

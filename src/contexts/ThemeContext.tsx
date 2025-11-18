@@ -57,7 +57,6 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadTheme();
@@ -71,8 +70,6 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
     } catch (error) {
       console.error('Erro ao carregar tema:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -97,10 +94,6 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const theme = themeMode === 'dark' ? darkTheme : lightTheme;
   const isDark = themeMode === 'dark';
 
-  if (isLoading) {
-    return null; // Ou um loading screen
-  }
-
   return (
     <ThemeContext.Provider value={{ theme, isDark, toggleTheme, setTheme }}>
       <PaperProvider theme={theme}>
@@ -117,4 +110,3 @@ export const useTheme = () => {
   }
   return context;
 };
-
