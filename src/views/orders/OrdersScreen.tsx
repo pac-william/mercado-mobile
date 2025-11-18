@@ -1,16 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "../../components/layout/header";
 import { Order } from "../../domain/orderDomain";
+import { getOrders as getOrdersLocal } from "../../domain/order/orderStorage";
 import { useSession } from "../../hooks/useSession";
 import { SettingsStackParamList } from "../../navigation/types";
 import { getOrders } from "../../services/orderService";
-import { User } from "../../types/user";
 
 const getStatusColor = (status: string) => {
   switch (status?.toUpperCase()) {
@@ -57,18 +57,33 @@ const getStatusText = (status: string) => {
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'Orders'>;
 
+const ORDERS_CACHE_TTL = 1000 * 60 * 2;
+
 export default function OrdersScreen() {
   const navigation = useNavigation<OrdersScreenNavigationProp>();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
   const { user: sessionUser } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [offline, setOffline] = useState(false);
   const isFetchingRef = useRef(false);
-  const hasLoadedRef = useRef(false);
+  const lastFetchRef = useRef<number>(0);
   const lastProcessedUserIdRef = useRef<string | null>(null);
+
+  const loadLocalOrders = useCallback(async (userId: string) => {
+    try {
+      const localOrders = await getOrdersLocal(userId);
+      if (localOrders.length > 0) {
+        setOrders(localOrders);
+        setLoading(false);
+      }
+      return localOrders;
+    } catch (error) {
+      return [];
+    }
+  }, []);
 
   const fetchOrders = useCallback(async (userId: string, forceRefresh: boolean = false) => {
     if (!userId) {
@@ -76,70 +91,71 @@ export default function OrdersScreen() {
       return;
     }
 
-    // Previne múltiplas chamadas simultâneas
     if (isFetchingRef.current) {
       return;
     }
 
-    // Se já carregou e não é refresh forçado, não busca novamente
-    if (!forceRefresh && hasLoadedRef.current) {
-      setLoading(false);
+    const now = Date.now();
+    if (!forceRefresh && lastFetchRef.current && now - lastFetchRef.current < ORDERS_CACHE_TTL) {
       return;
     }
 
     isFetchingRef.current = true;
-    setLoading(true);
-    setOffline(false);
 
     try {
       const response = await getOrders(1, 50, { userId });
       setOrders(response.orders);
       setOffline(false);
-      hasLoadedRef.current = true;
+      lastFetchRef.current = now;
     } catch (error: any) {
       console.warn("⚠️ Erro ao buscar pedidos:", error);
-      
-      // Tenta carregar apenas dos dados locais diretamente
-      try {
-        const { getOrders: getOrdersLocal } = await import("../../domain/order/orderStorage");
-        const localOrders = await getOrdersLocal(userId);
-        setOrders(localOrders);
-        setOffline(true);
-        hasLoadedRef.current = true;
-      } catch (localError) {
-        console.error("❌ Erro ao carregar pedidos locais:", localError);
+      const localOrders = await loadLocalOrders(userId);
+      if (localOrders.length === 0) {
         setOrders([]);
         setOffline(true);
-        hasLoadedRef.current = true;
       }
     } finally {
       setLoading(false);
       setRefreshing(false);
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [loadLocalOrders]);
 
-  // Carrega pedidos sempre que a tela ganha foco
+  useEffect(() => {
+    const userId = sessionUser?.id || null;
+    
+    if (userId) {
+      if (userId !== lastProcessedUserIdRef.current) {
+        lastFetchRef.current = 0;
+        lastProcessedUserIdRef.current = userId;
+      }
+      
+      setLoading(true);
+      loadLocalOrders(userId).then((localOrders) => {
+        if (localOrders.length > 0) {
+          fetchOrders(userId, false);
+        } else {
+          fetchOrders(userId, true);
+        }
+      });
+    } else {
+      setLoading(false);
+      setOrders([]);
+      lastFetchRef.current = 0;
+      lastProcessedUserIdRef.current = null;
+    }
+  }, [sessionUser?.id, loadLocalOrders, fetchOrders]);
+
   useFocusEffect(
     useCallback(() => {
       const userId = sessionUser?.id || null;
-      
       if (userId) {
-        // Se o userId mudou, reseta as refs
-        if (userId !== lastProcessedUserIdRef.current) {
-          hasLoadedRef.current = false;
-          lastProcessedUserIdRef.current = userId;
+        const now = Date.now();
+        if (!lastFetchRef.current || now - lastFetchRef.current >= ORDERS_CACHE_TTL) {
+          fetchOrders(userId, false);
         }
-        // Sempre recarrega quando a tela ganha foco para pegar novos pedidos
-        fetchOrders(userId, true);
-      } else {
-        setLoading(false);
-        setOrders([]);
-        hasLoadedRef.current = false;
-        lastProcessedUserIdRef.current = null;
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sessionUser?.id])
+    }, [sessionUser?.id, fetchOrders])
   );
 
   const handleRefresh = useCallback(async () => {
@@ -148,7 +164,7 @@ export default function OrdersScreen() {
       return;
     }
     setRefreshing(true);
-    hasLoadedRef.current = false; // Reseta para permitir nova busca
+    lastFetchRef.current = 0;
     await fetchOrders(sessionUser.id, true);
   }, [sessionUser?.id, fetchOrders]);
 
