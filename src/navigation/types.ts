@@ -1,7 +1,6 @@
 import { Product } from "../services/productService";
 import { SearchResults } from "../components/ui/SearchItens";
 
-// Tipos de navegação para todas as stacks
 export type HomeStackParamList = {
   HomeMain: undefined;
   SearchMain: { initialResults?: SearchResults } | undefined;
@@ -14,6 +13,7 @@ export type HomeStackParamList = {
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
   History: undefined;
+  Notifications: undefined;
   SuggestionDetail: { suggestionId: string };
   MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
@@ -29,6 +29,7 @@ export type SearchStackParamList = {
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
   History: undefined;
+  Notifications: undefined;
   SuggestionDetail: { suggestionId: string };
   MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
@@ -45,6 +46,7 @@ export type SettingsStackParamList = {
   Orders: undefined;
   OrderDetail: { orderId: string };
   History: undefined;
+  Notifications: undefined;
   SuggestionDetail: { suggestionId: string };
   MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
@@ -62,6 +64,7 @@ export type AIStackParamList = {
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
   EditAddress: { addressId: string };
   History: undefined;
+  Notifications: undefined;
   SuggestionDetail: { suggestionId: string };
   MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
 };
@@ -77,7 +80,6 @@ export type RootStackParamList = {
   MainTabs: undefined;
 };
 
-// Tipos auxiliares para navegação
 export type NavigationParamList = 
   | HomeStackParamList 
   | SearchStackParamList 

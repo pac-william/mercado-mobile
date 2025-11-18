@@ -5,7 +5,7 @@ import { apiBaseUrl } from "../utils/server";
 
 const api = axios.create({
   baseURL: `${apiBaseUrl}/api/v1`,
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     "Content-Type": "application/json",
   },

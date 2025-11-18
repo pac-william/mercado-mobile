@@ -453,7 +453,7 @@ export default function SettingsScreen() {
                             </TouchableOpacity>
 
                             <TouchableOpacity 
-                                style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]} 
+                                style={[styles.menuItem, { borderBottomWidth: 0 }]} 
                                 onPress={() => navigation.navigate("Orders")}
                             >
                                 <Ionicons name="receipt-outline" size={24} color={paperTheme.colors.onSurface} />
@@ -466,7 +466,7 @@ export default function SettingsScreen() {
                             <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface, opacity: 0.6 }]}>Preferências</Text>
 
                             <TouchableOpacity 
-                                style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
+                                style={[styles.menuItem, { borderBottomWidth: 0 }]}
                                 onPress={toggleTheme}
                                 activeOpacity={0.7}
                             >
@@ -484,12 +484,6 @@ export default function SettingsScreen() {
                                     trackColor={{ false: paperTheme.colors.outline, true: paperTheme.colors.primary }}
                                     thumbColor={paperTheme.colors.surface}
                                 />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}>
-                                <Ionicons name="language-outline" size={24} color={paperTheme.colors.onSurface} />
-                                <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Idioma</Text>
-                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
                         </View>
 

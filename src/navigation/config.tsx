@@ -1,6 +1,4 @@
 import React, { ComponentType } from 'react';
-
-// Imports dos componentes de tela
 import AddEditAddressScreen from '../views/addresses/AddEditAddressScreen';
 import AddressesScreen from '../views/addresses/index';
 import AISearch from '../views/ai/index';
@@ -9,6 +7,7 @@ import CheckoutScreen from '../views/checkout/CheckoutScreen';
 import HistoryScreen from '../views/history/index';
 import SuggestionDetailScreen from '../views/history/SuggestionDetailScreen';
 import MarketProductsScreen from '../views/history/MarketProductsScreen';
+import NotificationsScreen from '../views/notifications/index';
 import Home from '../views/home/index';
 import MarketDetailsScreen from '../views/market/index';
 import OrderDetailScreen from '../views/orders/OrderDetailScreen';
@@ -18,7 +17,6 @@ import EditProfileScreen from '../views/profile/EditProfileScreen';
 import Search from '../views/search/index';
 import SettingsScreen from '../views/settings/SettingsScreen';
 
-// Configuração das rotas compartilhadas (rotas que aparecem em múltiplos stacks)
 export const sharedRoutes = [
   { name: 'ProductDetail', component: ProductDetail },
   { name: 'Cart', component: CartScreen },
@@ -28,11 +26,11 @@ export const sharedRoutes = [
   { name: 'AddAddress', component: AddEditAddressScreen },
   { name: 'EditAddress', component: AddEditAddressScreen },
   { name: 'History', component: HistoryScreen },
+  { name: 'Notifications', component: NotificationsScreen },
   { name: 'SuggestionDetail', component: SuggestionDetailScreen },
   { name: 'MarketProducts', component: MarketProductsScreen },
 ] as const;
 
-// Configuração das rotas do HomeStack
 export const homeStackRoutes = [
   { name: 'HomeMain', component: Home },
   { name: 'SearchMain', component: Search },
@@ -40,21 +38,18 @@ export const homeStackRoutes = [
   { name: 'MarketDetails', component: MarketDetailsScreen },
 ] as const;
 
-// Configuração das rotas do SearchStack
 export const searchStackRoutes = [
   { name: 'SearchMain', component: Search },
   ...sharedRoutes,
   { name: 'MarketDetails', component: MarketDetailsScreen },
 ] as const;
 
-// Configuração das rotas do AIStack (tela específica para pesquisa com IA)
 export const aiStackRoutes = [
   { name: 'AIMain', component: AISearch },
   ...sharedRoutes,
   { name: 'MarketDetails', component: MarketDetailsScreen },
 ] as const;
 
-// Configuração das rotas do SettingsStack
 export const settingsStackRoutes = [
   { name: 'SettingsMain', component: SettingsScreen },
   ...sharedRoutes,
@@ -62,14 +57,12 @@ export const settingsStackRoutes = [
   { name: 'OrderDetail', component: OrderDetailScreen },
 ] as const;
 
-// Tipo para uma rota
 export type RouteConfig = {
   name: string;
   component: ComponentType<any>;
   options?: any;
 };
 
-// Helper para criar rotas de um stack
 export const createStackRoutes = (routes: readonly RouteConfig[]) => {
   return routes.map(route => ({
     key: route.name,

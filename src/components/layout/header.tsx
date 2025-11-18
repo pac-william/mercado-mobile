@@ -9,11 +9,7 @@ import { ProfileButton } from "../ui/ProfileButton";
 
 import Logo from "../../assets/logo1.jpg";
 
-interface HeaderProps {
-  onPressCart?: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = () => {
+export const Header: React.FC = () => {
   const navigation = useNavigation<any>();
   const { state: cartState } = useCart();
   const paperTheme = usePaperTheme();
@@ -31,6 +27,16 @@ export const Header: React.FC<HeaderProps> = () => {
             onPress={() => navigation.navigate("History")}
           >
             <Ionicons name="time-outline" size={24} color={paperTheme.colors.tertiary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]}
+            onPress={() => navigation.navigate("Notifications")}
+          >
+            <Ionicons name="notifications-outline" size={24} color={paperTheme.colors.tertiary} />
+            <View style={[styles.notificationBadge, { backgroundColor: paperTheme.colors.primary }]}>
+              <Text style={styles.notificationBadgeText}>2</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -55,9 +61,7 @@ export const Header: React.FC<HeaderProps> = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    // backgroundColor será aplicado dinamicamente via props
-  },
+  safeArea: {},
   container: {
     flexDirection: "row",
     alignItems: "center",
@@ -72,7 +76,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 8,
     flexShrink: 1
-    // color será aplicado dinamicamente via props
   },
   buttonsContainer: { flexDirection: "row" },
   button: {
@@ -80,7 +83,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginLeft: 8,
     position: 'relative'
-    // backgroundColor será aplicado dinamicamente via props
   },
   cartBadge: {
     position: 'absolute',
@@ -92,11 +94,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
-    // backgroundColor será aplicado dinamicamente via props
   },
   cartBadgeText: {
     color: 'white',
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    color: 'white',
+    fontSize: 10,
     fontWeight: 'bold',
   },
 });
