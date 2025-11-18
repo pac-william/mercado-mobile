@@ -21,7 +21,7 @@ const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
   const paperTheme = usePaperTheme();
   const permissions = usePermissions();
-  const { setLocalPhoto: setProfilePhoto, applyProfileUpdate, localPhoto } = useUserProfile();
+  const { profile: contextProfile, setLocalPhoto: setProfilePhoto, applyProfileUpdate, localPhoto } = useUserProfile();
   const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -32,7 +32,7 @@ const EditProfileScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalConfig, setModalConfig] = useState({
@@ -115,31 +115,46 @@ const EditProfileScreen: React.FC = () => {
   };
 
 
+  const initializeFormData = useCallback((userData: User) => {
+    setFormData({
+      name: userData.name || '',
+      email: userData.email || '',
+      phone: userData.phone || '',
+      birthDate: userData.birthDate ? formatDateForInput(userData.birthDate) : '',
+    });
+  }, []);
+
+  useEffect(() => {
+    if (contextProfile) {
+      setUser(contextProfile);
+      initializeFormData(contextProfile);
+      setIsLoadingUser(false);
+    } else {
+      setIsLoadingUser(true);
+    }
+  }, [contextProfile, initializeFormData]);
+
   const loadUser = useCallback(async () => {
     try {
-      setIsLoadingUser(true);
       const currentUser = await getUserMe();
       setUser(currentUser);
-      setFormData({
-        name: currentUser.name || '',
-        email: currentUser.email || '',
-        phone: currentUser.phone || '',
-        birthDate: currentUser.birthDate ? formatDateForInput(currentUser.birthDate) : '',
-      });
+      initializeFormData(currentUser);
       await applyProfileUpdate(currentUser);
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
-      showModal('error', 'Erro', 'Não foi possível carregar os dados do usuário.', {
-        text: 'OK',
-        onPress: () => {
-          setModalVisible(false);
-          navigation.goBack();
-        }
-      });
+      if (!contextProfile) {
+        showModal('error', 'Erro', 'Não foi possível carregar os dados do usuário.', {
+          text: 'OK',
+          onPress: () => {
+            setModalVisible(false);
+            navigation.goBack();
+          }
+        });
+      }
     } finally {
       setIsLoadingUser(false);
     }
-  }, [navigation, applyProfileUpdate]);
+  }, [navigation, applyProfileUpdate, contextProfile, initializeFormData]);
 
   useFocusEffect(
     useCallback(() => {
