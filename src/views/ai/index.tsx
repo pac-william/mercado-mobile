@@ -1,11 +1,10 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { View, FlatList, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text, useTheme, Searchbar } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Header } from "../../components/layout/header";
-import SearchItens from "../../components/ui/SearchItens";
-import { SuggestionResponse, getSuggestionById } from "../../services/suggestionService";
+import { SuggestionResponse, getSuggestionById, getSuggestions } from "../../services/suggestionService";
 import { useMarketLoader } from "../../hooks/useMarketLoader";
 import { AIStackParamList } from "../../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,6 +15,9 @@ export default function AISearch() {
   const navigation = useNavigation<AISearchNavigationProp>();
   const paperTheme = useTheme();
   const [results, setResults] = useState<SuggestionResponse | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const loadingRef = useRef(false);
   const { markets, productsCache, loading: loadingMarkets, loadMarkets } = useMarketLoader();
 
   const recipeSuggestions = [
@@ -63,6 +65,30 @@ export default function AISearch() {
     fetchSuggestionAndMarkets();
   }, [results?.suggestionId, loadMarkets]);
 
+  const handleSearch = useCallback(async (query?: string) => {
+    const searchTerm = query || searchQuery;
+    
+    if (!searchTerm.trim()) {
+      return;
+    }
+
+    if (loadingRef.current) {
+      return;
+    }
+
+    loadingRef.current = true;
+    setLoading(true);
+    try {
+      const suggestionResponse = await getSuggestions(searchTerm.trim());
+      setResults(suggestionResponse);
+    } catch (error: any) {
+      setResults(null);
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+    }
+  }, [searchQuery]);
+
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
@@ -84,10 +110,37 @@ export default function AISearch() {
           </View>
           
           <View style={styles.searchInputContainer}>
-            <SearchItens 
-              onResult={setResults} 
-              placeholder="Ex: Bolo de chocolate, Pizza"
-            />
+            <View style={styles.searchBarContainer}>
+              <Searchbar
+                placeholder="Ex: Bolo de chocolate, Pizza"
+                onChangeText={setSearchQuery}
+                value={searchQuery}
+                style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface }]}
+                icon={() => <Ionicons name="sparkles-outline" size={24} color={paperTheme.colors.primary} />}
+                clearIcon={() => <Ionicons name="close-circle" size={24} color={paperTheme.colors.onSurfaceVariant} />}
+                onSubmitEditing={() => handleSearch()}
+                inputStyle={{ color: paperTheme.colors.onSurface }}
+                placeholderTextColor={paperTheme.colors.onSurfaceVariant}
+              />
+              <TouchableOpacity
+                onPress={() => handleSearch()}
+                disabled={loading || !searchQuery.trim()}
+                style={[
+                  styles.searchButton,
+                  {
+                    backgroundColor: paperTheme.colors.primary,
+                    opacity: (loading || !searchQuery.trim()) ? 0.6 : 1,
+                  }
+                ]}
+                activeOpacity={0.7}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color={paperTheme.colors.onPrimary} />
+                ) : (
+                  <Ionicons name="search" size={20} color={paperTheme.colors.onPrimary} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -112,6 +165,10 @@ export default function AISearch() {
                     }
                   ]}
                   activeOpacity={0.7}
+                  onPress={() => {
+                    setSearchQuery(suggestion);
+                    handleSearch(suggestion);
+                  }}
                 >
                   <Ionicons 
                     name="restaurant-outline" 
@@ -278,6 +335,32 @@ const styles = StyleSheet.create({
   },
   searchInputContainer: {
     marginTop: 20,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchbar: {
+    flex: 1,
+    borderRadius: 15,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    marginRight: 8,
+  },
+  searchButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   titleContainer: {
     alignItems: "center",

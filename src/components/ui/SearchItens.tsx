@@ -31,8 +31,8 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
       ]);
 
       onResult({
-        products: productsResponse.products || [],
-        markets: marketsResponse.markets || [],
+        products: productsResponse?.products || [],
+        markets: marketsResponse?.markets || [],
       });
     } catch (err: any) {
       onResult({ products: [], markets: [] });
