@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
@@ -19,6 +20,7 @@ import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import { formatCEP, searchAddressByCEP, validateCEP } from '../../services/cepService';
 import { Address, createAddress, getAddressById, updateAddress } from '../../services/addressService';
+import { reverseGeocode } from '../../services/geocodingService';
 
 type AddEditAddressScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -57,6 +59,7 @@ export default function AddEditAddressScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [loadingCEP, setLoadingCEP] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const cepTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -227,6 +230,76 @@ export default function AddEditAddressScreen() {
     };
   };
 
+  const handleRequestLocation = () => {
+    Alert.alert(
+      'Usar localização atual?',
+      'Deseja usar sua localização atual para preencher automaticamente o endereço?\n\nSerá necessário permitir o acesso à sua localização.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sim, usar localização',
+          onPress: handleGetLocation,
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleGetLocation = async () => {
+    setLoadingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permissão negada',
+          'Para usar sua localização, é necessário permitir o acesso à localização nas configurações do dispositivo.'
+        );
+        setLoadingLocation(false);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = location.coords;
+
+      const addressData = await reverseGeocode(latitude, longitude);
+      console.log('addressData', addressData);
+      setFormData(prev => ({
+        ...prev,
+        street: prev.street.trim() || addressData.street || '',
+        number: prev.number.trim() || addressData.number || '',
+        neighborhood: prev.neighborhood.trim() || addressData.neighborhood || '',
+        city: prev.city.trim() || addressData.city || '',
+        state: prev.state.trim() || addressData.state || '',
+        zipCode: prev.zipCode.trim() || (addressData.zipCode ? formatCEP(addressData.zipCode) : ''),
+        complement: prev.complement.trim() || '',
+      }));
+    } catch (error: any) {
+      console.error('Erro ao buscar localização:', error);
+      let errorMessage = 'Não foi possível obter sua localização.';
+      
+      if (error.message?.includes('permission')) {
+        errorMessage = 'Permissão de localização negada. Por favor, permita o acesso à localização nas configurações.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Tempo esgotado ao buscar localização. Tente novamente.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Endereço não encontrado para as coordenadas fornecidas.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Erro', errorMessage);
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
@@ -253,6 +326,24 @@ export default function AddEditAddressScreen() {
         </View>
 
         <View style={styles.form}>
+          <TouchableOpacity
+            style={[styles.locationButton, {
+              backgroundColor: paperTheme.colors.surfaceVariant,
+              borderColor: paperTheme.colors.outline,
+            }]}
+            onPress={handleRequestLocation}
+            disabled={loadingLocation}
+          >
+            {loadingLocation ? (
+              <ActivityIndicator size="small" color={paperTheme.colors.primary} />
+            ) : (
+              <Ionicons name="location" size={20} color={paperTheme.colors.primary} style={{ marginRight: 8 }} />
+            )}
+            <Text style={[styles.locationButtonText, { color: paperTheme.colors.onSurface }]}>
+              {loadingLocation ? 'Buscando localização...' : 'Usar minha localização atual'}
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>Nome do Endereço *</Text>
             <TextInput
@@ -462,6 +553,20 @@ const styles = StyleSheet.create({
   },
   form: {
     paddingHorizontal: 16,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  locationButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   inputGroup: {
     marginBottom: 16,
