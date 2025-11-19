@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import CustomModal from '../../components/ui/CustomModal';
-import { useCart } from '../../contexts/CartContext';
+import { CartItem, useCart } from '../../contexts/CartContext';
 import { OrderCreateDTO } from '../../domain/orderDomain';
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
@@ -25,10 +25,7 @@ import { Address, getUserAddresses } from '../../services/addressService';
 import { createOrder } from '../../services/orderService';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
-
-interface RouteParams {
-  // Pode receber dados do carrinho se necessário
-}
+type CheckoutScreenRouteProp = RouteProp<HomeStackParamList, 'Checkout'>;
 
 const PAYMENT_METHODS = [
   { id: 'credit_card', backendValue: 'CREDIT_CARD', name: 'Cartão de Crédito', icon: 'card' },
@@ -39,10 +36,10 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutScreen() {
   const navigation = useNavigation<CheckoutScreenNavigationProp>();
-  const route = useRoute();
+  const route = useRoute<CheckoutScreenRouteProp>();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
-  const { state: cartState, clearCart } = useCart();
+  const { state: cartState, clearCart, removeItem } = useCart();
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
   const { user, isAuthenticated } = useSession();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -50,6 +47,33 @@ export default function CheckoutScreen() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [creatingOrder, setCreatingOrder] = useState(false);
+
+  const checkoutItems = useMemo(() => {
+    const routeItems = route.params?.items;
+    const routeMarketId = route.params?.marketId;
+    
+    if (routeItems && routeItems.length > 0) {
+      return routeItems;
+    }
+    
+    if (routeMarketId) {
+      return cartState.items.filter(item => item.marketId === routeMarketId);
+    }
+    
+    return cartState.items;
+  }, [route.params, cartState.items]);
+
+  const checkoutTotal = useMemo(() => {
+    return checkoutItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  }, [checkoutItems]);
+
+  const checkoutItemCount = useMemo(() => {
+    return checkoutItems.reduce((sum, item) => sum + item.quantity, 0);
+  }, [checkoutItems]);
+
+  const checkoutMarketId = useMemo(() => {
+    return route.params?.marketId || checkoutItems[0]?.marketId || '';
+  }, [route.params, checkoutItems]);
 
   const loadAddresses = useCallback(async () => {
     try {
@@ -153,8 +177,8 @@ export default function CheckoutScreen() {
 
       const orderData: OrderCreateDTO = {
         userId: user?.sub || '',
-        marketId: cartState.items[0]?.marketId || '',
-        items: cartState.items.map((item) => ({
+        marketId: checkoutMarketId,
+        items: checkoutItems.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
           price: item.price,
@@ -165,11 +189,13 @@ export default function CheckoutScreen() {
 
       const newOrder = await createOrder(orderData);
 
-      clearCart();
+      checkoutItems.forEach(item => {
+        removeItem(item.id);
+      });
 
       showSuccess(
         'Compra Finalizada! 🎉',
-        `Pedido #${newOrder.id} criado com sucesso!\n\nTotal: R$ ${cartState.total.toFixed(2)}`,
+        `Pedido #${newOrder.id} criado com sucesso!\n\nTotal: R$ ${checkoutTotal.toFixed(2)}`,
         {
           text: 'Ver Pedidos',
           onPress: () => {
@@ -297,10 +323,10 @@ export default function CheckoutScreen() {
               marginBottom: 8
             }}>
               <Text style={{ color: paperTheme.colors.onSurface, opacity: 0.7 }}>
-                Subtotal ({cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'})
+                Subtotal ({checkoutItemCount} {checkoutItemCount === 1 ? 'item' : 'itens'})
               </Text>
               <Text style={{ color: paperTheme.colors.onSurface, fontWeight: '600' }}>
-                R$ {cartState.total.toFixed(2)}
+                R$ {checkoutTotal.toFixed(2)}
               </Text>
             </View>
             <View style={{
@@ -323,7 +349,7 @@ export default function CheckoutScreen() {
                 fontWeight: 'bold',
                 color: paperTheme.colors.primary
               }}>
-                R$ {cartState.total.toFixed(2)}
+                R$ {checkoutTotal.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -587,7 +613,7 @@ export default function CheckoutScreen() {
               fontWeight: 'bold',
               color: paperTheme.colors.primary
             }}>
-              R$ {cartState.total.toFixed(2)}
+              R$ {checkoutTotal.toFixed(2)}
             </Text>
           </View>
           

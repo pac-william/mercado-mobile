@@ -1,12 +1,13 @@
 import { Product } from "../services/productService";
 import { SearchResults } from "../components/ui/SearchItens";
+import { CartItem } from "../contexts/CartContext";
 
 export type HomeStackParamList = {
   HomeMain: undefined;
   SearchMain: { initialResults?: SearchResults } | undefined;
   ProductDetail: { product: any };
   Cart: undefined;
-  Checkout: undefined;
+  Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
   EditProfile: undefined;
   AddressesMain: undefined;
@@ -22,7 +23,7 @@ export type SearchStackParamList = {
   SearchMain: { initialResults?: SearchResults } | undefined;
   ProductDetail: { product: any };
   Cart: undefined;
-  Checkout: undefined;
+  Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
   EditProfile: undefined;
   AddressesMain: undefined;
@@ -38,7 +39,7 @@ export type SettingsStackParamList = {
   SettingsMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
-  Checkout: undefined;
+  Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
@@ -57,7 +58,7 @@ export type AIStackParamList = {
   AIMain: undefined;
   ProductDetail: { product: any };
   Cart: undefined;
-  Checkout: undefined;
+  Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
   EditProfile: undefined;
   AddressesMain: undefined;
