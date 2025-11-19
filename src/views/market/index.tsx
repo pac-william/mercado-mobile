@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, FlatList, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Searchbar, useTheme } from 'react-native-paper';
 import { getMarketById } from '../../services/marketService';
 import { getProducts } from '../../services/productService';
 import { getCategories } from '../../services/categoryService';
@@ -14,9 +15,10 @@ import { Product } from '../../domain/productDomain';
 import { Category } from '../../domain/categoryDomain';
 import { HomeStackParamList } from '../../../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActivityIndicator, useTheme } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { isNetworkError } from '../../utils/networkUtils';
 import { isValidImageUri } from '../../utils/imageUtils';
+import { normalizeString } from '../../utils/stringUtils';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -40,10 +42,9 @@ export default function MarketDetailsScreen() {
   const [market, setMarket] = useState<Market | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categorizedProducts, setCategorizedProducts] = useState<CategoryGroup[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
@@ -63,8 +64,6 @@ export default function MarketDetailsScreen() {
         console.error('Erro ao buscar dados do mercado:', error);
         if (isNetworkError(error)) {
           setOffline(true);
-        } else {
-          setError(true);
         }
       } finally {
         setLoading(false);
@@ -76,34 +75,62 @@ export default function MarketDetailsScreen() {
     }
   }, [marketId]);
 
-  useEffect(() => {
-    if (products.length > 0) {
-      const categoryMap: Record<string, string> = categories.reduce((map, category) => {
-        map[category.id] = category.name;
-        return map;
-      }, {} as Record<string, string>);
-
-      const groupedProducts = products.reduce((acc, product) => {
-        const categoryId = product.categoryId || 'sem-categoria';
-
-        if (!acc[categoryId]) {
-          acc[categoryId] = {
-            id: categoryId,
-            name: product.category?.name || "Outros Produtos", 
-            products: [],
-          };
-        }
-
-        acc[categoryId].products.push(product);
-        
-        return acc;
-      }, {} as Record<string, CategoryGroup>);
-
-      setCategorizedProducts(Object.values(groupedProducts));
-    } else {
-      setCategorizedProducts([]);
+  const filteredAndCategorizedProducts = useMemo(() => {
+    if (products.length === 0) {
+      return [];
     }
-  }, [products, categories]);
+
+    const categoryMap: Record<string, { name: string; normalizedName: string }> = categories.reduce((map, category) => {
+      map[category.id] = {
+        name: category.name,
+        normalizedName: normalizeString(category.name),
+      };
+      return map;
+    }, {} as Record<string, { name: string; normalizedName: string }>);
+
+    let filteredProducts = products;
+
+    if (searchQuery.trim()) {
+      const normalizedQuery = normalizeString(searchQuery.trim());
+
+      const matchingCategoryIds = Object.keys(categoryMap).filter(categoryId =>
+        categoryMap[categoryId].normalizedName.includes(normalizedQuery)
+      );
+
+      filteredProducts = products.filter(product => {
+        const normalizedProductName = normalizeString(product.name);
+        const normalizedCategoryName = product.category?.name ? normalizeString(product.category.name) : '';
+        
+        const productNameMatch = normalizedProductName.includes(normalizedQuery);
+        const categoryMatch = product.categoryId && matchingCategoryIds.includes(product.categoryId);
+        const categoryNameMatch = normalizedCategoryName.includes(normalizedQuery);
+        
+        return productNameMatch || categoryMatch || categoryNameMatch;
+      });
+    }
+
+    if (filteredProducts.length === 0) {
+      return [];
+    }
+
+    const groupedProducts = filteredProducts.reduce((acc, product) => {
+      const categoryId = product.categoryId || 'sem-categoria';
+
+      if (!acc[categoryId]) {
+        acc[categoryId] = {
+          id: categoryId,
+          name: categoryMap[categoryId]?.name || product.category?.name || "Outros Produtos",
+          products: [],
+        };
+      }
+
+      acc[categoryId].products.push(product);
+
+      return acc;
+    }, {} as Record<string, CategoryGroup>);
+
+    return Object.values(groupedProducts);
+  }, [products, categories, searchQuery]);
 
   if (!market) {
     return (
@@ -155,8 +182,21 @@ export default function MarketDetailsScreen() {
           </View>
         </View>
 
-        {categorizedProducts.length > 0 ? (
-          categorizedProducts.map((category) => (
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder="Buscar produtos..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface }]}
+            icon={() => <Ionicons name="search-outline" size={24} color={paperTheme.colors.primary} />}
+            clearIcon={() => <Ionicons name="close-circle" size={24} color={paperTheme.colors.onSurfaceVariant} />}
+            inputStyle={{ color: paperTheme.colors.onSurface }}
+            placeholderTextColor={paperTheme.colors.onSurfaceVariant}
+          />
+        </View>
+
+        {filteredAndCategorizedProducts.length > 0 ? (
+          filteredAndCategorizedProducts.map((category) => (
             <View key={category.id} style={styles.categoryContainer}>
               <Text style={[styles.categoryTitle, { color: paperTheme.colors.onSurface }]}>
                 {category.name}
@@ -186,6 +226,16 @@ export default function MarketDetailsScreen() {
               />
             </View>
           ))
+        ) : searchQuery.trim() ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={48} color={paperTheme.colors.onSurfaceVariant} style={{ opacity: 0.5, marginBottom: 16 }} />
+            <Text style={[styles.noProductsText, { color: paperTheme.colors.onSurfaceVariant }]}>
+              Nenhum produto encontrado
+            </Text>
+            <Text style={[styles.noProductsSubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
+              Tente buscar com outro termo
+            </Text>
+          </View>
         ) : (
           <View style={styles.emptyContainer}>
             <Text style={[styles.noProductsText, { color: paperTheme.colors.onSurfaceVariant }]}>
@@ -219,12 +269,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderRadius: 16,
-    marginBottom: 24,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  searchContainer: {
+    marginBottom: 24,
+  },
+  searchbar: {
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   marketImage: {
     width: 80,
@@ -271,5 +332,12 @@ const styles = StyleSheet.create({
   noProductsText: {
     fontSize: 16,
     textAlign: 'center',
+    fontWeight: '600',
+  },
+  noProductsSubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
+    opacity: 0.7,
   },
 });

@@ -29,8 +29,8 @@ type CartScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 const CartScreen: React.FC = () => {
   const navigation = useNavigation<CartScreenNavigationProp>();
   const { state: cartState, removeItem, updateQuantity, clearCart, addItem } = useCart();
-  const { modalState, hideModal, showWarning, showSuccess } = useModal();
-  const { user, isAuthenticated, isLoading: sessionLoading } = useSession();
+  const { modalState, hideModal, showWarning } = useModal();
+  const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
