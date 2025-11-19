@@ -135,7 +135,6 @@ export default function ProductSectionWithCards({
             <ProductCard
               marketLogo={item.marketLogo || ""}
               marketName={item.marketName}
-              marketAddress={item.marketAddress}
               title={item.name}
               subtitle={item.unit || item.name}
               price={item.price}

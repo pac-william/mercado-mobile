@@ -149,7 +149,6 @@ export default function Home() {
               <ProductCard
                 marketLogo={market.profilePicture}
                 marketName={market.name}
-                marketAddress={market.address}
                 title={item.name}
                 subtitle=""
                 price={item.price}

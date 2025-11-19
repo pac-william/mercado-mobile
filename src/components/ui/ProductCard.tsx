@@ -9,7 +9,6 @@ const CARD_WIDTH = width * 0.45;
 interface ProductCardProps {
   marketLogo: string;
   marketName: string;
-  marketAddress: string;
   title: string;
   subtitle: string;
   price: number;
@@ -21,7 +20,6 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({
   marketLogo,
   marketName,
-  marketAddress,
   title,
   subtitle,
   price,
@@ -59,13 +57,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ellipsizeMode="tail"
           >
             {marketName}
-          </Text>
-          <Text 
-            style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} 
-            numberOfLines={1} 
-            ellipsizeMode="tail"
-          >
-            {marketAddress}
           </Text>
         </View>
       </View>
@@ -109,7 +100,6 @@ export default ProductCard;
 
 const styles = StyleSheet.create({
   card: {
-    // backgroundColor será aplicado dinamicamente via props
     borderRadius: 12,
     padding: 12,
     marginRight: 12,
@@ -118,7 +108,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
-    // borderWidth e borderColor serão aplicados dinamicamente via props
   },
   header: {
     flexDirection: "row",
@@ -133,11 +122,6 @@ const styles = StyleSheet.create({
   marketName: {
     fontWeight: "bold",
     fontSize: 14,
-    // color será aplicado dinamicamente via props
-  },
-  marketAddress: {
-    fontSize: 12,
-    // color será aplicado dinamicamente via props
   },
   productImageContainer: {
     alignItems: "center",
@@ -155,16 +139,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     marginBottom: 2,
-    // color será aplicado dinamicamente via props
   },
   productSubtitle: {
     fontSize: 12,
-    // color será aplicado dinamicamente via props
     marginBottom: 2,
   },
   productPrice: {
     fontSize: 16,
     fontWeight: "bold",
-    // color será aplicado dinamicamente via props
   },
 });

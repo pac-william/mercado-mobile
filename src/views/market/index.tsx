@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, FlatList, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { getMarketById } from '../../services/marketService';
 import { getProducts } from '../../services/productService';
 import { getCategories } from '../../services/categoryService';
@@ -14,6 +16,7 @@ import { HomeStackParamList } from '../../../App';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, useTheme } from 'react-native-paper';
 import { isNetworkError } from '../../utils/networkUtils';
+import { isValidImageUri } from '../../utils/imageUtils';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -31,6 +34,7 @@ export default function MarketDetailsScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const route = useRoute();
   const paperTheme = useTheme();
+  const insets = useSafeAreaInsets();
   const { marketId } = route.params as MarketDetailsRouteParams;
 
   const [market, setMarket] = useState<Market | null>(null);
@@ -124,8 +128,23 @@ export default function MarketDetailsScreen() {
       {offline && (
         <OfflineBanner message="Sem conexão com a internet. Alguns recursos podem estar limitados." />
       )}
-        <View style={styles.marketInfoContainer}>
-          <Image source={{ uri: market.profilePicture }} style={styles.marketImage} />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom + 100, 120) }
+        ]}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+      >
+        <View style={[styles.marketInfoCard, { backgroundColor: paperTheme.colors.surface }]}>
+          {isValidImageUri(market.profilePicture) ? (
+            <Image source={{ uri: market.profilePicture }} style={styles.marketImage} />
+          ) : (
+            <View style={[styles.marketImage, styles.marketImagePlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+              <Ionicons name="storefront-outline" size={32} color={paperTheme.colors.onSurfaceVariant} />
+            </View>
+          )}
           <View style={styles.textContainer}>
             <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
               {market.name}
@@ -147,11 +166,11 @@ export default function MarketDetailsScreen() {
                 keyExtractor={(item) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.productsListContent}
                 renderItem={({ item }) => (
                   <ProductCard
                     marketLogo={market.profilePicture}
                     marketName={market.name}
-                    marketAddress={market.address}
                     title={item.name}
                     subtitle={item.unit}
                     price={item.price}
@@ -161,17 +180,20 @@ export default function MarketDetailsScreen() {
                         product: { ...item, marketName: market.name },
                       })
                     }
-                    style={{ marginRight: 16 }}
+                    style={styles.productCard}
                   />
                 )}
               />
             </View>
           ))
         ) : (
-          <Text style={[styles.noProductsText, { color: paperTheme.colors.onSurfaceVariant }]}>
-            Nenhum produto cadastrado
-          </Text>
+          <View style={styles.emptyContainer}>
+            <Text style={[styles.noProductsText, { color: paperTheme.colors.onSurfaceVariant }]}>
+              Nenhum produto cadastrado
+            </Text>
+          </View>
         )}
+      </ScrollView>
     </View>
   );
 }
@@ -179,53 +201,75 @@ export default function MarketDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor será aplicado dinamicamente via props
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // backgroundColor será aplicado dinamicamente via props
+  },
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
-  marketInfoContainer: {
+  marketInfoCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   marketImage: {
     width: 80,
     height: 80,
-    borderRadius: 8,
+    borderRadius: 12,
     marginRight: 16,
+  },
+  marketImagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   textContainer: {
     flex: 1,
   },
   marketName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    // color será aplicado dinamicamente via props
+    marginBottom: 4,
   },
   marketAddress: {
-    fontSize: 16,
-    // color será aplicado dinamicamente via props
+    fontSize: 14,
+    lineHeight: 20,
   },
   categoryContainer: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   categoryTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
-    // color será aplicado dinamicamente via props
+    paddingHorizontal: 4,
+  },
+  productsListContent: {
+    paddingLeft: 4,
+    paddingRight: 16,
+  },
+  productCard: {
+    marginRight: 12,
+  },
+  emptyContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
   },
   noProductsText: {
-    textAlign: 'center',
-    marginTop: 50,
     fontSize: 16,
-    // color será aplicado dinamicamente via props
+    textAlign: 'center',
   },
 });
