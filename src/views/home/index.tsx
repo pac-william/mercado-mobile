@@ -126,14 +126,11 @@ export default function Home() {
     return filtered
       .filter((market) => market.products && market.products.length > 0)
       .map((market) => (
-        <View key={market.id} style={{ marginBottom: 5 }}>
+        <View key={market.id} style={{ marginBottom: 20 }}>
           <TouchableOpacity
             onPress={() => navigation.navigate("MarketDetails", { marketId: market.id })}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 12,
-            }}
+            style={[styles.marketInfoCard, { backgroundColor: paperTheme.colors.surface }]}
+            activeOpacity={0.7}
           >
             {isValidImageUri(market.profilePicture) ? (
               <Image
@@ -141,23 +138,17 @@ export default function Home() {
                 style={styles.marketImage}
               />
             ) : (
-              <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
+              <View style={[styles.marketImage, styles.marketImagePlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                <Ionicons name="storefront-outline" size={32} color={paperTheme.colors.onSurfaceVariant} />
               </View>
             )}
-            <View style={{ marginLeft: 10, flex: 1 }}>
-
-              <Text
-                variant="titleMedium"
-                style={{ fontWeight: "bold", fontSize: 18, color: paperTheme.colors.onBackground }}
-              >
+            <View style={styles.textContainer}>
+              <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
                 {market.name}
               </Text>
-              
-              <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurface, opacity: 0.7 }]} numberOfLines={1} ellipsizeMode="tail">
+              <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1} ellipsizeMode="tail">
                 {market.address}
               </Text>
-
             </View>
           </TouchableOpacity>
 
@@ -273,14 +264,39 @@ const styles = StyleSheet.create({
         padding: 16,
         paddingBottom: 200, 
     },
+    marketInfoCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+    },
     marketImage: {
         width: 80,
         height: 80,
-        borderRadius: 8,
+        borderRadius: 12,
         marginRight: 16,
     },
+    marketImagePlaceholder: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    textContainer: {
+        flex: 1,
+    },
+    marketName: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
     marketAddress: {
-      fontSize: 12,
+        fontSize: 14,
+        lineHeight: 20,
     },
     productList: {
         minHeight: 250,

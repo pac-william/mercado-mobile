@@ -26,7 +26,8 @@ export default function CategoryFilter({
     try {
       setLoading(true);
       const response = await getCategories(1, 100);
-      setCategories(response.category || []);
+      const categoriesData = (response as any).categories || response.category || [];
+      setCategories(categoriesData);
     } catch (error) {
       setCategories([]);
     } finally {
