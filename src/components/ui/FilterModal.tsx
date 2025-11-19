@@ -12,15 +12,17 @@ import {
 import { Text, useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import PriceFilter from './PriceFilter';
+import CategoryFilter from './CategoryFilter';
 
 interface FilterModalProps {
   visible: boolean;
   onClose: () => void;
-  onApply: (filters: { minPrice?: number; maxPrice?: number }) => void;
+  onApply: (filters: { minPrice?: number; maxPrice?: number; categoryId?: string }) => void;
   onClear: () => void;
   currentFilters: {
     minPrice?: number;
     maxPrice?: number;
+    categoryId?: string;
   };
 }
 
@@ -34,25 +36,28 @@ export default function FilterModal({
   const paperTheme = useTheme();
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
+  const [categoryId, setCategoryId] = useState<string | undefined>(currentFilters.categoryId);
 
   useEffect(() => {
     setMinPrice(currentFilters.minPrice);
     setMaxPrice(currentFilters.maxPrice);
+    setCategoryId(currentFilters.categoryId);
   }, [currentFilters]);
 
   const handleApply = () => {
-    onApply({ minPrice, maxPrice });
+    onApply({ minPrice, maxPrice, categoryId });
     onClose();
   };
 
   const handleClear = () => {
     setMinPrice(undefined);
     setMaxPrice(undefined);
+    setCategoryId(undefined);
     onClear();
     onClose();
   };
 
-  const hasActiveFilters = minPrice !== undefined || maxPrice !== undefined;
+  const hasActiveFilters = minPrice !== undefined || maxPrice !== undefined || categoryId !== undefined;
 
   return (
     <Modal
@@ -99,6 +104,10 @@ export default function FilterModal({
                   indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                   keyboardShouldPersistTaps="handled"
                 >
+                  <CategoryFilter
+                    selectedCategoryId={categoryId}
+                    onCategoryChange={setCategoryId}
+                  />
                   <PriceFilter
                     minPrice={minPrice}
                     maxPrice={maxPrice}

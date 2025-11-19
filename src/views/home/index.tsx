@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
-import { Text, ActivityIndicator, useTheme } from "react-native-paper";
+import { Text, ActivityIndicator, useTheme, Searchbar } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 
 import { HomeStackParamList } from '../../../App';
 import ProductCard from "../../components/ui/ProductCard";
@@ -11,13 +12,12 @@ import FilterModal from "../../components/ui/FilterModal";
 import HeroBanner from "../../components/ui/Hero";
 import { Header } from "../../components/layout/header";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
-import SearchItens from "../../components/ui/SearchItens";
 import { getProducts } from "../../services/productService";
 import { getMarkets, getMarketById } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
 import { isNetworkError } from "../../utils/networkUtils";
 import { isValidImageUri } from "../../utils/imageUtils";
-
+import { normalizeString } from "../../utils/stringUtils";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -29,9 +29,11 @@ export default function Home() {
   const [offline, setOffline] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<{
     minPrice?: number;
     maxPrice?: number;
+    categoryId?: string;
   }>({});
 
   const fetchMarketsWithProducts = useCallback(async () => {
@@ -48,7 +50,8 @@ export default function Home() {
               marketDetails.id,
               undefined,
               filters.minPrice,
-              filters.maxPrice
+              filters.maxPrice,
+              filters.categoryId
             );
             return {
               ...marketDetails,
@@ -86,7 +89,7 @@ export default function Home() {
     setRefreshing(false);
   };
 
-  const handleApplyFilters = (newFilters: { minPrice?: number; maxPrice?: number }) => {
+  const handleApplyFilters = (newFilters: { minPrice?: number; maxPrice?: number; categoryId?: string }) => {
     setFilters(newFilters);
   };
 
@@ -94,14 +97,33 @@ export default function Home() {
     setFilters({});
   };
 
-  const hasActiveFilters = filters.minPrice !== undefined || filters.maxPrice !== undefined;
+  const hasActiveFilters = filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.categoryId !== undefined;
 
-  const handleSearchResult = useCallback((results: any) => {
-    navigation.navigate("SearchMain", { initialResults: results });
-  }, [navigation]);
+  const filteredMarkets = useMemo(() => {
+    let filtered = markets;
 
-  const filteredMarkets = useMemo(() => 
-    markets
+    if (searchQuery.trim()) {
+      const normalizedQuery = normalizeString(searchQuery.trim());
+      filtered = markets.map(market => {
+        const normalizedMarketName = normalizeString(market.name);
+        const marketMatches = normalizedMarketName.includes(normalizedQuery);
+        
+        const filteredProducts = market.products?.filter(product => {
+          const normalizedProductName = normalizeString(product.name);
+          return normalizedProductName.includes(normalizedQuery);
+        }) || [];
+
+        if (marketMatches || filteredProducts.length > 0) {
+          return {
+            ...market,
+            products: marketMatches ? market.products : filteredProducts
+          };
+        }
+        return null;
+      }).filter((market): market is Market => market !== null);
+    }
+
+    return filtered
       .filter((market) => market.products && market.products.length > 0)
       .map((market) => (
         <View key={market.id} style={{ marginBottom: 5 }}>
@@ -165,7 +187,8 @@ export default function Home() {
             contentContainerStyle={{ paddingLeft: 4, paddingRight: 16 }}
           />
         </View>
-      )), [markets, navigation, paperTheme.colors]);
+      ));
+  }, [markets, searchQuery, navigation, paperTheme.colors]);
 
     if (loading) {
         return (
@@ -200,9 +223,15 @@ export default function Home() {
           <HeroBanner />
         </View>
         <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-          <SearchItens 
-            onResult={handleSearchResult}
-            placeholder="Digite produto ou mercado"
+          <Searchbar
+            placeholder="Buscar produtos ou mercados..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface }]}
+            icon={() => <Ionicons name="search-outline" size={24} color={paperTheme.colors.primary} />}
+            clearIcon={() => <Ionicons name="close-circle" size={24} color={paperTheme.colors.onSurfaceVariant} />}
+            inputStyle={{ color: paperTheme.colors.onSurface }}
+            placeholderTextColor={paperTheme.colors.onSurfaceVariant}
           />
         </View>
         <View
@@ -236,7 +265,6 @@ export default function Home() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // backgroundColor será aplicado dinamicamente via props
     },
     scrollViewFlex: {
         flex: 1,
@@ -253,7 +281,6 @@ const styles = StyleSheet.create({
     },
     marketAddress: {
       fontSize: 12,
-      // color será aplicado dinamicamente via props
     },
     productList: {
         minHeight: 250,
@@ -263,4 +290,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
       },
+    searchbar: {
+        borderRadius: 12,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
 });

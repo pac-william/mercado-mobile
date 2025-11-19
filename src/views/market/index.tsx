@@ -212,7 +212,7 @@ export default function MarketDetailsScreen() {
                     marketLogo={market.profilePicture}
                     marketName={market.name}
                     title={item.name}
-                    subtitle={item.unit}
+                    subtitle={item.unit || ''}
                     price={item.price}
                     imageUrl={item.image}
                     onPress={() =>
