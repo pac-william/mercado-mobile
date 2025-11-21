@@ -34,15 +34,17 @@ export default function ProductDetail({ route }: Props) {
     try {
       setIsAdding(true);
 
-      // Se estiver autenticado, sincroniza com a API primeiro
       if (isAuthenticated) {
         try {
-          const response = await addItemToCart({
+          const cartResponse = await addItemToCart({
             productId: product.id,
             quantity: 1,
           });
-          // Se adicionou na API com sucesso, adiciona também no contexto local
-          // com o cartItemId para sincronização futura
+          
+          const addedItem = cartResponse.items.find(item => 
+            item.productId === product.id
+          );
+          
           addItem({
             id: product.id,
             name: product.name,
@@ -50,11 +52,10 @@ export default function ProductDetail({ route }: Props) {
             image: product.image,
             marketName: product.marketName,
             marketId: product.marketId,
-            cartItemId: response.id, // Armazena o ID do item no carrinho da API
+            cartItemId: addedItem?.id,
           });
         } catch (apiError: any) {
           console.error("Erro ao adicionar item ao carrinho na API:", apiError);
-          // Se der erro na API, ainda adiciona localmente
           addItem({
             id: product.id,
             name: product.name,
@@ -75,7 +76,6 @@ export default function ProductDetail({ route }: Props) {
           return;
         }
       } else {
-        // Se não estiver autenticado, adiciona apenas no contexto local
         addItem({
           id: product.id,
           name: product.name,

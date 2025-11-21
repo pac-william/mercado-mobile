@@ -50,12 +50,10 @@ const CartScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      const cartResponse = await getCart();
+      const carts = await getCart();
       
-      // Limpa o carrinho local primeiro
       clearCart();
       
-      // Função auxiliar para buscar nome do mercado
       const getMarketName = async (marketId: string): Promise<string> => {
         try {
           const market = await getMarketById(marketId);
@@ -66,20 +64,16 @@ const CartScreen: React.FC = () => {
         }
       };
       
-      // Adiciona os itens do carrinho da API ao contexto
-      // Como já limpamos o carrinho, podemos adicionar todos os itens diretamente
-      // Usa um Set para evitar duplicações baseadas no ID
+      const allItems = carts.flatMap((cart) => cart.items ?? []);
       const addedIds = new Set<string>();
       
-      for (const item of cartResponse.items) {
+      for (const item of allItems) {
         const cartItem = await mapCartItemResponseToCartItem(item, getMarketName);
         const itemId = String(cartItem.id);
         
-        // Verifica se já adicionamos este item (evita duplicações na API)
         if (!addedIds.has(itemId)) {
           addedIds.add(itemId);
           
-          // Adiciona o item com o cartItemId para sincronização
           addItem({
             id: itemId,
             name: cartItem.name,
@@ -87,10 +81,9 @@ const CartScreen: React.FC = () => {
             image: cartItem.image,
             marketName: cartItem.marketName,
             marketId: cartItem.marketId,
-            cartItemId: cartItem.cartItemId, // Preserva o cartItemId
+            cartItemId: cartItem.cartItemId,
           });
           
-          // Atualiza a quantidade para o valor correto da API
           if (item.quantity !== 1) {
             updateQuantity(itemId, item.quantity);
           }
@@ -98,7 +91,6 @@ const CartScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar carrinho:', error);
-      // Se der erro, continua com o carrinho local
     } finally {
       setLoading(false);
       setHasLoadedOnce(true);
@@ -162,18 +154,15 @@ const CartScreen: React.FC = () => {
         text: 'Limpar Tudo',
         onPress: async () => {
           try {
-            // Se estiver autenticado, limpa na API também
             if (isAuthenticated) {
               try {
                 await clearCartAPI();
               } catch (apiError) {
                 console.error("Erro ao limpar carrinho na API:", apiError);
-                // Continua limpando localmente mesmo se der erro na API
               }
             }
             
             clearCart();
-            // Reseta o flag para permitir recarregar na próxima vez que a tela for montada
             setHasLoadedOnce(false);
             hideModal();
           } catch (error) {

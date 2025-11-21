@@ -25,6 +25,7 @@ export interface CartItemResponse {
 export interface CartResponse {
   id: string;
   userId: string;
+  marketId: string;
   items: CartItemResponse[];
   totalItems: number;
   totalValue: number;
@@ -36,19 +37,23 @@ export interface AddMultipleItemsDTO {
   items: CartItemDTO[];
 }
 
-export const getCart = async (): Promise<CartResponse> => {
+export const getCart = async (): Promise<CartResponse[]> => {
   try {
-    const response = await api.get<CartResponse>("/cart");
-    return response.data;
+    const response = await api.get<CartResponse[]>("/cart");
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return [data];
   } catch (error) {
     console.error("Erro ao buscar carrinho:", error);
     throw error;
   }
 };
 
-export const addItemToCart = async (item: CartItemDTO): Promise<CartItemResponse> => {
+export const addItemToCart = async (item: CartItemDTO): Promise<CartResponse> => {
   try {
-    const response = await api.post<CartItemResponse>("/cart/items", item);
+    const response = await api.post<CartResponse>("/cart/items", item);
     return response.data;
   } catch (error) {
     console.error("Erro ao adicionar item ao carrinho:", error);
@@ -56,9 +61,9 @@ export const addItemToCart = async (item: CartItemDTO): Promise<CartItemResponse
   }
 };
 
-export const addMultipleItemsToCart = async (items: AddMultipleItemsDTO): Promise<CartResponse> => {
+export const addMultipleItemsToCart = async (items: AddMultipleItemsDTO): Promise<CartResponse[]> => {
   try {
-    const response = await api.post<CartResponse>("/cart/items/multiple", items);
+    const response = await api.post<CartResponse[]>("/cart/items/multiple", items);
     return response.data;
   } catch (error) {
     console.error("Erro ao adicionar múltiplos itens ao carrinho:", error);
@@ -66,9 +71,9 @@ export const addMultipleItemsToCart = async (items: AddMultipleItemsDTO): Promis
   }
 };
 
-export const updateCartItem = async (itemId: string, quantity: number): Promise<CartItemResponse> => {
+export const updateCartItem = async (itemId: string, quantity: number): Promise<CartResponse> => {
   try {
-    const response = await api.put<CartItemResponse>(`/cart/items/${itemId}`, { quantity });
+    const response = await api.put<CartResponse>(`/cart/items/${itemId}`, { quantity });
     return response.data;
   } catch (error) {
     console.error("Erro ao atualizar item do carrinho:", error);
@@ -87,7 +92,12 @@ export const removeCartItem = async (itemId: string): Promise<void> => {
 
 export const clearCart = async (): Promise<void> => {
   try {
-    await api.delete("/cart");
+    const carts = await getCart();
+    if (carts.length > 0) {
+      await Promise.all(
+        carts.map(cart => api.delete(`/cart?cartId=${cart.id}`))
+      );
+    }
   } catch (error) {
     console.error("Erro ao limpar carrinho:", error);
     throw error;

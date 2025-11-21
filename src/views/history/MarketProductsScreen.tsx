@@ -149,8 +149,9 @@ export default function MarketProductsScreen() {
         });
         if (isAuthenticated) {
           addItemToCart({ productId: product.id, quantity: 1 })
-            .then((response) => {
-              setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, cartItemId: response.id } : p)));
+            .then((cartResponse) => {
+              const addedItem = cartResponse.items.find(item => item.productId === product.id);
+              setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, cartItemId: addedItem?.id } : p)));
             })
             .catch(() => {
               setProducts((prev) => prev.map((p) => {
@@ -219,8 +220,9 @@ export default function MarketProductsScreen() {
       } else if (cartItemId) {
         await updateCartItem(cartItemId, quantity);
       } else if (quantity > 0) {
-        const response = await addItemToCart({ productId, quantity });
-        setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, cartItemId: response.id } : p)));
+        const cartResponse = await addItemToCart({ productId, quantity });
+        const addedItem = cartResponse.items.find(item => item.productId === productId);
+        setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, cartItemId: addedItem?.id } : p)));
       }
     } catch {
       const cartItem = cartState.items.find((i) => i.id === productId && i.marketId === marketId);
@@ -338,12 +340,13 @@ export default function MarketProductsScreen() {
 
           if (isAuthenticated) {
             addItemToCart({ productId: newProduct.id, quantity: oldQuantity })
-              .then((response) => {
+              .then((cartResponse) => {
+                const addedItem = cartResponse.items.find(item => item.productId === newProduct.id);
                 setProducts((prevState) => {
                   if (prevState.find((p) => p.id === newProduct.id)) {
-                    return prevState.map((p) => (p.id === newProduct.id ? { ...p, cartItemId: response.id } : p));
+                    return prevState.map((p) => (p.id === newProduct.id ? { ...p, cartItemId: addedItem?.id } : p));
                   }
-                  return replaceProductInList(prevState, currentProduct.id, { ...newProductWithQuantity, cartItemId: response.id });
+                  return replaceProductInList(prevState, currentProduct.id, { ...newProductWithQuantity, cartItemId: addedItem?.id });
                 });
               })
               .catch(() => {
