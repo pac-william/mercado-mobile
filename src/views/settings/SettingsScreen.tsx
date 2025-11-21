@@ -452,6 +452,24 @@ export default function SettingsScreen() {
                                 <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
 
+                            <TouchableOpacity
+                                style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
+                                onPress={() => navigation.navigate("Cart")}
+                            >
+                                <Ionicons name="cart-outline" size={24} color={paperTheme.colors.onSurface} />
+                                <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Carrinho</Text>
+                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
+                                onPress={() => navigation.navigate("History")}
+                            >
+                                <Ionicons name="time-outline" size={24} color={paperTheme.colors.onSurface} />
+                                <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Histórico de sugestões</Text>
+                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                            </TouchableOpacity>
+
                             <TouchableOpacity 
                                 style={[styles.menuItem, { borderBottomWidth: 0 }]} 
                                 onPress={() => navigation.navigate("Orders")}
