@@ -23,13 +23,13 @@ type CartAction =
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'CLEAR_CART' };
 
-const initialState: CartState = {
+export const initialState: CartState = {
   items: [],
   total: 0,
   itemCount: 0,
 };
 
-const cartReducer = (state: CartState, action: CartAction): CartState => {
+export const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
       // Normaliza os IDs para string para garantir comparação correta
