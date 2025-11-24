@@ -12,19 +12,26 @@ import FilterModal from "../../components/ui/FilterModal";
 import HeroBanner from "../../components/ui/Hero";
 import { Header } from "../../components/layout/header";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
-import { getProducts } from "../../services/productService";
+import { getProducts, Product } from "../../services/productService";
 import { getMarkets, getMarketById } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
 import { isNetworkError } from "../../utils/networkUtils";
 import { isValidImageUri } from "../../utils/imageUtils";
 import { normalizeString } from "../../utils/stringUtils";
+import { useUserLocation } from "../../hooks/useUserLocation";
+import { usePermissions } from "../../hooks/usePermissions";
+import { formatDistance } from "../../utils/distance";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
+
+type MarketWithProducts = Market & {
+  products?: Product[];
+};
 
 export default function Home() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const paperTheme = useTheme();
-  const [markets, setMarkets] = useState<Market[]>([]);
+  const [markets, setMarkets] = useState<MarketWithProducts[]>([]);
   const [loading, setLoading] = useState(true); 
   const [offline, setOffline] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -35,11 +42,31 @@ export default function Home() {
     maxPrice?: number;
     categoryId?: string;
   }>({});
+  const [sortByDistance, setSortByDistance] = useState(false);
+  const { getUserLocation } = useUserLocation();
+  const permissions = usePermissions();
 
   const fetchMarketsWithProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const resMarkets = await getMarkets(1, 20);
+      let userLatitude: number | undefined;
+      let userLongitude: number | undefined;
+
+      if (permissions.location.granted) {
+        const userLocation = await getUserLocation();
+        if (userLocation) {
+          userLatitude = userLocation.latitude;
+          userLongitude = userLocation.longitude;
+        }
+      }
+
+      const resMarkets = await getMarkets(
+        1,
+        20,
+        undefined,
+        userLatitude,
+        userLongitude
+      );
       const marketsWithDetails = await Promise.all(
         resMarkets.markets.map(async (marketFromList: Market) => {
           try {
@@ -55,6 +82,9 @@ export default function Home() {
             );
             return {
               ...marketDetails,
+              distance: marketFromList.distance,
+              latitude: marketFromList.latitude,
+              longitude: marketFromList.longitude,
               products: resProducts.products
             };
           } catch (err: any) {
@@ -77,11 +107,25 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, permissions.location.granted, getUserLocation]);
 
   useEffect(() => {
     fetchMarketsWithProducts();
   }, [fetchMarketsWithProducts]);
+
+  const handleToggleNearbyMarkets = async () => {
+    if (sortByDistance) {
+      setSortByDistance(false);
+    } else {
+      if (!permissions.location.granted) {
+        const granted = await permissions.location.request();
+        if (!granted) {
+          return;
+        }
+      }
+      setSortByDistance(true);
+    }
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -100,27 +144,29 @@ export default function Home() {
   const hasActiveFilters = filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.categoryId !== undefined;
 
   const filteredMarkets = useMemo(() => {
-    let filtered = markets;
+    let filtered: MarketWithProducts[] = markets;
 
     if (searchQuery.trim()) {
       const normalizedQuery = normalizeString(searchQuery.trim());
-      filtered = markets.map(market => {
-        const normalizedMarketName = normalizeString(market.name);
-        const marketMatches = normalizedMarketName.includes(normalizedQuery);
-        
-        const filteredProducts = market.products?.filter(product => {
-          const normalizedProductName = normalizeString(product.name);
-          return normalizedProductName.includes(normalizedQuery);
-        }) || [];
+      filtered = markets
+        .map((market): MarketWithProducts | null => {
+          const normalizedMarketName = normalizeString(market.name);
+          const marketMatches = normalizedMarketName.includes(normalizedQuery);
+          
+          const filteredProducts = market.products?.filter((product: Product) => {
+            const normalizedProductName = normalizeString(product.name);
+            return normalizedProductName.includes(normalizedQuery);
+          }) || [];
 
-        if (marketMatches || filteredProducts.length > 0) {
-          return {
-            ...market,
-            products: marketMatches ? market.products : filteredProducts
-          };
-        }
-        return null;
-      }).filter((market): market is Market => market !== null);
+          if (marketMatches || filteredProducts.length > 0) {
+            return {
+              ...market,
+              products: marketMatches ? market.products : filteredProducts
+            };
+          }
+          return null;
+        })
+        .filter((market): market is MarketWithProducts => market !== null);
     }
 
     return filtered
@@ -149,6 +195,21 @@ export default function Home() {
               <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1} ellipsizeMode="tail">
                 {market.address}
               </Text>
+              {formatDistance(market.distance) && (
+                <View style={styles.marketDistanceContainer}>
+                  <View
+                    style={[
+                      styles.marketDistanceBadge,
+                      { borderColor: paperTheme.colors.secondary, backgroundColor: paperTheme.colors.surface },
+                    ]}
+                  >
+                    <Ionicons name="navigate-outline" size={12} color={paperTheme.colors.secondary} />
+                    <Text style={[styles.marketDistanceText, { color: paperTheme.colors.secondary }]}>
+                      {formatDistance(market.distance)}
+                    </Text>
+                  </View>
+                </View>
+              )}
             </View>
           </TouchableOpacity>
 
@@ -160,7 +221,7 @@ export default function Home() {
             style={styles.productList}
             renderItem={({ item, index }) => (
               <ProductCard
-                marketLogo={market.profilePicture}
+                marketLogo={market.profilePicture || ""}
                 marketName={market.name}
                 title={item.name}
                 subtitle=""
@@ -171,7 +232,7 @@ export default function Home() {
                 }
                 style={{
                   marginRight:
-                    index === market.products.length - 1 ? 0 : 12,
+                    index === (market.products?.length || 0) - 1 ? 0 : 12,
                 }}
               />
             )}
@@ -227,11 +288,32 @@ export default function Home() {
         </View>
         <View
           style={{
-            alignItems: "flex-end",
+            flexDirection: "row",
+            alignItems: "center",
             marginBottom: 20,
             paddingHorizontal: 16,
+            gap: 12,
           }}
         >
+          <TouchableOpacity
+            onPress={handleToggleNearbyMarkets}
+            style={styles.nearbyButton}
+            activeOpacity={0.7}
+          >
+            <View style={styles.nearbyButtonContent}>
+              <Ionicons
+                name={sortByDistance ? "navigate" : "navigate-outline"}
+                size={20}
+                color={paperTheme.colors.primary}
+              />
+              <Text style={[styles.nearbyButtonText, { color: paperTheme.colors.primary }]}>
+                Mercados Próximos
+              </Text>
+              {sortByDistance && (
+                <View style={[styles.nearbyButtonBadge, { backgroundColor: paperTheme.colors.primary }]} />
+              )}
+            </View>
+          </TouchableOpacity>
           <FilterButton
             title="Filtra por..."
             onPress={() => setFilterModalVisible(true)}
@@ -298,6 +380,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 20,
     },
+    marketDistanceContainer: {
+        marginTop: 8,
+    },
+    marketDistanceBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        alignSelf: 'flex-start',
+        gap: 4,
+    },
+    marketDistanceText: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
     productList: {
         minHeight: 250,
     },
@@ -313,5 +412,28 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
+    },
+    nearbyButton: {
+        backgroundColor: "#f0f0f0",
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderWidth: 1,
+        borderColor: "#e0e0e0",
+    },
+    nearbyButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    nearbyButtonText: {
+        marginLeft: 8,
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    nearbyButtonBadge: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginLeft: 8,
     },
 });
