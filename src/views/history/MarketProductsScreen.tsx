@@ -22,7 +22,7 @@ import { getMarketById } from "../../services/marketService";
 import { Suggestion } from "../../types/suggestion";
 import { useCart } from "../../contexts/CartContext";
 import { useSession } from "../../hooks/useSession";
-import { addItemToCart, updateCartItem, removeCartItem } from "../../services/cartService";
+import { addItemToCart, addMultipleItemsToCart, updateCartItem, removeCartItem } from "../../services/cartService";
 
 type MarketProductsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -88,13 +88,32 @@ export default function MarketProductsScreen() {
 
   const buildProductsMap = (suggestionItems: Suggestion["data"]["items"], products: Product[]) => {
     const productsMap = new Map<string, { categoryId: string; type: "essential" | "common" | "utensil" }>();
-    for (const item of suggestionItems) {
-      products.forEach((p) => {
-        if (!productsMap.has(p.id) && p.name.toLowerCase().includes(item.name.toLowerCase())) {
-          productsMap.set(p.id, { categoryId: item.categoryId, type: item.type });
+    
+    for (const product of products) {
+      if (productsMap.has(product.id)) {
+        continue;
+      }
+      
+      let mapped = false;
+      for (const item of suggestionItems) {
+        const normalizedProductName = product.name.toLowerCase();
+        const normalizedItemName = item.name.toLowerCase();
+        
+        if (normalizedProductName.includes(normalizedItemName) || normalizedItemName.includes(normalizedProductName)) {
+          productsMap.set(product.id, { categoryId: item.categoryId, type: item.type });
+          mapped = true;
+          break;
         }
-      });
+      }
+      
+      if (!mapped && suggestionItems.length > 0) {
+        productsMap.set(product.id, { 
+          categoryId: suggestionItems[0].categoryId, 
+          type: suggestionItems[0].type 
+        });
+      }
     }
+    
     return productsMap;
   };
 
@@ -136,34 +155,6 @@ export default function MarketProductsScreen() {
     }
   };
 
-  const addProductsToCart = async (products: ProductWithQuantity[], targetMarketId: string, marketName: string) => {
-    for (const product of products) {
-      if (!cartState.items.find((i) => i.id === product.id && i.marketId === targetMarketId)) {
-        addItem({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image || "",
-          marketName: marketName,
-          marketId: product.marketId,
-        });
-        if (isAuthenticated) {
-          addItemToCart({ productId: product.id, quantity: 1 })
-            .then((cartResponse) => {
-              const addedItem = cartResponse.items.find(item => item.productId === product.id);
-              setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, cartItemId: addedItem?.id } : p)));
-            })
-            .catch(() => {
-              setProducts((prev) => prev.map((p) => {
-                const cartItem = cartState.items.find((i) => i.id === p.id && i.marketId === targetMarketId);
-                return p.id === product.id ? { ...p, quantity: cartItem?.quantity || 1, cartItemId: cartItem?.cartItemId } : p;
-              }));
-            });
-        }
-      }
-    }
-  };
-
   const loadProductsFromCache = async (
     suggestionData: Suggestion,
     cachedProducts: Product[],
@@ -174,7 +165,6 @@ export default function MarketProductsScreen() {
       await removeSuggestionProductsFromOtherMarkets(cachedProducts, targetMarketId);
       const productsMap = buildProductsMap(suggestionData.data.items, cachedProducts);
       const productsWithQuantity = mapProductsWithQuantity(cachedProducts, productsMap, targetMarketId);
-      await addProductsToCart(productsWithQuantity, targetMarketId, marketName);
       setProducts(productsWithQuantity);
     } catch {
       setProducts([]);
@@ -205,7 +195,6 @@ export default function MarketProductsScreen() {
       const uniqueProducts = allProducts.filter((p, i, self) => i === self.findIndex((x) => x.id === p.id));
       await removeSuggestionProductsFromOtherMarkets(uniqueProducts, targetMarketId);
       const productsWithQuantity = mapProductsWithQuantity(uniqueProducts, productsMap, targetMarketId);
-      await addProductsToCart(productsWithQuantity, targetMarketId, marketName);
       setProducts(productsWithQuantity);
     } catch {
       setProducts([]);
@@ -231,19 +220,29 @@ export default function MarketProductsScreen() {
   };
 
   const updateProductQuantity = async (product: ProductWithQuantity, newQuantity: number) => {
+    const cartItem = cartState.items.find((i) => i.id === product.id && i.marketId === marketId);
+    const isInCart = cartItem !== undefined || product.cartItemId !== undefined;
+
     if (newQuantity === 0) {
-      removeItem(product.id);
-      await syncCartItem(product.id, 0, product.cartItemId);
-      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: 0, cartItemId: undefined } : p)));
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: 0 } : p)));
+      if (isInCart) {
+        removeItem(product.id);
+        await syncCartItem(product.id, 0, product.cartItemId);
+        setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, cartItemId: undefined } : p)));
+      }
     } else {
-      if (product.quantity === 0) {
-        addItem({ id: product.id, name: product.name, price: product.price, image: product.image || "", marketName: market?.name || "Mercado", marketId: product.marketId });
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: newQuantity } : p)));
+      
+      if (isInCart) {
+        if (!cartItem) {
+          addItem({ id: product.id, name: product.name, price: product.price, image: product.image || "", marketName: market?.name || "Mercado", marketId: product.marketId });
+          if (newQuantity > 1) {
+            updateQuantity(product.id, newQuantity);
+          }
+        } else {
+          updateQuantity(product.id, newQuantity);
+        }
         await syncCartItem(product.id, newQuantity, product.cartItemId);
-        setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: newQuantity } : p)));
-      } else {
-        updateQuantity(product.id, newQuantity);
-        await syncCartItem(product.id, newQuantity, product.cartItemId);
-        setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: newQuantity } : p)));
       }
     }
   };
@@ -254,6 +253,95 @@ export default function MarketProductsScreen() {
 
   const handleRemoveProduct = async (product: ProductWithQuantity) => {
     await updateProductQuantity(product, Math.max(0, product.quantity - 1));
+  };
+
+  const handleAddToCart = async () => {
+    const productsToAdd = products.filter((p) => p.quantity > 0);
+    const newProducts: ProductWithQuantity[] = [];
+    const updateProducts: ProductWithQuantity[] = [];
+    
+    for (const product of productsToAdd) {
+      const cartItem = cartState.items.find((i) => i.id === product.id && i.marketId === marketId);
+      
+      if (!cartItem) {
+        newProducts.push(product);
+      } else {
+        if (cartItem.quantity !== product.quantity) {
+          updateProducts.push(product);
+        }
+      }
+    }
+    
+    for (const product of newProducts) {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image || "",
+        marketName: market?.name || "Mercado",
+        marketId: product.marketId,
+      });
+      
+      if (product.quantity > 1) {
+        updateQuantity(product.id, product.quantity);
+      }
+    }
+    
+    for (const product of updateProducts) {
+      updateQuantity(product.id, product.quantity);
+    }
+    
+    if (isAuthenticated) {
+      if (newProducts.length > 0) {
+        try {
+          const itemsToAdd = newProducts.map(p => ({
+            productId: p.id,
+            quantity: p.quantity
+          }));
+          
+          const cartResponses = await addMultipleItemsToCart({ items: itemsToAdd });
+          
+          const cartItemIds: Record<string, string | undefined> = {};
+          
+          for (const cartResponse of cartResponses) {
+            for (const item of cartResponse.items) {
+              const product = newProducts.find(p => p.id === item.productId);
+              if (product) {
+                cartItemIds[item.productId] = item.id;
+              }
+            }
+          }
+          
+          setProducts((prev) => prev.map((p) => 
+            cartItemIds[p.id] !== undefined ? { ...p, cartItemId: cartItemIds[p.id] } : p
+          ));
+        } catch (error) {
+          console.warn("Erro ao adicionar múltiplos itens, tentando individualmente:", error);
+          
+          for (const product of newProducts) {
+            try {
+              const cartResponse = await addItemToCart({ productId: product.id, quantity: product.quantity });
+              const addedItem = cartResponse.items.find(item => item.productId === product.id);
+              setProducts((prev) => prev.map((p) => 
+                p.id === product.id ? { ...p, cartItemId: addedItem?.id } : p
+              ));
+            } catch {
+              const cartItem = cartState.items.find((i) => i.id === product.id && i.marketId === marketId);
+              setProducts((prev) => prev.map((p) => 
+                p.id === product.id ? { ...p, cartItemId: cartItem?.cartItemId } : p
+              ));
+            }
+          }
+        }
+      }
+      
+      if (updateProducts.length > 0) {
+        for (const product of updateProducts) {
+          const cartItem = cartState.items.find((i) => i.id === product.id && i.marketId === marketId);
+          await syncCartItem(product.id, product.quantity, cartItem?.cartItemId);
+        }
+      }
+    }
   };
 
   const handleCloseModal = () => {
@@ -385,14 +473,19 @@ export default function MarketProductsScreen() {
     return { essential, common, utensil };
   }, [products]);
 
-  const { total, itemCount, hasSelectedProducts } = useMemo(() => {
+  const { total, itemCount, hasSelectedProducts, hasProductsInCart } = useMemo(() => {
     const selected = products.filter((p) => p.quantity > 0);
+    const inCart = selected.filter((p) => {
+      const cartItem = cartState.items.find((i) => i.id === p.id && i.marketId === marketId);
+      return cartItem && cartItem.quantity > 0;
+    });
     return {
       total: selected.reduce((sum, p) => sum + p.price * p.quantity, 0),
       itemCount: selected.reduce((sum, p) => sum + p.quantity, 0),
       hasSelectedProducts: selected.length > 0,
+      hasProductsInCart: inCart.length > 0,
     };
-  }, [products]);
+  }, [products, cartState.items, marketId]);
 
   const renderImage = (image: string | undefined, size: number, iconSize: number) => (
     image ? (
@@ -558,16 +651,29 @@ export default function MarketProductsScreen() {
             </Text>
             <Text style={[styles.totalValue, { color: paperTheme.colors.primary }]}>R$ {total.toFixed(2)}</Text>
           </View>
-          <Button
-            mode="contained"
-            onPress={() => navigation.navigate("Checkout")}
-            style={[styles.checkoutButton, { backgroundColor: paperTheme.colors.primary }]}
-            contentStyle={styles.checkoutButtonContent}
-            labelStyle={[styles.checkoutButtonLabel, { color: paperTheme.colors.onPrimary }]}
-            icon={() => <Ionicons name="cart" size={19} color={paperTheme.colors.onPrimary} />}
-          >
-            Finalizar Compra
-          </Button>
+          {!hasProductsInCart ? (
+            <Button
+              mode="contained"
+              onPress={handleAddToCart}
+              style={[styles.checkoutButton, { backgroundColor: paperTheme.colors.primary }]}
+              contentStyle={styles.checkoutButtonContent}
+              labelStyle={[styles.checkoutButtonLabel, { color: paperTheme.colors.onPrimary }]}
+              icon={() => <Ionicons name="cart" size={19} color={paperTheme.colors.onPrimary} />}
+            >
+              Adicionar ao Carrinho
+            </Button>
+          ) : (
+            <Button
+              mode="contained"
+              onPress={() => navigation.navigate("Cart")}
+              style={[styles.checkoutButton, { backgroundColor: paperTheme.colors.primary }]}
+              contentStyle={styles.checkoutButtonContent}
+              labelStyle={[styles.checkoutButtonLabel, { color: paperTheme.colors.onPrimary }]}
+              icon={() => <Ionicons name="cart" size={19} color={paperTheme.colors.onPrimary} />}
+            >
+              Ir para Carrinho
+            </Button>
+          )}
         </View>
       )}
 

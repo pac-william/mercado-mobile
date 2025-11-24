@@ -26,6 +26,7 @@ export interface CartResponse {
   id: string;
   userId: string;
   marketId: string;
+  marketName?: string;
   items: CartItemResponse[];
   totalItems: number;
   totalValue: number;
@@ -104,31 +105,19 @@ export const clearCart = async (): Promise<void> => {
   }
 };
 
-// Função auxiliar para converter CartItemResponse em CartItem
-// Nota: marketName será buscado separadamente se necessário
-export const mapCartItemResponseToCartItem = async (
+export const mapCartItemResponseToCartItem = (
   item: CartItemResponse,
-  getMarketName?: (marketId: string) => Promise<string>
-): Promise<CartItem> => {
-  let marketName = "Mercado"; // Nome padrão
-  
-  if (getMarketName) {
-    try {
-      marketName = await getMarketName(item.product.marketId);
-    } catch (error) {
-      console.warn(`Erro ao buscar nome do mercado ${item.product.marketId}:`, error);
-    }
-  }
-
+  marketName?: string
+): CartItem => {
   return {
     id: item.productId,
     name: item.product.name,
     price: item.product.price,
     image: item.product.image,
-    marketName,
+    marketName: marketName || "Mercado",
     quantity: item.quantity,
     marketId: item.product.marketId,
-    cartItemId: item.id, // Armazena o ID do item no carrinho da API
+    cartItemId: item.id,
   };
 };
 

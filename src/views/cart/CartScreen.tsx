@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -21,7 +21,6 @@ import { CartItem, useCart } from '../../contexts/CartContext';
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
 import { getCart, mapCartItemResponseToCartItem, removeCartItem, clearCart as clearCartAPI, updateCartItem } from '../../services/cartService';
-import { getMarketById } from '../../services/marketService';
 
 
 type CartScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -36,15 +35,13 @@ const CartScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  const loadCart = useCallback(async () => {
+  const loadCart = useCallback(async (forceReload = false) => {
     if (!isAuthenticated) {
       setLoading(false);
       return;
     }
 
-    // Se já carregou uma vez, não recarrega automaticamente
-    // Isso evita que itens removidos/limpos voltem
-    if (hasLoadedOnce) {
+    if (hasLoadedOnce && !forceReload) {
       return;
     }
 
@@ -52,41 +49,42 @@ const CartScreen: React.FC = () => {
       setLoading(true);
       const carts = await getCart();
       
+      const addedIds = new Set<string>();
+      const itemsToAdd: Array<{
+        cartItem: CartItem;
+        quantity: number;
+      }> = [];
+      
+      for (const cart of carts) {
+        for (const item of cart.items ?? []) {
+          const cartItem = mapCartItemResponseToCartItem(item, cart.marketName);
+          const itemId = String(cartItem.id);
+          
+          if (!addedIds.has(itemId)) {
+            addedIds.add(itemId);
+            itemsToAdd.push({
+              cartItem,
+              quantity: item.quantity,
+            });
+          }
+        }
+      }
+      
       clearCart();
       
-      const getMarketName = async (marketId: string): Promise<string> => {
-        try {
-          const market = await getMarketById(marketId);
-          return market.name;
-        } catch (error) {
-          console.warn(`Erro ao buscar mercado ${marketId}:`, error);
-          return "Mercado";
-        }
-      };
-      
-      const allItems = carts.flatMap((cart) => cart.items ?? []);
-      const addedIds = new Set<string>();
-      
-      for (const item of allItems) {
-        const cartItem = await mapCartItemResponseToCartItem(item, getMarketName);
-        const itemId = String(cartItem.id);
+      for (const { cartItem, quantity } of itemsToAdd) {
+        addItem({
+          id: cartItem.id,
+          name: cartItem.name,
+          price: cartItem.price,
+          image: cartItem.image,
+          marketName: cartItem.marketName,
+          marketId: cartItem.marketId,
+          cartItemId: cartItem.cartItemId,
+        });
         
-        if (!addedIds.has(itemId)) {
-          addedIds.add(itemId);
-          
-          addItem({
-            id: itemId,
-            name: cartItem.name,
-            price: cartItem.price,
-            image: cartItem.image,
-            marketName: cartItem.marketName,
-            marketId: cartItem.marketId,
-            cartItemId: cartItem.cartItemId,
-          });
-          
-          if (item.quantity !== 1) {
-            updateQuantity(itemId, item.quantity);
-          }
+        if (quantity !== 1) {
+          updateQuantity(cartItem.id, quantity);
         }
       }
     } catch (error) {
@@ -106,6 +104,14 @@ const CartScreen: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionLoading, isAuthenticated]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated && !sessionLoading) {
+        loadCart(true);
+      }
+    }, [isAuthenticated, sessionLoading, loadCart])
+  );
 
 
 
