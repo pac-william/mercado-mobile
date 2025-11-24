@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   ScrollView,
@@ -16,6 +16,8 @@ import { Header } from "../../components/layout/header";
 import { getSuggestionById } from "../../services/suggestionService";
 import { Suggestion } from "../../types/suggestion";
 import { useMarketLoader } from "../../hooks/useMarketLoader";
+import { formatDistance } from "../../utils/distance";
+import { useUserLocation } from "../../hooks/useUserLocation";
 
 type SuggestionDetailScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -28,24 +30,27 @@ export default function SuggestionDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { markets, productsCache, loadMarkets } = useMarketLoader();
+  const { getUserLocation } = useUserLocation();
 
-  useEffect(() => {
-    loadData();
-  }, [suggestionId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
+      const locationPromise = getUserLocation();
       const data = await getSuggestionById(suggestionId);
       setSuggestion(data);
-      await loadMarkets(data);
+      const coords = await locationPromise;
+      await loadMarkets(data, coords);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar sugestão");
     } finally {
       setLoading(false);
     }
-  };
+  }, [suggestionId, getUserLocation, loadMarkets]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   if (loading) {
     return (
@@ -133,57 +138,75 @@ export default function SuggestionDetailScreen() {
               </Text>
             </View>
           ) : (
-            markets.map((market) => (
-              <TouchableOpacity
-                key={market.id}
-                style={[
-                  styles.marketCard,
-                  { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
-                ]}
-                activeOpacity={0.7}
-                onPress={() => {
-                  navigation.navigate("MarketProducts", {
-                    suggestionId: suggestionId,
-                    marketId: market.id,
-                    products: productsCache.get(market.id),
-                  });
-                }}
-              >
-                <View style={styles.marketCardContent}>
-                  {market.logo ? (
-                    <Image source={{ uri: market.logo }} style={styles.marketLogo} />
-                  ) : (
-                    <View style={[styles.marketLogoPlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                      <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
-                    </View>
-                  )}
-                  <View style={styles.marketInfo}>
-                    <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
-                      {market.name}
-                    </Text>
-                    {market.address && (
-                      <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                        {market.address}
-                      </Text>
+            markets.map((market) => {
+              const distanceLabel = formatDistance(market.distance);
+
+              return (
+                <TouchableOpacity
+                  key={market.id}
+                  style={[
+                    styles.marketCard,
+                    { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.navigate("MarketProducts", {
+                      suggestionId: suggestionId,
+                      marketId: market.id,
+                      products: productsCache.get(market.id),
+                    });
+                  }}
+                >
+                  <View style={styles.marketCardContent}>
+                    {market.logo ? (
+                      <Image source={{ uri: market.logo }} style={styles.marketLogo} />
+                    ) : (
+                      <View style={[styles.marketLogoPlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                        <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
+                      </View>
                     )}
-                    <View style={styles.marketBadges}>
-                      <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                        <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
-                        <Text style={[styles.marketBadgeText, { color: paperTheme.colors.primary }]}>
-                          {market.productCount} {market.productCount === 1 ? "produto" : "produtos"}
+                    <View style={styles.marketInfo}>
+                      <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
+                        {market.name}
+                      </Text>
+                      {market.address && (
+                        <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                          {market.address}
                         </Text>
-                      </View>
-                      <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.primaryContainer }]}>
-                        <Text style={[styles.marketPriceText, { color: paperTheme.colors.onPrimaryContainer }]}>
-                          R$ {market.totalPrice.toFixed(2)}
-                        </Text>
+                      )}
+                      <View style={styles.marketBadges}>
+                        {distanceLabel && (
+                          <View
+                            style={[
+                              styles.marketBadge,
+                              styles.marketDistanceBadge,
+                              { borderColor: paperTheme.colors.secondary, backgroundColor: paperTheme.colors.surface },
+                            ]}
+                          >
+                            <Ionicons name="navigate-outline" size={12} color={paperTheme.colors.secondary} />
+                            <Text style={[styles.marketBadgeText, { color: paperTheme.colors.secondary }]}>
+                              {distanceLabel}
+                            </Text>
+                          </View>
+                        )}
+                        <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                          <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
+                          <Text style={[styles.marketBadgeText, { color: paperTheme.colors.primary }]}>
+                            {market.productCount} {market.productCount === 1 ? "produto" : "produtos"}
+                          </Text>
+                        </View>
+                        <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.primaryContainer }]}>
+                          <Text style={[styles.marketPriceText, { color: paperTheme.colors.onPrimaryContainer }]}>
+                            R$ {market.totalPrice.toFixed(2)}
+                          </Text>
+                        </View>
                       </View>
                     </View>
+                    <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
-                </View>
-              </TouchableOpacity>
-            ))
+                </TouchableOpacity>
+              );
+            })
           )}
         </View>
       </ScrollView>
@@ -299,6 +322,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  marketDistanceBadge: {
+    borderWidth: 1,
   },
   marketBadgeText: {
     fontSize: 11,

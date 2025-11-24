@@ -8,6 +8,8 @@ import { SuggestionResponse, getSuggestionById, getSuggestions } from "../../ser
 import { useMarketLoader } from "../../hooks/useMarketLoader";
 import { AIStackParamList } from "../../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
+import { formatDistance } from "../../utils/distance";
+import { useUserLocation } from "../../hooks/useUserLocation";
 
 type AISearchNavigationProp = NativeStackNavigationProp<AIStackParamList>;
 
@@ -19,6 +21,7 @@ export default function AISearch() {
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
   const { markets, productsCache, loading: loadingMarkets, loadMarkets } = useMarketLoader();
+  const { getUserLocation, locationLoading } = useUserLocation();
 
   const recipeSuggestions = [
     "Receita de bolo de chocolate",
@@ -55,15 +58,17 @@ export default function AISearch() {
       if (!results?.suggestionId) return;
 
       try {
+        const locationPromise = getUserLocation();
         const suggestionData = await getSuggestionById(results.suggestionId);
-        await loadMarkets(suggestionData);
-      } catch {
-        return;
+        const coords = await locationPromise;
+        await loadMarkets(suggestionData, coords);
+      } catch (error) {
+        console.warn("Erro ao carregar mercados da sugestão", error);
       }
     };
 
     fetchSuggestionAndMarkets();
-  }, [results?.suggestionId, loadMarkets]);
+  }, [results?.suggestionId, loadMarkets, getUserLocation]);
 
   const handleSearch = useCallback(async (query?: string) => {
     const searchTerm = query || searchQuery;
@@ -231,11 +236,20 @@ export default function AISearch() {
               />
             </View>
 
+            {locationLoading && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={paperTheme.colors.primary} />
+                <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                  Buscando sua localização...
+                </Text>
+              </View>
+            )}
+
             {loadingMarkets ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={paperTheme.colors.primary} />
                 <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
-                  Buscando mercados...
+                  Buscando mercados próximos...
                 </Text>
               </View>
             ) : markets.length > 0 ? (
@@ -243,57 +257,75 @@ export default function AISearch() {
                 <Text style={[styles.marketsTitle, { color: paperTheme.colors.onBackground }]}>
                   Mercados Disponíveis
                 </Text>
-                {markets.map((market) => (
-                  <TouchableOpacity
-                    key={market.id}
-                    style={[
-                      styles.marketCard,
-                      { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
-                    ]}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      navigation.navigate("MarketProducts", {
-                        suggestionId: results.suggestionId,
-                        marketId: market.id,
-                        products: productsCache.get(market.id),
-                      });
-                    }}
-                  >
-                    <View style={styles.marketCardContent}>
-                      {market.logo ? (
-                        <Image source={{ uri: market.logo }} style={styles.marketLogo} />
-                      ) : (
-                        <View style={[styles.marketLogoPlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                          <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
-                        </View>
-                      )}
-                      <View style={styles.marketInfo}>
-                        <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
-                          {market.name}
-                        </Text>
-                        {market.address && (
-                          <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                            {market.address}
-                          </Text>
+                {markets.map((market) => {
+                  const distanceLabel = formatDistance(market.distance);
+
+                  return (
+                    <TouchableOpacity
+                      key={market.id}
+                      style={[
+                        styles.marketCard,
+                        { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                      ]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        navigation.navigate("MarketProducts", {
+                          suggestionId: results.suggestionId,
+                          marketId: market.id,
+                          products: productsCache.get(market.id),
+                        });
+                      }}
+                    >
+                      <View style={styles.marketCardContent}>
+                        {market.logo ? (
+                          <Image source={{ uri: market.logo }} style={styles.marketLogo} />
+                        ) : (
+                          <View style={[styles.marketLogoPlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                            <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
+                          </View>
                         )}
-                        <View style={styles.marketBadges}>
-                          <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                            <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
-                            <Text style={[styles.marketBadgeText, { color: paperTheme.colors.primary }]}>
-                              {market.productCount} {market.productCount === 1 ? "produto" : "produtos"}
+                        <View style={styles.marketInfo}>
+                          <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
+                            {market.name}
+                          </Text>
+                          {market.address && (
+                            <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                              {market.address}
                             </Text>
-                          </View>
-                          <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.primaryContainer }]}>
-                            <Text style={[styles.marketPriceText, { color: paperTheme.colors.onPrimaryContainer }]}>
-                              R$ {market.totalPrice.toFixed(2)}
-                            </Text>
+                          )}
+                          <View style={styles.marketBadges}>
+                            {distanceLabel && (
+                              <View
+                                style={[
+                                  styles.marketBadge,
+                                  styles.marketDistanceBadge,
+                                  { borderColor: paperTheme.colors.secondary, backgroundColor: paperTheme.colors.surface },
+                                ]}
+                              >
+                                <Ionicons name="navigate-outline" size={12} color={paperTheme.colors.secondary} />
+                                <Text style={[styles.marketBadgeText, { color: paperTheme.colors.secondary }]}>
+                                  {distanceLabel}
+                                </Text>
+                              </View>
+                            )}
+                            <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                              <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
+                              <Text style={[styles.marketBadgeText, { color: paperTheme.colors.primary }]}>
+                                {market.productCount} {market.productCount === 1 ? "produto" : "produtos"}
+                              </Text>
+                            </View>
+                            <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.primaryContainer }]}>
+                              <Text style={[styles.marketPriceText, { color: paperTheme.colors.onPrimaryContainer }]}>
+                                R$ {market.totalPrice.toFixed(2)}
+                              </Text>
+                            </View>
                           </View>
                         </View>
+                        <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
                       </View>
-                      <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             ) : markets.length === 0 && !loadingMarkets ? (
               <View style={styles.emptyMarketsContainer}>
@@ -538,6 +570,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     gap: 4,
+  },
+  marketDistanceBadge: {
+    borderWidth: 1,
   },
   marketBadgeText: {
     fontSize: 12,

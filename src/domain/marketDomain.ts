@@ -1,20 +1,25 @@
 import { Meta } from "./metaDomain";
-import { Product } from "./productDomain";
 
 export class Market {
-    constructor(
-        public id: string,
-        public name: string,
-        public address: string,
-        public profilePicture: string,
-        public products: Product[],
-        
-    ) { }
+  constructor(
+    public id: string,
+    public name: string,
+    public address: string,
+    public profilePicture?: string,
+    public bannerImage?: string,
+    public ownerId?: string,
+    public managersIds?: string[],
+    public createdAt?: Date,
+    public updatedAt?: Date,
+    public latitude?: number | null,
+    public longitude?: number | null,
+    public distance?: number | null,
+  ) {}
 }
 
 export class MarketPaginatedResponse {
-    constructor(
-        public markets: Market[],
-        public meta: Meta,
-    ) { }
+  constructor(
+    public markets: Market[],
+    public meta: Meta,
+  ) {}
 }

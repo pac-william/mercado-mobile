@@ -5,4 +5,7 @@ export interface MarketInfo {
   logo?: string;
   productCount: number;
   totalPrice: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  distance?: number | null;
 }

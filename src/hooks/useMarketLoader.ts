@@ -3,13 +3,14 @@ import { Suggestion } from "../types/suggestion";
 import { Product, getProducts } from "../services/productService";
 import { getMarkets } from "../services/marketService";
 import { MarketInfo } from "../types/market";
+import { calculateDistanceInKm } from "../utils/distance";
 
 export const useMarketLoader = () => {
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [productsCache, setProductsCache] = useState<Map<string, Product[]>>(new Map());
   const [loading, setLoading] = useState(false);
 
-  const loadMarkets = useCallback(async (suggestionData: Suggestion) => {
+  const loadMarkets = useCallback(async (suggestionData: Suggestion, userLocation?: { latitude: number; longitude: number } | null) => {
     if (suggestionData.data.items.length === 0) {
       setMarkets([]);
       return;
@@ -17,9 +18,17 @@ export const useMarketLoader = () => {
 
     setLoading(true);
     try {
-      const marketsResponse = await getMarkets(1, 100);
+      const marketsResponse = await getMarkets(
+        1,
+        100,
+        undefined,
+        userLocation?.latitude,
+        userLocation?.longitude
+      );
       const allMarkets = marketsResponse.markets || [];
       const newProductsCache = new Map<string, Product[]>();
+      const hasUserLocation =
+        typeof userLocation?.latitude === "number" && typeof userLocation?.longitude === "number";
 
       const marketsInfo = await Promise.all(
         allMarkets.map(async (market): Promise<MarketInfo | null> => {
@@ -48,6 +57,15 @@ export const useMarketLoader = () => {
 
             newProductsCache.set(market.id, uniqueProducts);
             const totalPrice = uniqueProducts.reduce((sum, product) => sum + product.price, 0);
+            const latitude = market.latitude ?? null;
+            const longitude = market.longitude ?? null;
+            const distanceFromApi = typeof market.distance === "number" ? market.distance : null;
+            const hasCoordinates = latitude !== null && longitude !== null;
+            const shouldCalculateLocally =
+              hasUserLocation && userLocation && distanceFromApi === null && hasCoordinates;
+            const distance = shouldCalculateLocally
+              ? calculateDistanceInKm(userLocation.latitude, userLocation.longitude, latitude!, longitude!)
+              : distanceFromApi;
 
             return {
               id: market.id,
@@ -56,6 +74,9 @@ export const useMarketLoader = () => {
               logo: market.profilePicture,
               productCount: uniqueProducts.length,
               totalPrice: totalPrice,
+              latitude,
+              longitude,
+              distance,
             };
           } catch {
             return null;
