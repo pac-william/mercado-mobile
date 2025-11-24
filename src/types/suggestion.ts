@@ -5,8 +5,22 @@ export interface SuggestionItem {
   type: "essential" | "common" | "utensil";
 }
 
+export interface Receipt {
+  name: string;
+  description: string;
+  ingredients: {
+    name: string;
+    quantity: string;
+  }[];
+  instructions: string[];
+  prepTime: number;
+  cookTime?: number;
+  servings: number;
+}
+
 export interface SuggestionData {
   items: SuggestionItem[];
+  receipt?: Receipt;
 }
 
 export interface Suggestion {

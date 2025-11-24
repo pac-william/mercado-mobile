@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { View, FlatList, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from "react-native";
 import { Text, useTheme, Searchbar } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -10,6 +10,8 @@ import { AIStackParamList } from "../../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 import { formatDistance } from "../../utils/distance";
 import { useUserLocation } from "../../hooks/useUserLocation";
+import { Suggestion } from "../../types/suggestion";
+import ReceiptModal from "../../components/ui/ReceiptModal";
 
 type AISearchNavigationProp = NativeStackNavigationProp<AIStackParamList>;
 
@@ -17,11 +19,14 @@ export default function AISearch() {
   const navigation = useNavigation<AISearchNavigationProp>();
   const paperTheme = useTheme();
   const [results, setResults] = useState<SuggestionResponse | null>(null);
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
   const { markets, productsCache, loading: loadingMarkets, loadMarkets } = useMarketLoader();
   const { getUserLocation, locationLoading } = useUserLocation();
+  const [receiptModalVisible, setReceiptModalVisible] = useState(false);
+  const [receiptModalMode, setReceiptModalMode] = useState<'recipe' | 'instructions'>('recipe');
 
   const recipeSuggestions = [
     "Receita de bolo de chocolate",
@@ -36,23 +41,6 @@ export default function AISearch() {
     "Frango grelhado"
   ];
 
-  const flatListData = useMemo(() => {
-    if (!results) return [];
-    const data: { type: "essential" | "common" | "utensil"; value: string }[] = [];
-
-    results.essential_products?.forEach((item) =>
-      data.push({ type: "essential", value: item })
-    );
-    results.common_products?.forEach((item) =>
-      data.push({ type: "common", value: item })
-    );
-    results.utensils?.forEach((item) =>
-      data.push({ type: "utensil", value: item })
-    );
-
-    return data;
-  }, [results]);
-
   useEffect(() => {
     const fetchSuggestionAndMarkets = async () => {
       if (!results?.suggestionId) return;
@@ -60,6 +48,7 @@ export default function AISearch() {
       try {
         const locationPromise = getUserLocation();
         const suggestionData = await getSuggestionById(results.suggestionId);
+        setSuggestion(suggestionData);
         const coords = await locationPromise;
         await loadMarkets(suggestionData, coords);
       } catch (error) {
@@ -86,8 +75,10 @@ export default function AISearch() {
     try {
       const suggestionResponse = await getSuggestions(searchTerm.trim());
       setResults(suggestionResponse);
+      setSuggestion(null);
     } catch (error: any) {
       setResults(null);
+      setSuggestion(null);
     } finally {
       loadingRef.current = false;
       setLoading(false);
@@ -149,7 +140,19 @@ export default function AISearch() {
           </View>
         </View>
 
-        {!results && (
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+            <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
+              Buscando receitas e ingredientes...
+            </Text>
+            <Text style={[styles.loadingSubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
+              Nossa IA está analisando sua busca
+            </Text>
+          </View>
+        )}
+
+        {!results && !loading && (
           <View style={styles.suggestionsContainer}>
             <Text style={[styles.suggestionsTitle, { color: paperTheme.colors.onBackground }]}>
               💡 Sugestões de Receitas
@@ -192,53 +195,69 @@ export default function AISearch() {
           </View>
         )}
 
-        {results && flatListData.length > 0 && (
+        {results && (
           <>
-            <View style={styles.resultsContainer}>
-              <View style={styles.resultsHeader}>
-                <Ionicons name="checkmark-circle" size={24} color={paperTheme.colors.primary} />
-                <Text style={[styles.resultsTitle, { color: paperTheme.colors.onBackground }]}>
-                  Ingredientes Encontrados
-                </Text>
-              </View>
-
-              <FlatList
-                data={flatListData}
-                keyExtractor={(item, index) => `${item.type}-${index}`}
-                scrollEnabled={false}
-                renderItem={({ item }) => (
-                  <View
-                    style={[
-                      styles.resultItem,
-                      {
-                        backgroundColor: paperTheme.colors.surface,
-                        borderColor: paperTheme.colors.outline,
-                      }
-                    ]}
-                  >
-                    <Ionicons 
-                      name={
-                        item.type === "essential" 
-                          ? "star" 
-                          : item.type === "common" 
-                          ? "cube-outline" 
-                          : "restaurant-outline"
-                      }
-                      size={18}
-                      color={paperTheme.colors.primary}
-                      style={styles.resultIcon}
-                    />
-                    <Text style={[styles.itemText, { color: paperTheme.colors.onSurface }]}>
-                      {item.value}
-                    </Text>
+            {suggestion?.data?.receipt && (
+              <View style={styles.receiptCardsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.receiptCard,
+                    { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setReceiptModalMode('recipe');
+                    setReceiptModalVisible(true);
+                  }}
+                >
+                  <View style={styles.receiptCardContent}>
+                    <View style={[styles.receiptCardIcon, { backgroundColor: paperTheme.colors.primaryContainer }]}>
+                      <Ionicons name="book-outline" size={24} color={paperTheme.colors.onPrimaryContainer} />
+                    </View>
+                    <View style={styles.receiptCardInfo}>
+                      <Text style={[styles.receiptCardTitle, { color: paperTheme.colors.onSurface }]}>
+                        Receita
+                      </Text>
+                      <Text style={[styles.receiptCardSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                        Ver ingredientes e informações
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
                   </View>
-                )}
-              />
-            </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.receiptCard,
+                    { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setReceiptModalMode('instructions');
+                    setReceiptModalVisible(true);
+                  }}
+                >
+                  <View style={styles.receiptCardContent}>
+                    <View style={[styles.receiptCardIcon, { backgroundColor: paperTheme.colors.secondaryContainer }]}>
+                      <Ionicons name="restaurant-outline" size={24} color={paperTheme.colors.onSecondaryContainer} />
+                    </View>
+                    <View style={styles.receiptCardInfo}>
+                      <Text style={[styles.receiptCardTitle, { color: paperTheme.colors.onSurface }]}>
+                        Modo de Preparo
+                      </Text>
+                      <Text style={[styles.receiptCardSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                        Ver passos de preparação
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {locationLoading && (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={paperTheme.colors.primary} />
+                <ActivityIndicator size="large" color={paperTheme.colors.primary} />
                 <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
                   Buscando sua localização...
                 </Text>
@@ -337,19 +356,16 @@ export default function AISearch() {
             ) : null}
           </>
         )}
-
-        {results && flatListData.length === 0 && (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={64} color={paperTheme.colors.onSurfaceVariant} />
-            <Text style={[styles.emptyText, { color: paperTheme.colors.onSurfaceVariant }]}>
-              Nenhum ingrediente encontrado
-            </Text>
-            <Text style={[styles.emptySubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
-              Tente pesquisar por outro termo ou escolha uma das sugestões acima
-            </Text>
-          </View>
-        )}
       </ScrollView>
+
+      {suggestion?.data?.receipt && (
+        <ReceiptModal
+          visible={receiptModalVisible}
+          onClose={() => setReceiptModalVisible(false)}
+          receipt={suggestion.data.receipt}
+          mode={receiptModalMode}
+        />
+      )}
     </View>
   );
 }
@@ -359,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 80,
   },
   searchSection: {
     paddingHorizontal: 16,
@@ -448,70 +464,27 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     flex: 1,
   },
-  resultsContainer: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-  },
-  resultsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  resultsTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-  resultItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  resultIcon: {
-    marginRight: 12,
-  },
-  itemText: {
-    fontSize: 16,
-    fontWeight: "500",
-    flex: 1,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
+  loadingContainer: {
     paddingVertical: 60,
+    alignItems: "center",
     paddingHorizontal: 32,
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 16,
-    textAlign: "center",
-  },
-  emptySubtext: {
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  loadingContainer: {
-    paddingVertical: 32,
-    alignItems: "center",
-  },
   loadingText: {
-    marginTop: 12,
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  loadingSubtext: {
+    marginTop: 8,
     fontSize: 14,
+    textAlign: "center",
+    opacity: 0.7,
   },
   marketsContainer: {
     paddingHorizontal: 16,
     marginTop: 24,
+    paddingBottom: 24,
   },
   marketsTitle: {
     fontSize: 20,
@@ -591,6 +564,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 12,
     textAlign: "center",
+  },
+  receiptCardsContainer: {
+    paddingHorizontal: 16,
+    marginTop: 24,
+    gap: 12,
+  },
+  receiptCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  receiptCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+  },
+  receiptCardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  receiptCardInfo: {
+    flex: 1,
+  },
+  receiptCardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  receiptCardSubtitle: {
+    fontSize: 13,
   },
 });
 
