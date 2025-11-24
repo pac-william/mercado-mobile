@@ -42,7 +42,7 @@ export default function SplashScreen() {
         ]}
       >
         <Image
-          source={require("../../assets/logo-smart-marketing.jpg")}
+          source={require("../../../assets/logotipo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -100,7 +100,7 @@ export function InitialLoadingScreen() {
         ]}
       >
         <Image
-          source={require("../../assets/logo-smart-marketing.jpg")}
+          source={require("../../../assets/logotipo.png")}
           style={styles.logo}
           resizeMode="contain"
         />

@@ -7,7 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../../contexts/CartContext";
 import { ProfileButton } from "../ui/ProfileButton";
 
-import Logo from "../../assets/logo1.jpg";
+import Logo from "../../../assets/logotipo.png";
 
 export const Header: React.FC = () => {
   const navigation = useNavigation<any>();
