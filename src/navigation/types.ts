@@ -9,6 +9,13 @@ export type HomeStackParamList = {
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
+  MarketCategoryProducts: {
+    marketId: string;
+    categoryId?: string;
+    categoryName: string;
+    marketName: string;
+    marketLogo?: string;
+  };
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
@@ -25,6 +32,13 @@ export type SearchStackParamList = {
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
+  MarketCategoryProducts: {
+    marketId: string;
+    categoryId?: string;
+    categoryName: string;
+    marketName: string;
+    marketLogo?: string;
+  };
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
@@ -50,6 +64,13 @@ export type SettingsStackParamList = {
   Notifications: undefined;
   SuggestionDetail: { suggestionId: string };
   MarketProducts: { suggestionId: string; marketId: string; products?: Product[] };
+  MarketCategoryProducts: {
+    marketId: string;
+    categoryId?: string;
+    categoryName: string;
+    marketName: string;
+    marketLogo?: string;
+  };
 };
 
 export type AuthStackParamList = {};
@@ -60,6 +81,13 @@ export type AIStackParamList = {
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
+  MarketCategoryProducts: {
+    marketId: string;
+    categoryId?: string;
+    categoryName: string;
+    marketName: string;
+    marketLogo?: string;
+  };
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;

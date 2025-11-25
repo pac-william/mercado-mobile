@@ -10,6 +10,7 @@ import MarketProductsScreen from '../views/history/MarketProductsScreen';
 import NotificationsScreen from '../views/notifications/index';
 import Home from '../views/home/index';
 import MarketDetailsScreen from '../views/market/index';
+import MarketCategoryProductsScreen from '../views/market/CategoryProductsScreen';
 import OrderDetailScreen from '../views/orders/OrderDetailScreen';
 import OrdersScreen from '../views/orders/OrdersScreen';
 import ProductDetail from '../views/product/ProductDetail';
@@ -29,6 +30,7 @@ export const sharedRoutes = [
   { name: 'Notifications', component: NotificationsScreen },
   { name: 'SuggestionDetail', component: SuggestionDetailScreen },
   { name: 'MarketProducts', component: MarketProductsScreen },
+  { name: 'MarketCategoryProducts', component: MarketCategoryProductsScreen },
 ] as const;
 
 export const homeStackRoutes = [

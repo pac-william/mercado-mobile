@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, FlatList, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,6 +30,7 @@ interface CategoryGroup {
   id: string;
   name: string;
   products: Product[];
+  isVirtual?: boolean;
 }
 
 export default function MarketDetailsScreen() {
@@ -121,6 +122,7 @@ export default function MarketDetailsScreen() {
           id: categoryId,
           name: categoryMap[categoryId]?.name || product.category?.name || "Outros Produtos",
           products: [],
+          isVirtual: !product.categoryId,
         };
       }
 
@@ -198,9 +200,33 @@ export default function MarketDetailsScreen() {
         {filteredAndCategorizedProducts.length > 0 ? (
           filteredAndCategorizedProducts.map((category) => (
             <View key={category.id} style={styles.categoryContainer}>
-              <Text style={[styles.categoryTitle, { color: paperTheme.colors.onSurface }]}>
-                {category.name}
-              </Text>
+              <TouchableOpacity
+                disabled={category.isVirtual}
+                onPress={() =>
+                  navigation.navigate('MarketCategoryProducts', {
+                    marketId: market.id,
+                    categoryId: category.isVirtual ? undefined : category.id,
+                    categoryName: category.name,
+                    marketName: market.name,
+                    marketLogo: market.profilePicture,
+                  })
+                }
+                activeOpacity={category.isVirtual ? 1 : 0.7}
+              >
+                <View style={styles.categoryHeader}>
+                  <Text style={[styles.categoryTitle, { color: paperTheme.colors.onSurface }]}>
+                    {category.name}
+                  </Text>
+                  {!category.isVirtual && (
+                    <View style={styles.categoryLink}>
+                      <Text style={[styles.categoryLinkText, { color: paperTheme.colors.primary }]}>
+                        Ver todos
+                      </Text>
+                      <Ionicons name="chevron-forward" size={16} color={paperTheme.colors.primary} />
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
               <FlatList
                 data={category.products}
                 keyExtractor={(item) => item.id}
@@ -312,11 +338,26 @@ const styles = StyleSheet.create({
   categoryContainer: {
     marginBottom: 32,
   },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   categoryTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
     paddingHorizontal: 4,
+  },
+  categoryLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  categoryLinkText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 4,
   },
   productsListContent: {
     paddingLeft: 4,

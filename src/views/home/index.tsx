@@ -26,6 +26,9 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 type MarketWithProducts = Market & {
   products?: Product[];
+  productsPage?: number;
+  hasMoreProducts?: boolean;
+  loadingMoreProducts?: boolean;
 };
 
 export default function Home() {
@@ -85,14 +88,23 @@ export default function Home() {
               distance: marketFromList.distance,
               latitude: marketFromList.latitude,
               longitude: marketFromList.longitude,
-              products: resProducts.products
+              products: resProducts.products,
+              productsPage: 1,
+              hasMoreProducts: resProducts.products.length === 20,
+              loadingMoreProducts: false
             };
           } catch (err: any) {
             console.error(`Erro ao buscar dados completos do mercado ${marketFromList.name}:`, err);
             if (isNetworkError(err)) {
               setOffline(true);
             }
-            return { ...marketFromList, products: [] };
+            return {
+              ...marketFromList,
+              products: [],
+              productsPage: 0,
+              hasMoreProducts: false,
+              loadingMoreProducts: false
+            };
           }
         })
       );
@@ -145,6 +157,67 @@ export default function Home() {
     filters.minPrice !== undefined ||
     filters.maxPrice !== undefined ||
     (filters.categoryIds && filters.categoryIds.length > 0);
+
+  const handleLoadMoreProducts = useCallback(
+    async (marketId: string) => {
+      const targetMarket = markets.find((m) => m.id === marketId);
+      if (!targetMarket || targetMarket.loadingMoreProducts || !targetMarket.hasMoreProducts) {
+        return;
+      }
+
+      setMarkets((prevMarkets) =>
+        prevMarkets.map((m) =>
+          m.id === marketId
+            ? {
+                ...m,
+                loadingMoreProducts: true
+              }
+            : m
+        )
+      );
+
+      try {
+        const nextPage = (targetMarket.productsPage ?? 1) + 1;
+        const resProducts = await getProducts(
+          nextPage,
+          20,
+          marketId,
+          undefined,
+          filters.minPrice,
+          filters.maxPrice,
+          filters.categoryIds
+        );
+
+        setMarkets((prevMarkets) =>
+          prevMarkets.map((m) =>
+            m.id === marketId
+              ? {
+                  ...m,
+                  products: [...(m.products || []), ...resProducts.products.filter(
+                    (newProduct) => !(m.products || []).some((existing) => existing.id === newProduct.id)
+                  )],
+                  productsPage: nextPage,
+                  hasMoreProducts: resProducts.products.length === 20,
+                  loadingMoreProducts: false
+                }
+              : m
+          )
+        );
+      } catch (error) {
+        setMarkets((prevMarkets) =>
+          prevMarkets.map((m) =>
+            m.id === marketId
+              ? {
+                  ...m,
+                  loadingMoreProducts: false
+                }
+              : m
+          )
+        );
+      }
+    },
+    [markets, filters]
+  );
 
   const filteredMarkets = useMemo(() => {
     let filtered: MarketWithProducts[] = markets;
@@ -222,6 +295,15 @@ export default function Home() {
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.productList}
+            onEndReached={() => handleLoadMoreProducts(market.id)}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              market.loadingMoreProducts ? (
+                <View style={styles.listFooter}>
+                  <ActivityIndicator size="small" color={paperTheme.colors.primary} />
+                </View>
+              ) : null
+            }
             renderItem={({ item, index }) => (
               <ProductCard
                 marketLogo={market.profilePicture || ""}
@@ -243,7 +325,7 @@ export default function Home() {
           />
         </View>
       ));
-  }, [markets, searchQuery, sortByDistance, navigation, paperTheme.colors]);
+  }, [markets, searchQuery, sortByDistance, navigation, paperTheme.colors, handleLoadMoreProducts]);
 
     if (loading) {
         return (
@@ -402,6 +484,11 @@ const styles = StyleSheet.create({
     },
     productList: {
         minHeight: 250,
+    },
+    listFooter: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingRight: 16,
     },
     loadingContainer: {
         flex: 1,
