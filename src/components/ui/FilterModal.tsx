@@ -13,6 +13,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import PriceFilter from './PriceFilter';
 import CategoryFilter from './CategoryFilter';
+import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
 
 interface FilterModalProps {
   visible: boolean;
@@ -179,11 +180,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
   },
   modalBody: {
@@ -192,31 +193,31 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     flexDirection: 'row',
-    gap: 12,
+    gap: SPACING.md,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: SPACING.lg,
     borderTopWidth: 1,
   },
   clearButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   clearButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
   applyButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   applyButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
 });

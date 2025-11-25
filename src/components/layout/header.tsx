@@ -6,8 +6,9 @@ import { useTheme as usePaperTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../../contexts/CartContext";
 import { ProfileButton } from "../ui/ProfileButton";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
-import Logo from "../../../assets/logotipo.png";
+const Logo = require("../../../assets/logotipo.png");
 
 export const Header: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -26,14 +27,14 @@ export const Header: React.FC = () => {
             style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]}
             onPress={() => navigation.navigate("History")}
           >
-            <Ionicons name="time-outline" size={24} color={paperTheme.colors.tertiary} />
+            <Ionicons name="time-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]}
             onPress={() => navigation.navigate("Notifications")}
           >
-            <Ionicons name="notifications-outline" size={24} color={paperTheme.colors.tertiary} />
+            <Ionicons name="notifications-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
             <View style={[styles.notificationBadge, { backgroundColor: paperTheme.colors.primary }]}>
               <Text style={styles.notificationBadgeText}>2</Text>
             </View>
@@ -43,7 +44,7 @@ export const Header: React.FC = () => {
             style={[styles.button, { backgroundColor: paperTheme.colors.surfaceVariant }]}
             onPress={() => navigation.navigate("Cart")}
           >
-            <Ionicons name="cart-outline" size={24} color={paperTheme.colors.tertiary} />
+            <Ionicons name="cart-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
             {cartState.itemCount > 0 && (
               <View style={[styles.cartBadge, { backgroundColor: paperTheme.colors.primary }]}>
                 <Text style={styles.cartBadgeText}>
@@ -66,54 +67,54 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
     minHeight: 60
   },
-  logo: { width: 80, height: 50, borderRadius: 20 },
+  logo: { width: 80, height: 50, borderRadius: BORDER_RADIUS.full },
   title: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
     flexShrink: 1
   },
   buttonsContainer: { flexDirection: "row" },
   button: {
-    padding: 8,
+    padding: SPACING.sm,
     borderRadius: 10,
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
     position: 'relative'
   },
   cartBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -SPACING.xs,
+    right: -SPACING.xs,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: SPACING.xs,
   },
   cartBadgeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
     fontWeight: 'bold',
   },
   notificationBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -SPACING.xs,
+    right: -SPACING.xs,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: SPACING.xs,
   },
   notificationBadgeText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
   },
 });

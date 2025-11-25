@@ -2,6 +2,7 @@ import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, ViewStyle } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { isValidImageUri } from "../../utils/imageUtils";
+import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE } from "../../constants/styles";
 
 const { width } = Dimensions.get("window"); // pega largura da tela
 const CARD_WIDTH = width * 0.45;
@@ -47,10 +48,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <Image source={{ uri: marketLogo }} style={styles.logo} />
         ) : (
           <View style={[styles.logo, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 10 }}>Sem logo</Text>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: FONT_SIZE.xs }}>Sem logo</Text>
           </View>
         )}
-        <View style={{ marginLeft: 10, flex: 1 }}>
+        <View style={{ marginLeft: SPACING.md, flex: 1 }}>
           <Text 
             style={[styles.marketName, { color: paperTheme.colors.onSurface }]} 
             numberOfLines={1} 
@@ -66,7 +67,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <Image source={{ uri: imageUrl }} style={styles.productImage} />
         ) : (
           <View style={[styles.productImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 12 }}>Sem imagem</Text>
+            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: FONT_SIZE.sm }}>Sem imagem</Text>
           </View>
         )}
       </View>
@@ -100,32 +101,28 @@ export default ProductCard;
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 12,
-    marginRight: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    marginRight: SPACING.md,
+    ...SHADOWS.medium,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   logo: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: BORDER_RADIUS.full,
   },
   marketName: {
     fontWeight: "bold",
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
   },
   productImageContainer: {
     alignItems: "center",
-    marginVertical: 8,
+    marginVertical: SPACING.sm,
   },
   productImage: {
     width: "100%",
@@ -133,19 +130,19 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   footer: {
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
   productTitle: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: "500",
     marginBottom: 2,
   },
   productSubtitle: {
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
     marginBottom: 2,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
   },
 });

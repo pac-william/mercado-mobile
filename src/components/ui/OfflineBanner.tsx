@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 
 interface OfflineBannerProps {
   message?: string;
@@ -14,7 +15,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
 
   return (
     <View style={[styles.banner, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-      <Ionicons name="cloud-offline-outline" size={18} color={paperTheme.colors.onSurfaceVariant} />
+      <Ionicons name="cloud-offline-outline" size={ICON_SIZES.md} color={paperTheme.colors.onSurfaceVariant} />
       <Text style={[styles.text, { color: paperTheme.colors.onSurfaceVariant }]}>
         {message}
       </Text>
@@ -27,15 +28,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 8,
-    borderRadius: 8,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.sm,
+    marginBottom: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
   },
   text: {
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
     fontSize: 13,
     fontWeight: '500',
     textAlign: 'center',

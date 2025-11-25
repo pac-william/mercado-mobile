@@ -4,6 +4,7 @@ import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActivityIndicator, Searchbar, Text, useTheme } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
+import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE } from "../../constants/styles";
 
 import { HomeStackParamList } from "../../../App";
 import { getProducts, Product } from "../../services/productService";
@@ -211,36 +212,32 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 16
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg
   },
   categoryTitle: {
-    fontSize: 24,
+    fontSize: FONT_SIZE.xxl,
     fontWeight: "bold"
   },
   marketSubtitle: {
-    fontSize: 14,
-    marginTop: 4
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 16
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg
   },
   searchbar: {
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4
+    borderRadius: BORDER_RADIUS.lg,
+    ...SHADOWS.small
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm
   },
   row: {
     justifyContent: "space-between",
-    marginBottom: 16
+    marginBottom: SPACING.lg
   },
   productWrapper: {
     width: "48%"
@@ -249,7 +246,7 @@ const styles = StyleSheet.create({
     marginBottom: 0
   },
   listFooter: {
-    paddingVertical: 16,
+    paddingVertical: SPACING.lg,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -258,14 +255,14 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
     textAlign: "center"
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     textAlign: "center",
-    marginTop: 8,
+    marginTop: SPACING.sm,
     opacity: 0.7
   }
 });

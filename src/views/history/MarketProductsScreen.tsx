@@ -9,13 +9,14 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-import { Text, useTheme, Button } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
+import Button from "../../components/ui/Button";
 import { getSuggestionById } from "../../services/suggestionService";
 import { getProducts, Product } from "../../services/productService";
 import { getMarketById } from "../../services/marketService";
@@ -653,26 +654,28 @@ export default function MarketProductsScreen() {
           </View>
           {!hasProductsInCart ? (
             <Button
-              mode="contained"
+              title="Adicionar ao Carrinho"
               onPress={handleAddToCart}
-              style={[styles.checkoutButton, { backgroundColor: paperTheme.colors.primary }]}
-              contentStyle={styles.checkoutButtonContent}
-              labelStyle={[styles.checkoutButtonLabel, { color: paperTheme.colors.onPrimary }]}
-              icon={() => <Ionicons name="cart" size={19} color={paperTheme.colors.onPrimary} />}
-            >
-              Adicionar ao Carrinho
-            </Button>
+              variant="primary"
+              size="large"
+              icon={{
+                name: "cart",
+                position: "left",
+              }}
+              fullWidth
+            />
           ) : (
             <Button
-              mode="contained"
+              title="Ir para Carrinho"
               onPress={() => navigation.navigate("Cart")}
-              style={[styles.checkoutButton, { backgroundColor: paperTheme.colors.primary }]}
-              contentStyle={styles.checkoutButtonContent}
-              labelStyle={[styles.checkoutButtonLabel, { color: paperTheme.colors.onPrimary }]}
-              icon={() => <Ionicons name="cart" size={19} color={paperTheme.colors.onPrimary} />}
-            >
-              Ir para Carrinho
-            </Button>
+              variant="primary"
+              size="large"
+              icon={{
+                name: "cart",
+                position: "left",
+              }}
+              fullWidth
+            />
           )}
         </View>
       )}
@@ -927,16 +930,6 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 20,
     fontWeight: "bold",
-  },
-  checkoutButton: {
-    borderRadius: 12,
-  },
-  checkoutButtonContent: {
-    paddingVertical: 10,
-  },
-  checkoutButtonLabel: {
-    fontSize: 15,
-    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,

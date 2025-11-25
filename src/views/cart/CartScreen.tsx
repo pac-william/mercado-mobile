@@ -12,15 +12,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, useTheme } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import CustomModal from '../../components/ui/CustomModal';
+import Button from '../../components/ui/Button';
 import { CartItem, useCart } from '../../contexts/CartContext';
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
 import { getCart, mapCartItemResponseToCartItem, removeCartItem, clearCart as clearCartAPI, updateCartItem } from '../../services/cartService';
+import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 
 
 type CartScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -297,15 +299,11 @@ const CartScreen: React.FC = () => {
             paddingVertical: 12,
             backgroundColor: paperTheme.colors.surface,
             marginHorizontal: 16,
-            marginTop: 8,
-            borderRadius: 16,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
+            marginTop: SPACING.sm,
+            borderRadius: BORDER_RADIUS.xl,
+            ...SHADOWS.large,
           }}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
+            <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
               Meu Carrinho ({cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'})
             </Text>
             <TouchableOpacity
@@ -316,47 +314,43 @@ const CartScreen: React.FC = () => {
                 paddingHorizontal: 10,
                 paddingVertical: 5,
                 backgroundColor: '#ffebee',
-                borderRadius: 20,
+                borderRadius: BORDER_RADIUS.full,
               }}
             >
-              <Ionicons name="trash-outline" size={14} color="#d32f2f" />
-              <Text style={{ color: '#d32f2f', fontSize: 12, marginLeft: 4, fontWeight: '600' }}>
+              <Ionicons name="trash-outline" size={ICON_SIZES.sm} color="#d32f2f" />
+              <Text style={{ color: '#d32f2f', fontSize: FONT_SIZE.sm, marginLeft: SPACING.xs, fontWeight: '600' }}>
                 Limpar
               </Text>
             </TouchableOpacity>
           </View>
 
           {groupedByMarket.map((group, groupIndex) => (
-            <View key={group.marketId} style={{ marginTop: groupIndex > 0 ? 24 : 8 }}>
+            <View key={group.marketId} style={{ marginTop: groupIndex > 0 ? SPACING.xl : SPACING.sm }}>
               <View style={{
                 backgroundColor: paperTheme.colors.surface,
-                marginHorizontal: 16,
-                marginTop: 8,
-                borderRadius: 16,
-                padding: 16,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-                elevation: 4,
+                marginHorizontal: SPACING.lg,
+                marginTop: SPACING.sm,
+                borderRadius: BORDER_RADIUS.xl,
+                padding: SPACING.lg,
+                ...SHADOWS.large,
               }}>
                 <View style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  marginBottom: 12,
+                  marginBottom: SPACING.md,
                 }}>
-                  <Ionicons name="storefront" size={20} color={paperTheme.colors.primary} />
+                  <Ionicons name="storefront" size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
                   <Text style={{
-                    fontSize: 18,
+                    fontSize: FONT_SIZE.xl,
                     fontWeight: 'bold',
                     color: paperTheme.colors.onSurface,
-                    marginLeft: 8,
+                    marginLeft: SPACING.sm,
                   }}>
                     {group.marketName}
                   </Text>
                 </View>
                 <Text style={{
-                  fontSize: 14,
+                  fontSize: FONT_SIZE.md,
                   color: paperTheme.colors.onSurfaceVariant,
                 }}>
                   {group.itemCount} {group.itemCount === 1 ? 'item' : 'itens'}
@@ -366,9 +360,9 @@ const CartScreen: React.FC = () => {
               {group.items.map((item) => (
             <View key={item.id} style={{
               backgroundColor: paperTheme.colors.surface,
-              marginHorizontal: 16,
-              marginTop: 8,
-              borderRadius: 20,
+              marginHorizontal: SPACING.lg,
+              marginTop: SPACING.sm,
+              borderRadius: BORDER_RADIUS.full,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
@@ -610,54 +604,29 @@ const CartScreen: React.FC = () => {
                   </Text>
                 </View>
 
-                <TouchableOpacity
+                <Button
+                  title="Adicionar mais produtos"
                   onPress={() => navigation.navigate('MarketDetails', { marketId: group.marketId })}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    marginBottom: 12,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: paperTheme.colors.outline,
-                    backgroundColor: paperTheme.colors.surfaceVariant,
+                  variant="ghost"
+                  size="medium"
+                  icon={{
+                    name: "add-circle-outline",
+                    position: "left",
                   }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="add-circle-outline" size={18} color={paperTheme.colors.primary} />
-                  <Text style={{
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: paperTheme.colors.primary,
-                    marginLeft: 8,
-                  }}>
-                    Adicionar mais produtos
-                  </Text>
-                </TouchableOpacity>
+                  style={{ marginBottom: SPACING.md }}
+                />
 
                 <Button
-                  mode="contained"
+                  title={`Finalizar Pedido - ${group.marketName}`}
                   onPress={() => handleCheckout(group.marketId, group.items)}
-                  style={{
-                    borderRadius: 14,
-                    minHeight: 46,
-                    backgroundColor: paperTheme.colors.primary,
+                  variant="primary"
+                  size="large"
+                  icon={{
+                    name: "card",
+                    position: "left",
                   }}
-                  contentStyle={{
-                    paddingVertical: 10,
-                    paddingHorizontal: 24,
-                  }}
-                  labelStyle={{
-                    fontSize: 15,
-                    fontWeight: 'bold',
-                    color: paperTheme.colors.onPrimary,
-                  }}
-                  icon={() => <Ionicons name="card" size={19} color={paperTheme.colors.onPrimary} />}
-                >
-                  Finalizar Pedido - {group.marketName}
-                </Button>
+                  fullWidth
+                />
               </View>
             </View>
           ))}

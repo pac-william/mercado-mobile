@@ -12,6 +12,7 @@ import FilterModal from "../../components/ui/FilterModal";
 import HeroBanner from "../../components/ui/Hero";
 import { Header } from "../../components/layout/header";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
+import Button from "../../components/ui/Button";
 import { getProducts, Product } from "../../services/productService";
 import { getMarkets, getMarketById } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
@@ -21,6 +22,7 @@ import { normalizeString } from "../../utils/stringUtils";
 import { useUserLocation } from "../../hooks/useUserLocation";
 import { usePermissions } from "../../hooks/usePermissions";
 import { formatDistance } from "../../utils/distance";
+import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -380,25 +382,18 @@ export default function Home() {
             gap: 12,
           }}
         >
-          <TouchableOpacity
+          <Button
+            title="Mercados Próximos"
             onPress={handleToggleNearbyMarkets}
+            variant="ghost"
+            size="medium"
+            icon={{
+              name: sortByDistance ? "navigate" : "navigate-outline",
+              position: "left",
+            }}
+            badge={sortByDistance}
             style={styles.nearbyButton}
-            activeOpacity={0.7}
-          >
-            <View style={styles.nearbyButtonContent}>
-              <Ionicons
-                name={sortByDistance ? "navigate" : "navigate-outline"}
-                size={20}
-                color={paperTheme.colors.primary}
-              />
-              <Text style={[styles.nearbyButtonText, { color: paperTheme.colors.primary }]}>
-                Mercados Próximos
-              </Text>
-              {sortByDistance && (
-                <View style={[styles.nearbyButtonBadge, { backgroundColor: paperTheme.colors.primary }]} />
-              )}
-            </View>
-          </TouchableOpacity>
+          />
           <FilterButton
             title="Filtra por..."
             onPress={() => setFilterModalVisible(true)}
@@ -428,26 +423,22 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollViewContent: {
-        padding: 16,
+        padding: SPACING.lg,
         paddingBottom: 200, 
     },
     marketInfoCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
-        borderRadius: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        padding: SPACING.lg,
+        borderRadius: BORDER_RADIUS.xl,
+        marginBottom: SPACING.lg,
+        ...SHADOWS.large,
     },
     marketImage: {
         width: 80,
         height: 80,
-        borderRadius: 12,
-        marginRight: 16,
+        borderRadius: BORDER_RADIUS.lg,
+        marginRight: SPACING.lg,
     },
     marketImagePlaceholder: {
         justifyContent: 'center',
@@ -457,29 +448,29 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     marketName: {
-        fontSize: 22,
+        fontSize: FONT_SIZE.xxl,
         fontWeight: 'bold',
-        marginBottom: 4,
+        marginBottom: SPACING.xs,
     },
     marketAddress: {
-        fontSize: 14,
+        fontSize: FONT_SIZE.md,
         lineHeight: 20,
     },
     marketDistanceContainer: {
-        marginTop: 8,
+        marginTop: SPACING.sm,
     },
     marketDistanceBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 8,
+        paddingHorizontal: SPACING.sm,
+        paddingVertical: SPACING.xs,
+        borderRadius: BORDER_RADIUS.md,
         borderWidth: 1,
         alignSelf: 'flex-start',
-        gap: 4,
+        gap: SPACING.xs,
     },
     marketDistanceText: {
-        fontSize: 12,
+        fontSize: FONT_SIZE.sm,
         fontWeight: '500',
     },
     productList: {
@@ -488,7 +479,7 @@ const styles = StyleSheet.create({
     listFooter: {
         justifyContent: 'center',
         alignItems: 'center',
-        paddingRight: 16,
+        paddingRight: SPACING.lg,
     },
     loadingContainer: {
         flex: 1,
@@ -496,34 +487,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
       },
     searchbar: {
-        borderRadius: 12,
-        elevation: 2,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        borderRadius: BORDER_RADIUS.lg,
+        ...SHADOWS.small,
     },
     nearbyButton: {
         backgroundColor: "#f0f0f0",
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderWidth: 1,
         borderColor: "#e0e0e0",
-    },
-    nearbyButtonContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    nearbyButtonText: {
-        marginLeft: 8,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    nearbyButtonBadge: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginLeft: 8,
     },
 });

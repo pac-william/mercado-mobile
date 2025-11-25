@@ -1,6 +1,7 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, Image, Dimensions, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE } from "../../constants/styles";
 
 const { width } = Dimensions.get("window");
 const cardWidth = (width / 2) - 32;
@@ -47,39 +48,31 @@ const styles = StyleSheet.create({
   card: {
     width: cardWidth,
     minHeight: 90,
-    // backgroundColor será aplicado dinamicamente via props
-    margin: 8,
-    borderRadius: 12,
+    margin: SPACING.sm,
+    borderRadius: BORDER_RADIUS.lg,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    // borderWidth e borderColor serão aplicados dinamicamente via props
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    ...SHADOWS.medium,
   },
   image: {
     width: 60,
     height: 60,
     resizeMode: "contain",
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   textContainer: {
     flex: 1,
     flexShrink: 1, 
   },
   text: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
-    // color será aplicado dinamicamente via props
   },
   subtitle: {
-    fontSize: 12,
-    // color será aplicado dinamicamente via props
-    marginTop: 4,
+    fontSize: FONT_SIZE.sm,
+    marginTop: SPACING.xs,
   },
 });
 

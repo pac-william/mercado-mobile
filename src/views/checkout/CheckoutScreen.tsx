@@ -12,11 +12,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, useTheme } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import CustomModal from '../../components/ui/CustomModal';
+import Button from '../../components/ui/Button';
 import { CartItem, useCart } from '../../contexts/CartContext';
 import { OrderCreateDTO } from '../../domain/orderDomain';
 import { useModal } from '../../hooks/useModal';
@@ -425,12 +426,12 @@ export default function CheckoutScreen() {
                   Cadastre um endereço para continuar com a compra
                 </Text>
                 <Button
-                  mode="contained"
+                  title="Cadastrar Endereço"
                   onPress={handleAddAddress}
-                  style={{ borderRadius: 12 }}
-                >
-                  Cadastrar Endereço
-                </Button>
+                  variant="primary"
+                  size="medium"
+                  fullWidth
+                />
               </View>
             ) : (
               <View>
@@ -618,28 +619,18 @@ export default function CheckoutScreen() {
           </View>
           
           <Button
-            mode="contained"
+            title={creatingOrder ? 'Finalizando...' : 'Finalizar Pedido'}
             onPress={handleFinalizeOrder}
-            disabled={creatingOrder || !selectedAddress || !selectedPaymentMethod}
+            variant="primary"
+            size="large"
+            icon={{
+              name: "checkmark-circle",
+              position: "left",
+            }}
             loading={creatingOrder}
-            style={{
-              borderRadius: 14,
-              minHeight: 56,
-              backgroundColor: paperTheme.colors.primary,
-            }}
-            contentStyle={{
-              paddingVertical: 14,
-              paddingHorizontal: 24,
-            }}
-            labelStyle={{ 
-              fontSize: 17, 
-              fontWeight: 'bold',
-              color: paperTheme.colors.onPrimary,
-            }}
-            icon={() => <Ionicons name="checkmark-circle" size={22} color={paperTheme.colors.onPrimary} />}
-          >
-            {creatingOrder ? 'Finalizando...' : 'Finalizar Pedido'}
-          </Button>
+            disabled={creatingOrder || !selectedAddress || !selectedPaymentMethod}
+            fullWidth
+          />
         </View>
       </KeyboardAvoidingView>
 

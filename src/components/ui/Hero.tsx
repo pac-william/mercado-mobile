@@ -3,6 +3,7 @@ import { View, Image, StyleSheet, Dimensions, Text } from "react-native";
 import Swiper from "react-native-swiper";
 import { getActiveCampaignsForCarousel, Campaign } from "../../services/campaignService";
 import { getMarketById } from "../../services/marketService";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 const { width } = Dimensions.get("window");
 
@@ -102,7 +103,7 @@ const HeroBanner = () => {
 const styles = StyleSheet.create({
   container: {
     height: 180,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     overflow: "hidden",
     marginTop: 10,
     position: "relative",
@@ -115,35 +116,35 @@ const styles = StyleSheet.create({
   image: {
     width: width - 32,
     height: 180,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     resizeMode: "cover",
   },
   overlayText: {
     position: "absolute",
-    top: 12,
-    right: 12,
+    top: SPACING.md,
+    right: SPACING.md,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
-    paddingHorizontal: 12,
+    paddingHorizontal: SPACING.md,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: BORDER_RADIUS.sm,
   },
   overlayTextContent: {
     color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
     fontWeight: "600",
   },
   dot: {
     backgroundColor: "rgba(255,255,255,0.5)",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: ICON_SIZES.xs,
+    height: ICON_SIZES.xs,
+    borderRadius: BORDER_RADIUS.xs,
     marginHorizontal: 3,
   },
   activeDot: {
     backgroundColor: "#EA1D2C", 
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: ICON_SIZES.xs,
+    height: ICON_SIZES.xs,
+    borderRadius: BORDER_RADIUS.xs,
     marginHorizontal: 3,
   },
 });

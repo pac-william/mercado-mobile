@@ -2,6 +2,7 @@ import { AntDesign } from '@expo/vector-icons';
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 interface FilterButtonProps {
   title: string;
@@ -15,7 +16,7 @@ export default function FilterButton({ title, onPress, hasActiveFilters = false 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <View style={styles.content}>
-        <AntDesign name="filter" size={20} color={colors.primary} />
+        <AntDesign name="filter" size={ICON_SIZES.lg} color={colors.primary} />
         <Text style={[styles.text, { color: colors.primary }]}>
           {title}
         </Text>
@@ -29,10 +30,10 @@ export default function FilterButton({ title, onPress, hasActiveFilters = false 
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f0f0f0", // Fundo cinza claro
-    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+    borderRadius: BORDER_RADIUS.md,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
@@ -41,14 +42,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    marginLeft: 8,
-    fontSize: 16,
+    marginLeft: SPACING.sm,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
   },
   badge: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 8,
+    width: ICON_SIZES.xs,
+    height: ICON_SIZES.xs,
+    borderRadius: BORDER_RADIUS.xs,
+    marginLeft: SPACING.sm,
   },
 });

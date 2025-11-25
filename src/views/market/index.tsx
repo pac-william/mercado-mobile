@@ -19,6 +19,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import { isNetworkError } from '../../utils/networkUtils';
 import { isValidImageUri } from '../../utils/imageUtils';
 import { normalizeString } from '../../utils/stringUtils';
+import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -235,7 +236,7 @@ export default function MarketDetailsScreen() {
                 contentContainerStyle={styles.productsListContent}
                 renderItem={({ item }) => (
                   <ProductCard
-                    marketLogo={market.profilePicture}
+                    marketLogo={market.profilePicture || ''}
                     marketName={market.name}
                     title={item.name}
                     subtitle={item.unit || ''}
@@ -287,37 +288,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg,
   },
   marketInfoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    marginBottom: SPACING.lg,
+    ...SHADOWS.large,
   },
   searchContainer: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   searchbar: {
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    borderRadius: BORDER_RADIUS.lg,
+    ...SHADOWS.small,
   },
   marketImage: {
     width: 80,
     height: 80,
-    borderRadius: 12,
-    marginRight: 16,
+    borderRadius: BORDER_RADIUS.lg,
+    marginRight: SPACING.lg,
   },
   marketImagePlaceholder: {
     justifyContent: 'center',
@@ -327,16 +320,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   marketName: {
-    fontSize: 22,
+    fontSize: FONT_SIZE.xxl,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   marketAddress: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     lineHeight: 20,
   },
   categoryContainer: {
-    marginBottom: 32,
+    marginBottom: SPACING.xxl,
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -344,41 +337,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryTitle: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
-    marginBottom: 16,
-    paddingHorizontal: 4,
+    marginBottom: SPACING.lg,
+    paddingHorizontal: SPACING.xs,
   },
   categoryLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: SPACING.xs,
   },
   categoryLinkText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
-    marginRight: 4,
+    marginRight: SPACING.xs,
   },
   productsListContent: {
-    paddingLeft: 4,
-    paddingRight: 16,
+    paddingLeft: SPACING.xs,
+    paddingRight: SPACING.lg,
   },
   productCard: {
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   emptyContainer: {
     paddingVertical: 60,
     alignItems: 'center',
   },
   noProductsText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     textAlign: 'center',
     fontWeight: '600',
   },
   noProductsSubtext: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: SPACING.sm,
     opacity: 0.7,
   },
 });
