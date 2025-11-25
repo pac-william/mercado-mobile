@@ -21,9 +21,15 @@ export const getProducts = async (
   name?: string,
   minPrice?: number,
   maxPrice?: number,
-  categoryId?: string
+  categoryIds?: string | string[]
 ): Promise<ProductResponse> => {
   try {
+    const normalizedCategoryIds = Array.isArray(categoryIds)
+      ? categoryIds.filter(Boolean)
+      : categoryIds
+        ? [categoryIds]
+        : [];
+
     const response = await api.get<ProductResponse>("/products", {
       params: {
         page,
@@ -32,7 +38,27 @@ export const getProducts = async (
         name,
         minPrice,
         maxPrice,
-        categoryId,
+        categoryId: normalizedCategoryIds.length ? normalizedCategoryIds : undefined,
+      },
+      paramsSerializer: {
+        serialize: (params) => {
+          const searchParams = new URLSearchParams();
+          Object.entries(params).forEach(([key, value]) => {
+            if (value === undefined || value === null) {
+              return;
+            }
+            if (Array.isArray(value)) {
+              value.forEach((item) => {
+                if (item !== undefined && item !== null) {
+                  searchParams.append(key, String(item));
+                }
+              });
+            } else {
+              searchParams.append(key, String(value));
+            }
+          });
+          return searchParams.toString();
+        },
       },
     });
 

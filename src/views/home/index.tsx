@@ -40,7 +40,7 @@ export default function Home() {
   const [filters, setFilters] = useState<{
     minPrice?: number;
     maxPrice?: number;
-    categoryId?: string;
+    categoryIds?: string[];
   }>({});
   const [sortByDistance, setSortByDistance] = useState(false);
   const { getUserLocation } = useUserLocation();
@@ -52,7 +52,7 @@ export default function Home() {
       let userLatitude: number | undefined;
       let userLongitude: number | undefined;
 
-      if (permissions.location.granted) {
+      if (sortByDistance && permissions.location.granted) {
         const userLocation = await getUserLocation();
         if (userLocation) {
           userLatitude = userLocation.latitude;
@@ -78,7 +78,7 @@ export default function Home() {
               undefined,
               filters.minPrice,
               filters.maxPrice,
-              filters.categoryId
+              filters.categoryIds
             );
             return {
               ...marketDetails,
@@ -107,7 +107,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [filters, permissions.location.granted, getUserLocation]);
+  }, [filters, sortByDistance, permissions.location.granted, getUserLocation]);
 
   useEffect(() => {
     fetchMarketsWithProducts();
@@ -133,7 +133,7 @@ export default function Home() {
     setRefreshing(false);
   };
 
-  const handleApplyFilters = (newFilters: { minPrice?: number; maxPrice?: number; categoryId?: string }) => {
+  const handleApplyFilters = (newFilters: { minPrice?: number; maxPrice?: number; categoryIds?: string[] }) => {
     setFilters(newFilters);
   };
 
@@ -141,7 +141,10 @@ export default function Home() {
     setFilters({});
   };
 
-  const hasActiveFilters = filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.categoryId !== undefined;
+  const hasActiveFilters =
+    filters.minPrice !== undefined ||
+    filters.maxPrice !== undefined ||
+    (filters.categoryIds && filters.categoryIds.length > 0);
 
   const filteredMarkets = useMemo(() => {
     let filtered: MarketWithProducts[] = markets;
@@ -195,7 +198,7 @@ export default function Home() {
               <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1} ellipsizeMode="tail">
                 {market.address}
               </Text>
-              {formatDistance(market.distance) && (
+              {sortByDistance && market.distance !== null && market.distance !== undefined && (
                 <View style={styles.marketDistanceContainer}>
                   <View
                     style={[
@@ -240,7 +243,7 @@ export default function Home() {
           />
         </View>
       ));
-  }, [markets, searchQuery, navigation, paperTheme.colors]);
+  }, [markets, searchQuery, sortByDistance, navigation, paperTheme.colors]);
 
     if (loading) {
         return (

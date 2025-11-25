@@ -6,12 +6,12 @@ import { getCategories } from '../../services/categoryService';
 import { Category } from '../../domain/categoryDomain';
 
 interface CategoryFilterProps {
-  selectedCategoryId?: string;
-  onCategoryChange: (categoryId: string | undefined) => void;
+  selectedCategoryIds: string[];
+  onCategoryChange: (categoryIds: string[]) => void;
 }
 
 export default function CategoryFilter({
-  selectedCategoryId,
+  selectedCategoryIds,
   onCategoryChange,
 }: CategoryFilterProps) {
   const paperTheme = useTheme();
@@ -36,10 +36,10 @@ export default function CategoryFilter({
   };
 
   const handleCategoryPress = (categoryId: string) => {
-    if (selectedCategoryId === categoryId) {
-      onCategoryChange(undefined);
+    if (selectedCategoryIds.includes(categoryId)) {
+      onCategoryChange(selectedCategoryIds.filter((id) => id !== categoryId));
     } else {
-      onCategoryChange(categoryId);
+      onCategoryChange([...selectedCategoryIds, categoryId]);
     }
   };
 
@@ -81,7 +81,7 @@ export default function CategoryFilter({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesContainer}
         renderItem={({ item }) => {
-          const isSelected = selectedCategoryId === item.id;
+          const isSelected = selectedCategoryIds.includes(item.id);
           return (
             <TouchableOpacity
               style={[

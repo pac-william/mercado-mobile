@@ -17,12 +17,12 @@ import CategoryFilter from './CategoryFilter';
 interface FilterModalProps {
   visible: boolean;
   onClose: () => void;
-  onApply: (filters: { minPrice?: number; maxPrice?: number; categoryId?: string }) => void;
+  onApply: (filters: { minPrice?: number; maxPrice?: number; categoryIds?: string[] }) => void;
   onClear: () => void;
   currentFilters: {
     minPrice?: number;
     maxPrice?: number;
-    categoryId?: string;
+    categoryIds?: string[];
   };
 }
 
@@ -36,28 +36,29 @@ export default function FilterModal({
   const paperTheme = useTheme();
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
-  const [categoryId, setCategoryId] = useState<string | undefined>(currentFilters.categoryId);
+  const [categoryIds, setCategoryIds] = useState<string[]>(currentFilters.categoryIds || []);
 
   useEffect(() => {
     setMinPrice(currentFilters.minPrice);
     setMaxPrice(currentFilters.maxPrice);
-    setCategoryId(currentFilters.categoryId);
+    setCategoryIds(currentFilters.categoryIds || []);
   }, [currentFilters]);
 
   const handleApply = () => {
-    onApply({ minPrice, maxPrice, categoryId });
+    onApply({ minPrice, maxPrice, categoryIds: categoryIds.length ? categoryIds : undefined });
     onClose();
   };
 
   const handleClear = () => {
     setMinPrice(undefined);
     setMaxPrice(undefined);
-    setCategoryId(undefined);
+    setCategoryIds([]);
     onClear();
     onClose();
   };
 
-  const hasActiveFilters = minPrice !== undefined || maxPrice !== undefined || categoryId !== undefined;
+  const hasActiveFilters =
+    minPrice !== undefined || maxPrice !== undefined || (categoryIds && categoryIds.length > 0);
 
   return (
     <Modal
@@ -105,8 +106,8 @@ export default function FilterModal({
                   keyboardShouldPersistTaps="handled"
                 >
                   <CategoryFilter
-                    selectedCategoryId={categoryId}
-                    onCategoryChange={setCategoryId}
+                    selectedCategoryIds={categoryIds}
+                    onCategoryChange={setCategoryIds}
                   />
                   <PriceFilter
                     minPrice={minPrice}
