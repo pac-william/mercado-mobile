@@ -313,12 +313,12 @@ const CartScreen: React.FC = () => {
                 alignItems: 'center',
                 paddingHorizontal: 10,
                 paddingVertical: 5,
-                backgroundColor: '#ffebee',
+                backgroundColor: paperTheme.colors.errorBackground,
                 borderRadius: BORDER_RADIUS.full,
               }}
             >
-              <Ionicons name="trash-outline" size={ICON_SIZES.sm} color="#d32f2f" />
-              <Text style={{ color: '#d32f2f', fontSize: FONT_SIZE.sm, marginLeft: SPACING.xs, fontWeight: '600' }}>
+              <Ionicons name="trash-outline" size={ICON_SIZES.sm} color={paperTheme.colors.errorText} />
+              <Text style={{ color: paperTheme.colors.errorText, fontSize: FONT_SIZE.sm, marginLeft: SPACING.xs, fontWeight: '600' }}>
                 Limpar
               </Text>
             </TouchableOpacity>

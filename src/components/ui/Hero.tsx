@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Image, StyleSheet, Dimensions, Text } from "react-native";
+import { useTheme } from "react-native-paper";
 import Swiper from "react-native-swiper";
 import { getActiveCampaignsForCarousel, Campaign } from "../../services/campaignService";
 import { getMarketById } from "../../services/marketService";
@@ -8,6 +9,7 @@ import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/s
 const { width } = Dimensions.get("window");
 
 const HeroBanner = () => {
+  const { colors } = useTheme();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [marketNames, setMarketNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,9 @@ const HeroBanner = () => {
           }}
         />
         <View style={styles.overlayText}>
-          <Text style={styles.overlayTextContent}>Promovido por {marketNames[campaigns[0].marketId] || "Mercado"}</Text>
+          <Text style={[styles.overlayTextContent, { color: colors.white }]}>
+            Promovido por {marketNames[campaigns[0].marketId] || "Mercado"}
+          </Text>
         </View>
       </View>
     );
@@ -75,7 +79,7 @@ const HeroBanner = () => {
         autoplayTimeout={10}
         showsPagination
         dotStyle={styles.dot}
-        activeDotStyle={styles.activeDot}
+        activeDotStyle={[styles.activeDot, { backgroundColor: colors.accent }]}
       >
         {campaigns.map((campaign) => (
           <View key={campaign.id} style={styles.slideContainer}>
@@ -89,7 +93,7 @@ const HeroBanner = () => {
                   }}
                 />
                 <View style={styles.overlayText}>
-                  <Text style={styles.overlayTextContent}>Promovido por {marketNames[campaign.marketId] || "Mercado"}</Text>
+                  <Text style={[styles.overlayTextContent, { color: colors.white }]}>Promovido por {marketNames[campaign.marketId] || "Mercado"}</Text>
                 </View>
               </>
             ) : null}
@@ -129,7 +133,6 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.sm,
   },
   overlayTextContent: {
-    color: "#FFFFFF",
     fontSize: FONT_SIZE.sm,
     fontWeight: "600",
   },
@@ -141,7 +144,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 3,
   },
   activeDot: {
-    backgroundColor: "#EA1D2C", 
     width: ICON_SIZES.xs,
     height: ICON_SIZES.xs,
     borderRadius: BORDER_RADIUS.xs,

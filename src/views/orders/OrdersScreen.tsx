@@ -12,28 +12,28 @@ import { useSession } from "../../hooks/useSession";
 import { SettingsStackParamList } from "../../navigation/types";
 import { getOrders } from "../../services/orderService";
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, colors: any) => {
   switch (status?.toUpperCase()) {
     case 'PENDENTE':
     case 'PENDING':
-      return '#FF9800';
+      return colors.statusPending;
     case 'CONFIRMADO':
     case 'CONFIRMED':
-      return '#2196F3';
+      return colors.statusConfirmed;
     case 'PREPARANDO':
     case 'PREPARING':
-      return '#9C27B0';
+      return colors.statusPreparing;
     case 'SAIU_PARA_ENTREGA':
     case 'OUT_FOR_DELIVERY':
-      return '#FF5722';
+      return colors.statusOutForDelivery;
     case 'ENTREGUE':
     case 'DELIVERED':
-      return '#4CAF50';
+      return colors.statusDelivered;
     case 'CANCELADO':
     case 'CANCELLED':
-      return '#F44336';
+      return colors.statusCancelled;
     default:
-      return '#757575';
+      return colors.statusDefault;
   }
 };
 
@@ -169,7 +169,7 @@ export default function OrdersScreen() {
   }, [sessionUser?.id, fetchOrders]);
 
   const renderItem = ({ item }: { item: Order }) => {
-    const statusColor = getStatusColor(item.status || 'PENDENTE');
+    const statusColor = getStatusColor(item.status || 'PENDENTE', paperTheme.colors);
     const statusText = getStatusText(item.status || 'PENDENTE');
     
     const totalValue = item.total || item.totalPrice || 0;

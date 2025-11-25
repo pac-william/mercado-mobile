@@ -9,6 +9,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
@@ -40,31 +41,33 @@ const CustomModal: React.FC<CustomModalProps> = ({
   secondaryButton,
   showCloseButton = true,
 }) => {
+  const { colors } = useTheme();
+
   const getIconAndColor = () => {
     switch (type) {
       case 'success':
         return {
-          icon: 'checkmark-circle',
-          color: '#4CAF50',
-          backgroundColor: '#E8F5E8',
+          icon: 'checkmark-circle' as const,
+          color: colors.successIcon,
+          backgroundColor: colors.successBackground,
         };
       case 'warning':
         return {
-          icon: 'warning',
-          color: '#FF9800',
-          backgroundColor: '#FFF3E0',
+          icon: 'warning' as const,
+          color: colors.warningIcon,
+          backgroundColor: colors.warningBackground,
         };
       case 'error':
         return {
-          icon: 'close-circle',
-          color: '#F44336',
-          backgroundColor: '#FFEBEE',
+          icon: 'close-circle' as const,
+          color: colors.error,
+          backgroundColor: colors.errorBackground,
         };
       default:
         return {
-          icon: 'information-circle',
-          color: '#2196F3',
-          backgroundColor: '#E3F2FD',
+          icon: 'information-circle' as const,
+          color: colors.infoIcon,
+          backgroundColor: colors.infoBackground,
         };
     }
   };
@@ -74,23 +77,16 @@ const CustomModal: React.FC<CustomModalProps> = ({
   const getButtonStyle = (buttonStyle?: string) => {
     switch (buttonStyle) {
       case 'danger':
-        return styles.dangerButton;
+        return { backgroundColor: colors.buttonDanger };
       case 'success':
-        return styles.successButton;
+        return { backgroundColor: colors.buttonSuccess };
       default:
-        return styles.primaryButton;
+        return { backgroundColor: colors.buttonPrimary };
     }
   };
 
-  const getButtonTextStyle = (buttonStyle?: string) => {
-    switch (buttonStyle) {
-      case 'danger':
-        return styles.dangerButtonText;
-      case 'success':
-        return styles.successButtonText;
-      default:
-        return styles.primaryButtonText;
-    }
+  const getButtonTextStyle = () => {
+    return { color: colors.white };
   };
 
   return (
@@ -100,8 +96,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
+      <View style={[styles.overlay, { backgroundColor: colors.modalOverlay }]}>
+        <View style={[styles.modalContainer, { backgroundColor: colors.modalSurface, shadowColor: colors.modalShadow }]}>
           {/* Header com ícone */}
           <View style={[styles.iconContainer, { backgroundColor }]}>
             <Ionicons name={icon} size={48} color={color} />
@@ -109,17 +105,17 @@ const CustomModal: React.FC<CustomModalProps> = ({
 
           {/* Conteúdo */}
           <View style={styles.content}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.message}>{message}</Text>
+            <Text style={[styles.title, { color: colors.onSurface }]}>{title}</Text>
+            <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
 
             {/* Botões */}
             <View style={styles.buttonContainer}>
               {secondaryButton && (
                 <TouchableOpacity
-                  style={styles.secondaryButton}
+                  style={[styles.secondaryButton, { backgroundColor: colors.surfaceLight, borderColor: colors.outlineLight }]}
                   onPress={secondaryButton.onPress}
                 >
-                  <Text >
+                  <Text style={{ color: colors.onSurface }}>
                     {secondaryButton.text}
                   </Text>
                 </TouchableOpacity>
@@ -127,10 +123,10 @@ const CustomModal: React.FC<CustomModalProps> = ({
 
               {primaryButton && (
                 <TouchableOpacity
-                  style={[styles.button, getButtonStyle(primaryButton.style)]}
+                  style={[styles.button, getButtonStyle(primaryButton.style), { shadowColor: colors.modalShadow }]}
                   onPress={primaryButton.onPress}
                 >
-                  <Text style={[styles.buttonText, getButtonTextStyle(primaryButton.style)]}>
+                  <Text style={[styles.buttonText, getButtonTextStyle()]}>
                     {primaryButton.text}
                   </Text>
                 </TouchableOpacity>
@@ -140,8 +136,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
 
           {/* Botão de fechar */}
           {showCloseButton && (
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Ionicons name="close" size={24} color="#666" />
+            <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.surfaceLight }]} onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -153,17 +149,14 @@ const CustomModal: React.FC<CustomModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
   modalContainer: {
-    backgroundColor: 'white',
     borderRadius: 24,
     width: width * 0.9,
     maxWidth: 400,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
@@ -188,39 +181,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#1a1a1a',
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 28,
   },
   message: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 24,
   },
-  primaryButton: {
-    backgroundColor: '#2E7D32',
-  },
-  dangerButton: {
-    backgroundColor: '#F44336',
-  },
-  successButton: {
-    backgroundColor: '#4CAF50',
-  },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  primaryButtonText: {
-    color: 'white',
-  },
-  dangerButtonText: {
-    color: 'white',
-  },
-  successButtonText: {
-    color: 'white',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -232,20 +205,17 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 16,
     alignItems: 'center',
-    justifyContent: 'center', // 🔥 garante alinhamento vertical
-    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginRight: 6, // substitui gap
+    marginRight: 6,
   },
   button: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 16,
     alignItems: 'center',
-    justifyContent: 'center', // 🔥 garante centralização vertical
-    marginLeft: 6, // substitui gap
-    shadowColor: '#000',
+    justifyContent: 'center',
+    marginLeft: 6,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -258,7 +228,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f8f9fa',
     justifyContent: 'center',
     alignItems: 'center',
   },

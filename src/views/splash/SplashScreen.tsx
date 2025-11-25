@@ -53,7 +53,7 @@ export default function SplashScreen() {
         <Text variant="bodyLarge" style={[styles.loadingText, { color: paperTheme.colors.primary }]}>
           Carregando...
         </Text>
-        <Text variant="bodyMedium" style={[styles.subtitleText, { color: isDark ? '#FFFFFF' : paperTheme.colors.primary }]}>
+        <Text variant="bodyMedium" style={[styles.subtitleText, { color: isDark ? paperTheme.colors.white : paperTheme.colors.primary }]}>
           Preparando as melhores ofertas e ajustando sua experiência de compras
         </Text>
       </View>
@@ -111,7 +111,7 @@ export function InitialLoadingScreen() {
         <Text variant="bodyLarge" style={[styles.loadingText, { color: paperTheme.colors.primary }]}>
           Carregando...
         </Text>
-        <Text variant="bodyMedium" style={[styles.subtitleText, { color: isDark ? '#FFFFFF' : paperTheme.colors.primary }]}>
+        <Text variant="bodyMedium" style={[styles.subtitleText, { color: isDark ? paperTheme.colors.white : paperTheme.colors.primary }]}>
           Preparando as melhores ofertas e ajustando sua experiência de compras
         </Text>
       </View>

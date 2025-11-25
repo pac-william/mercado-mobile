@@ -324,7 +324,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
               resizeMode="cover"
             />
           ) : (
-            <Text style={styles.userAvatarText}>
+            <Text style={[styles.userAvatarText, { color: paperTheme.colors.white }]}>
               {sessionUser.name ? sessionUser.name.charAt(0).toUpperCase() : 'U'}
             </Text>
           )}
@@ -352,7 +352,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   userAvatarText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },

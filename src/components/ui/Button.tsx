@@ -83,8 +83,8 @@ export default function Button({
         backgroundColor: "transparent",
       },
       ghost: {
-        backgroundColor: colors.surfaceVariant,
-        borderColor: colors.outline,
+        backgroundColor: colors.surfaceLight,
+        borderColor: colors.outlineLight,
       },
     };
 

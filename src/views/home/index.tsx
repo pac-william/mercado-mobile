@@ -392,7 +392,6 @@ export default function Home() {
               position: "left",
             }}
             badge={sortByDistance}
-            style={styles.nearbyButton}
           />
           <FilterButton
             title="Filtra por..."
@@ -489,9 +488,5 @@ const styles = StyleSheet.create({
     searchbar: {
         borderRadius: BORDER_RADIUS.lg,
         ...SHADOWS.small,
-    },
-    nearbyButton: {
-        backgroundColor: "#f0f0f0",
-        borderColor: "#e0e0e0",
     },
 });

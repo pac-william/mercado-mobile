@@ -18,16 +18,16 @@ export default function OnboardingScreen1({ onNext }: OnboardingScreen1Props) {
       resizeMode="cover"
     >
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
         <SafeAreaView style={styles.container} edges={['top']}>
           <View style={styles.content}>
             <View style={styles.spacer} />
 
             <View style={styles.textContainer}>
-              <Text variant="headlineMedium" style={[styles.title, { color: '#FFFFFF' }]}>
+              <Text variant="headlineMedium" style={[styles.title, { color: paperTheme.colors.white, textShadowColor: paperTheme.colors.textShadow }]}>
                 Descubra os melhores produtos e preços incríveis!
               </Text>
-              <Text variant="bodyLarge" style={[styles.description, { color: paperTheme.colors.onPrimary }]}>
+              <Text variant="bodyLarge" style={[styles.description, { color: paperTheme.colors.onPrimary, textShadowColor: paperTheme.colors.textShadow }]}>
                 Encontre os melhores preços e ofertas especiais, selecionados para você.
                 Compre produtos de qualidade a preços imbatíveis!
               </Text>
@@ -62,7 +62,6 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   backgroundImage: {
     flex: 1,
@@ -86,14 +85,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 16,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
   description: {
     textAlign: "center",
     lineHeight: 24,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },

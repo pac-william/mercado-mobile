@@ -39,6 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           backgroundColor: paperTheme.colors.surface,
           borderWidth: 1,
           borderColor: paperTheme.colors.outline,
+          shadowColor: paperTheme.colors.modalShadow,
         }
       ]} 
       onPress={onPress}

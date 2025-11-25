@@ -19,17 +19,17 @@ import { Dimensions, ImageBackground, StatusBar, StyleSheet, View } from "react-
         resizeMode="cover"
       >
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-        <View style={styles.overlay}>
+        <View style={[styles.overlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
           <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.content}>
               
               <View style={styles.spacer} /> 
 
               <View style={styles.textContainer}>
-                <Text variant="headlineMedium" style={[styles.title, { color: '#FFFFFF' }]}>
+                <Text variant="headlineMedium" style={[styles.title, { color: paperTheme.colors.white, textShadowColor: paperTheme.colors.textShadow }]}>
                   A união da tecnologia e do praticidade
                 </Text>
-                <Text variant="bodyLarge" style={[styles.description, { color: paperTheme.colors.onPrimary }]}>
+                <Text variant="bodyLarge" style={[styles.description, { color: paperTheme.colors.onPrimary, textShadowColor: paperTheme.colors.textShadow }]}>
                   Unindo tecnologia para te auxiliar e praticidade para você comprar.
                 </Text>
               </View>
@@ -71,10 +71,9 @@ import { Dimensions, ImageBackground, StatusBar, StyleSheet, View } from "react-
     container: {
       flex: 1,
     },
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-    },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
     backgroundImage: {
       flex: 1,
       width: Dimensions.get('window').width,
@@ -93,21 +92,19 @@ import { Dimensions, ImageBackground, StatusBar, StyleSheet, View } from "react-
       paddingHorizontal: 20,
       marginBottom: 40,
     },
-    title: {
-      fontWeight: "bold",
-      textAlign: "center",
-      marginBottom: 16,
-      textShadowColor: "rgba(0, 0, 0, 0.5)",
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
-    },
-    description: {
-      textAlign: "center",
-      lineHeight: 24,
-      textShadowColor: "rgba(0, 0, 0, 0.5)",
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
-    },
+  title: {
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 16,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  description: {
+    textAlign: "center",
+    lineHeight: 24,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
     footer: {
       alignItems: "center",
     },

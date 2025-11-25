@@ -78,6 +78,7 @@ export default function NotificationsScreen() {
           {
             backgroundColor: paperTheme.colors.surface,
             borderLeftColor: item.read ? 'transparent' : paperTheme.colors.primary,
+            shadowColor: paperTheme.colors.modalShadow,
           },
         ]}
         activeOpacity={0.7}
@@ -190,7 +191,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 12,
     borderLeftWidth: 4,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

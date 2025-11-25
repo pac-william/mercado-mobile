@@ -170,6 +170,7 @@ export const PermissionRequest: React.FC<PermissionRequestProps> = ({
               ? paperTheme.colors.surfaceVariant
               : paperTheme.colors.surface,
             borderColor: getStatusColor(),
+            shadowColor: paperTheme.colors.modalShadow,
           },
         ]}
         onPress={handleRequest}
@@ -248,7 +249,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     padding: 16,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

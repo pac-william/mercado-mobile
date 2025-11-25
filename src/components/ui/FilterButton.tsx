@@ -14,7 +14,16 @@ export default function FilterButton({ title, onPress, hasActiveFilters = false 
   const { colors } = useTheme();
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity 
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surfaceLight,
+          borderColor: colors.outlineLight,
+        }
+      ]} 
+      onPress={onPress}
+    >
       <View style={styles.content}>
         <AntDesign name="filter" size={ICON_SIZES.lg} color={colors.primary} />
         <Text style={[styles.text, { color: colors.primary }]}>
@@ -30,12 +39,10 @@ export default function FilterButton({ title, onPress, hasActiveFilters = false 
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f0f0f0",
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: 10,
     paddingHorizontal: SPACING.lg,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
   },
   content: {
     flexDirection: "row",

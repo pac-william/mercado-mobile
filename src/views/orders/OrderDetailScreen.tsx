@@ -18,28 +18,28 @@ interface OrderItemWithProduct extends OrderItem {
   productImage?: string;
 }
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, colors: any) => {
   switch (status?.toUpperCase()) {
     case 'PENDENTE':
     case 'PENDING':
-      return '#FF9800';
+      return colors.statusPending;
     case 'CONFIRMADO':
     case 'CONFIRMED':
-      return '#2196F3';
+      return colors.statusConfirmed;
     case 'PREPARANDO':
     case 'PREPARING':
-      return '#9C27B0';
+      return colors.statusPreparing;
     case 'SAIU_PARA_ENTREGA':
     case 'OUT_FOR_DELIVERY':
-      return '#FF5722';
+      return colors.statusOutForDelivery;
     case 'ENTREGUE':
     case 'DELIVERED':
-      return '#4CAF50';
+      return colors.statusDelivered;
     case 'CANCELADO':
     case 'CANCELLED':
-      return '#F44336';
+      return colors.statusCancelled;
     default:
-      return '#757575';
+      return colors.statusDefault;
   }
 };
 
@@ -152,7 +152,7 @@ export default function OrderDetailScreen() {
   }
 
   const totalValue = order.total || order.totalPrice || 0;
-  const statusColor = getStatusColor(order.status || 'PENDING');
+  const statusColor = getStatusColor(order.status || 'PENDING', paperTheme.colors);
   const statusText = getStatusText(order.status || 'PENDING');
 
   return (

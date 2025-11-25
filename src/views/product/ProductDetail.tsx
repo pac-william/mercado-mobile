@@ -136,7 +136,7 @@ export default function ProductDetail({ route }: Props) {
           marginHorizontal: 16,
           marginTop: 10,
           borderRadius: 24,
-          shadowColor: '#000',
+          shadowColor: paperTheme.colors.modalShadow,
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.15,
           shadowRadius: 16,

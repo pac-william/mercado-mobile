@@ -24,6 +24,7 @@ const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) 
           backgroundColor: paperTheme.colors.surface,
           borderWidth: 1,
           borderColor: paperTheme.colors.outline,
+          shadowColor: paperTheme.colors.modalShadow,
         }
       ]} 
       onPress={onPress}

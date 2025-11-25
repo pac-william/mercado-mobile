@@ -30,7 +30,7 @@ export const TabNavigator: React.FC = () => {
           backgroundColor: paperTheme.colors.surface,
           height: Platform.OS === 'ios' ? 70 + Math.max(insets.bottom - 25, 0) : 50 + Math.max(insets.bottom - 25, 0),
           paddingBottom: Math.max(insets.bottom - 25, 2),
-          shadowColor: '#000',
+          shadowColor: paperTheme.colors.modalShadow,
           shadowOpacity: 0.06,
           shadowOffset: { width: 0, height: 10 },
           shadowRadius: 10,
