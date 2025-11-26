@@ -112,7 +112,7 @@ export default function SuggestionDetailScreen() {
       style={[styles.container, { backgroundColor: paperTheme.colors.background }]}
     >
       <Header />
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: paperTheme.colors.borderLight }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={paperTheme.colors.onSurface} />
         </TouchableOpacity>
@@ -229,7 +229,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   backButton: {
     marginRight: 12,

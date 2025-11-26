@@ -88,6 +88,7 @@ export default function HistoryScreen() {
           {
             backgroundColor: paperTheme.colors.surface,
             borderColor: paperTheme.colors.outline,
+            shadowColor: paperTheme.colors.modalShadow,
           },
         ]}
         activeOpacity={0.7}
@@ -200,7 +201,7 @@ export default function HistoryScreen() {
       style={[styles.container, { backgroundColor: paperTheme.colors.background }]}
     >
       <Header />
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: paperTheme.colors.borderLight }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -278,7 +279,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   backButton: {
     marginRight: 12,
@@ -311,7 +311,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 16,
     padding: 16,
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,

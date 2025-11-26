@@ -36,7 +36,7 @@ export const Header: React.FC = () => {
           >
             <Ionicons name="notifications-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
             <View style={[styles.notificationBadge, { backgroundColor: paperTheme.colors.primary }]}>
-              <Text style={styles.notificationBadgeText}>2</Text>
+              <Text style={[styles.notificationBadgeText, { color: paperTheme.colors.onPrimary }]}>2</Text>
             </View>
           </TouchableOpacity>
 
@@ -47,7 +47,7 @@ export const Header: React.FC = () => {
             <Ionicons name="cart-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
             {cartState.itemCount > 0 && (
               <View style={[styles.cartBadge, { backgroundColor: paperTheme.colors.primary }]}>
-                <Text style={styles.cartBadgeText}>
+                <Text style={[styles.cartBadgeText, { color: paperTheme.colors.onPrimary }]}>
                   {cartState.itemCount > 99 ? '99+' : cartState.itemCount}
                 </Text>
               </View>
@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xs,
   },
   cartBadgeText: {
-    color: 'white',
     fontSize: FONT_SIZE.sm,
     fontWeight: 'bold',
   },
@@ -113,7 +112,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xs,
   },
   notificationBadgeText: {
-    color: 'white',
     fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
   },

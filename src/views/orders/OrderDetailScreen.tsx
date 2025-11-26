@@ -168,7 +168,7 @@ export default function OrderDetailScreen() {
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
         {/* Card de informações do pedido */}
-        <View style={[styles.orderInfoCard, { backgroundColor: paperTheme.colors.surface }]}>
+        <View style={[styles.orderInfoCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
           <View style={styles.orderHeader}>
             <View style={styles.orderHeaderLeft}>
               <Ionicons name="receipt-outline" size={32} color={paperTheme.colors.tertiary} />
@@ -207,7 +207,7 @@ export default function OrderDetailScreen() {
         </View>
 
         {/* Lista de itens */}
-        <View style={[styles.itemsCard, { backgroundColor: paperTheme.colors.surface }]}>
+        <View style={[styles.itemsCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
           <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
             Itens do Pedido ({orderItems.length})
           </Text>
@@ -254,7 +254,7 @@ export default function OrderDetailScreen() {
         </View>
 
         {/* Resumo do pedido */}
-        <View style={[styles.summaryCard, { backgroundColor: paperTheme.colors.surface }]}>
+        <View style={[styles.summaryCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: paperTheme.colors.onSurface }]}>
               Total dos itens
@@ -313,7 +313,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -372,7 +371,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -427,7 +425,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,

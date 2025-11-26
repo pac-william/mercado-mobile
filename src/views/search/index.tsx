@@ -59,6 +59,7 @@ export default function Search() {
         {
           backgroundColor: paperTheme.colors.surface,
           borderColor: paperTheme.colors.outline,
+          shadowColor: paperTheme.colors.modalShadow,
         },
       ]}
       activeOpacity={0.7}
@@ -86,6 +87,7 @@ export default function Search() {
         {
           backgroundColor: paperTheme.colors.surface,
           borderColor: paperTheme.colors.outline,
+          shadowColor: paperTheme.colors.modalShadow,
         },
       ]}
       activeOpacity={0.7}
@@ -212,7 +214,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 8,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
@@ -243,7 +244,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 8,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,

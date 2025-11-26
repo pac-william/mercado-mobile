@@ -391,7 +391,6 @@ const EditProfileScreen: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: paperTheme.colors.background,
     },
     keyboardAvoidingView: {
       flex: 1,
@@ -407,7 +406,6 @@ const EditProfileScreen: React.FC = () => {
       fontSize: 28,
       fontWeight: 'bold',
       marginBottom: 24,
-      color: paperTheme.colors.onBackground,
     },
     profileSection: {
       alignItems: 'center',
@@ -419,7 +417,6 @@ const EditProfileScreen: React.FC = () => {
       borderRadius: 48,
       marginBottom: 16,
       overflow: 'hidden',
-      backgroundColor: paperTheme.colors.surfaceVariant,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -429,19 +426,16 @@ const EditProfileScreen: React.FC = () => {
     },
     avatarPlaceholder: {
       fontSize: 32,
-      color: paperTheme.colors.onSurfaceVariant,
     },
     uploadButton: {
       paddingVertical: 12,
       paddingHorizontal: 24,
       borderRadius: 8,
-      backgroundColor: isUploadingImage ? paperTheme.colors.outline : paperTheme.colors.primary,
       minWidth: 140,
       alignItems: 'center',
       justifyContent: 'center',
     },
     uploadButtonText: {
-      color: paperTheme.colors.onPrimary,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -452,7 +446,6 @@ const EditProfileScreen: React.FC = () => {
       fontSize: 16,
       fontWeight: '600',
       marginBottom: 8,
-      color: paperTheme.colors.onSurface,
     },
     input: {
       borderWidth: 1,
@@ -460,17 +453,12 @@ const EditProfileScreen: React.FC = () => {
       paddingHorizontal: 16,
       paddingVertical: 12,
       fontSize: 16,
-      backgroundColor: paperTheme.colors.surface,
-      color: paperTheme.colors.onSurface,
     },
     inputError: {
-      borderColor: paperTheme.colors.error,
     },
     inputNormal: {
-      borderColor: paperTheme.colors.outline,
     },
     errorText: {
-      color: paperTheme.colors.error,
       fontSize: 14,
       marginTop: 4,
     },
@@ -485,12 +473,10 @@ const EditProfileScreen: React.FC = () => {
       flex: 1,
       paddingVertical: 16,
       borderRadius: 8,
-      backgroundColor: paperTheme.colors.surfaceVariant,
       alignItems: 'center',
       justifyContent: 'center',
     },
     cancelButtonText: {
-      color: paperTheme.colors.onSurfaceVariant,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -498,15 +484,12 @@ const EditProfileScreen: React.FC = () => {
       flex: 1,
       paddingVertical: 16,
       borderRadius: 8,
-      backgroundColor: paperTheme.colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
     },
     saveButtonDisabled: {
-      backgroundColor: paperTheme.colors.outline,
     },
     saveButtonText: {
-      color: paperTheme.colors.onPrimary,
       fontSize: 16,
       fontWeight: '600',
     },

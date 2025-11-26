@@ -176,7 +176,7 @@ export default function OrdersScreen() {
     
     return (
       <TouchableOpacity 
-        style={[styles.orderCard, { backgroundColor: paperTheme.colors.surface }]} 
+        style={[styles.orderCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]} 
         activeOpacity={0.7}
         onPress={() => {
           navigation.navigate('OrderDetail', { orderId: item.id });
@@ -306,7 +306,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

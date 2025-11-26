@@ -48,7 +48,7 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
           placeholder={placeholder}
           onChangeText={setSearchQuery}
           value={searchQuery}
-          style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface, marginRight: 8 }]}
+          style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface, marginRight: 8, shadowColor: paperTheme.colors.modalShadow }]}
           icon={() => <Ionicons name="sparkles-outline" size={24} color={paperTheme.colors.primary} />}
           clearIcon={() => <Ionicons name="close-circle" size={24} color={paperTheme.colors.onSurfaceVariant} />}
           onSubmitEditing={handleSearch} 
@@ -63,6 +63,7 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
             {
               backgroundColor: paperTheme.colors.primary,
               opacity: loading ? 0.6 : 1,
+              shadowColor: paperTheme.colors.modalShadow,
             }
           ]}
           activeOpacity={0.7}
@@ -90,7 +91,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 15,
     elevation: 3,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 3,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 5,

@@ -363,7 +363,7 @@ const CartScreen: React.FC = () => {
               marginHorizontal: SPACING.lg,
               marginTop: SPACING.sm,
               borderRadius: BORDER_RADIUS.full,
-              shadowColor: '#000',
+              shadowColor: paperTheme.colors.modalShadow,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
               shadowRadius: 12,
@@ -384,7 +384,7 @@ const CartScreen: React.FC = () => {
                       width: 65,
                       height: 65,
                       borderRadius: 10,
-                      backgroundColor: '#f5f5f5',
+                      backgroundColor: paperTheme.colors.surfaceVariant,
                     }}
                     resizeMode="contain"
                   />
@@ -426,14 +426,14 @@ const CartScreen: React.FC = () => {
                   style={{
                     width: 30,
                     height: 30,
-                    backgroundColor: '#ffebee',
+                    backgroundColor: paperTheme.colors.errorBackground,
                     borderRadius: 15,
                     justifyContent: 'center',
                     alignItems: 'center',
                     marginLeft: 6,
                   }}
                 >
-                  <Ionicons name="close" size={15} color="#d32f2f" />
+                  <Ionicons name="close" size={15} color={paperTheme.colors.errorText} />
                 </TouchableOpacity>
               </View>
 
@@ -477,10 +477,10 @@ const CartScreen: React.FC = () => {
                       width: 36,
                       height: 36,
                       borderRadius: 18,
-                      backgroundColor: item.quantity <= 1 ? '#e0e0e0' : '#FF4500',
+                      backgroundColor: item.quantity <= 1 ? paperTheme.colors.outline : paperTheme.colors.secondary,
                       justifyContent: 'center',
                       alignItems: 'center',
-                      shadowColor: item.quantity <= 1 ? 'transparent' : '#FF4500',
+                      shadowColor: item.quantity <= 1 ? 'transparent' : paperTheme.colors.secondary,
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.2,
                       shadowRadius: 4,
@@ -491,7 +491,7 @@ const CartScreen: React.FC = () => {
                     <Ionicons
                       name="remove"
                       size={18}
-                      color={item.quantity <= 1 ? '#999' : 'white'}
+                      color={item.quantity <= 1 ? paperTheme.colors.textSecondary : paperTheme.colors.white}
                     />
                   </TouchableOpacity>
 
@@ -526,17 +526,17 @@ const CartScreen: React.FC = () => {
                       width: 36,
                       height: 36,
                       borderRadius: 18,
-                      backgroundColor: '#FF4500',
+                      backgroundColor: paperTheme.colors.secondary,
                       justifyContent: 'center',
                       alignItems: 'center',
-                      shadowColor: '#FF4500',
+                      shadowColor: paperTheme.colors.secondary,
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.2,
                       shadowRadius: 4,
                       elevation: 3,
                     }}
                   >
-                    <Ionicons name="add" size={18} color="white" />
+                    <Ionicons name="add" size={18} color={paperTheme.colors.white} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -576,7 +576,7 @@ const CartScreen: React.FC = () => {
                 marginTop: 12,
                 borderRadius: 16,
                 padding: 16,
-                shadowColor: '#000',
+                shadowColor: paperTheme.colors.modalShadow,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
                 shadowRadius: 8,
@@ -638,7 +638,7 @@ const CartScreen: React.FC = () => {
               marginTop: 24,
               borderRadius: 16,
               padding: 16,
-              shadowColor: '#000',
+              shadowColor: paperTheme.colors.modalShadow,
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.1,
               shadowRadius: 8,

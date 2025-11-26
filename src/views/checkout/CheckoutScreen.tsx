@@ -304,7 +304,7 @@ export default function CheckoutScreen() {
             marginTop: 16,
             borderRadius: 16,
             padding: 20,
-            shadowColor: '#000',
+            shadowColor: paperTheme.colors.modalShadow,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
             shadowRadius: 8,
@@ -362,7 +362,7 @@ export default function CheckoutScreen() {
             marginTop: 16,
             borderRadius: 16,
             padding: 20,
-            shadowColor: '#000',
+            shadowColor: paperTheme.colors.modalShadow,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
             shadowRadius: 8,
@@ -392,8 +392,8 @@ export default function CheckoutScreen() {
                   borderRadius: 20,
                 }}
               >
-                <Ionicons name="add" size={18} color="white" />
-                <Text style={{ color: 'white', fontSize: 12, marginLeft: 4, fontWeight: '600' }}>
+                <Ionicons name="add" size={18} color={paperTheme.colors.onPrimary} />
+                <Text style={{ color: paperTheme.colors.onPrimary, fontSize: 12, marginLeft: 4, fontWeight: '600' }}>
                   Novo
                 </Text>
               </TouchableOpacity>
@@ -468,7 +468,7 @@ export default function CheckoutScreen() {
                             {address.name}
                           </Text>
                           {address.isFavorite && (
-                            <Ionicons name="star" size={16} color="#FFD700" style={{ marginLeft: 8 }} />
+                            <Ionicons name="star" size={16} color={paperTheme.colors.favoriteIcon} style={{ marginLeft: 8 }} />
                           )}
                         </View>
                         <Text style={{
@@ -522,7 +522,7 @@ export default function CheckoutScreen() {
             marginTop: 16,
             borderRadius: 16,
             padding: 20,
-            shadowColor: '#000',
+            shadowColor: paperTheme.colors.modalShadow,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
             shadowRadius: 8,
@@ -590,7 +590,7 @@ export default function CheckoutScreen() {
           paddingBottom: Math.max(insets.bottom + 80, 100),
           borderTopWidth: 1,
           borderTopColor: paperTheme.colors.outline,
-          shadowColor: '#000',
+          shadowColor: paperTheme.colors.modalShadow,
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 8,

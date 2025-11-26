@@ -365,7 +365,7 @@ export default function AddEditAddressScreen() {
               <TextInput
                 style={[styles.input, cepError && styles.inputError, { 
                   backgroundColor: paperTheme.colors.surface,
-                  borderColor: cepError ? '#d32f2f' : paperTheme.colors.outline,
+                  borderColor: cepError ? paperTheme.colors.error : paperTheme.colors.outline,
                   color: paperTheme.colors.onSurface
                 }]}
                 value={formData.zipCode}
@@ -382,7 +382,7 @@ export default function AddEditAddressScreen() {
               )}
             </View>
             {cepError && (
-              <Text style={styles.errorText}>{cepError}</Text>
+              <Text style={[styles.errorText, { color: paperTheme.colors.errorText }]}>{cepError}</Text>
             )}
           </View>
 
@@ -482,17 +482,17 @@ export default function AddEditAddressScreen() {
           <TouchableOpacity
             style={[styles.favoriteToggle, formData.isFavorite && styles.favoriteToggleActive, {
               backgroundColor: formData.isFavorite ? paperTheme.colors.surfaceVariant : paperTheme.colors.surface,
-              borderColor: formData.isFavorite ? '#FFD700' : paperTheme.colors.outline
+              borderColor: formData.isFavorite ? paperTheme.colors.favoriteIcon : paperTheme.colors.outline
             }]}
             onPress={() => setFormData({ ...formData, isFavorite: !formData.isFavorite })}
           >
             <Ionicons
               name={formData.isFavorite ? "star" : "star-outline"}
               size={24}
-              color={formData.isFavorite ? "#FFD700" : paperTheme.colors.onSurface}
+              color={formData.isFavorite ? paperTheme.colors.favoriteIcon : paperTheme.colors.onSurface}
             />
             <Text style={[styles.favoriteText, formData.isFavorite && styles.favoriteTextActive, {
-              color: formData.isFavorite ? '#8b6914' : paperTheme.colors.onSurface
+              color: formData.isFavorite ? paperTheme.colors.favoriteText : paperTheme.colors.onSurface
             }]}>
               Definir como endereço favorito
             </Text>
@@ -514,9 +514,9 @@ export default function AddEditAddressScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color={paperTheme.colors.onPrimary} />
             ) : (
-              <Text style={styles.saveButtonText}>Salvar</Text>
+              <Text style={[styles.saveButtonText, { color: paperTheme.colors.onPrimary }]}>Salvar</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -584,7 +584,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputError: {
-    borderColor: '#d32f2f',
   },
   cepContainer: {
     position: 'relative',
@@ -595,7 +594,6 @@ const styles = StyleSheet.create({
     top: 12,
   },
   errorText: {
-    color: '#d32f2f',
     fontSize: 14,
     marginTop: 4,
   },
@@ -644,6 +642,5 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'white',
   },
 });

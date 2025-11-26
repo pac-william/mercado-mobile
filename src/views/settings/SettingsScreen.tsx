@@ -377,7 +377,7 @@ export default function SettingsScreen() {
                     </View>
                 ) : isAuthenticated && user ? (
                     <>
-                        <View style={[styles.profileSection, { backgroundColor: paperTheme.colors.surface }]}>
+                        <View style={[styles.profileSection, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
                             <View style={[styles.avatarLarge, { backgroundColor: paperTheme.colors.primary }]}>
                                 {displayPhoto ? (
                                     <Image
@@ -386,7 +386,7 @@ export default function SettingsScreen() {
                                         resizeMode="cover"
                                     />
                                 ) : (
-                                    <Text style={styles.avatarLargeText}>
+                                    <Text style={[styles.avatarLargeText, { color: paperTheme.colors.onPrimary }]}>
                                         {(profile?.name || user.name).charAt(0).toUpperCase()}
                                     </Text>
                                 )}
@@ -406,7 +406,7 @@ export default function SettingsScreen() {
                             )}
                         </View>
 
-                        <View style={[styles.section, { backgroundColor: paperTheme.colors.surface }]}>
+                        <View style={[styles.section, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
                             <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface, opacity: 0.6 }]}>Conta</Text>
 
                             <TouchableOpacity
@@ -480,7 +480,7 @@ export default function SettingsScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        <View style={[styles.section, { backgroundColor: paperTheme.colors.surface }]}>
+                        <View style={[styles.section, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
                             <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface, opacity: 0.6 }]}>Preferências</Text>
 
                             <TouchableOpacity 
@@ -508,7 +508,8 @@ export default function SettingsScreen() {
                         <TouchableOpacity
                             style={[styles.logoutButton, { 
                                 backgroundColor: paperTheme.colors.surface,
-                                borderColor: paperTheme.colors.error 
+                                borderColor: paperTheme.colors.error,
+                                shadowColor: paperTheme.colors.modalShadow
                             }]}
                             onPress={handleLogout}
                         >
@@ -524,12 +525,12 @@ export default function SettingsScreen() {
                             Faça login para acessar suas configurações e aproveitar todos os recursos do app.
                         </Text>
                         <TouchableOpacity
-                            style={[styles.loginButton, { backgroundColor: paperTheme.colors.primary }]}
+                            style={[styles.loginButton, { backgroundColor: paperTheme.colors.primary, shadowColor: paperTheme.colors.modalShadow }]}
                             onPress={handleLogin}
                             disabled={!request}
                         >
-                            <Ionicons name="log-in-outline" size={24} color="white" />
-                            <Text style={styles.loginButtonText}>Fazer login</Text>
+                            <Ionicons name="log-in-outline" size={24} color={paperTheme.colors.onPrimary} />
+                            <Text style={[styles.loginButtonText, { color: paperTheme.colors.onPrimary }]}>Fazer login</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -554,7 +555,6 @@ const styles = StyleSheet.create({
         paddingVertical: 32,
         marginTop: 16,
         borderRadius: 16,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -574,7 +574,6 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     avatarLargeText: {
-        color: "white",
         fontSize: 32,
         fontWeight: "bold",
     },
@@ -590,7 +589,6 @@ const styles = StyleSheet.create({
         marginTop: 16,
         borderRadius: 16,
         paddingVertical: 8,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -625,7 +623,6 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         borderRadius: 16,
         borderWidth: 2,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -662,14 +659,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
         borderRadius: 12,
         marginTop: 8,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 4,
     },
     loginButtonText: {
-        color: "white",
         fontSize: 16,
         fontWeight: "bold",
         marginLeft: 8,

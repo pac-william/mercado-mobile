@@ -63,7 +63,7 @@ const HeroBanner = () => {
             console.warn('Erro ao carregar banner:', campaigns[0].imageUrl);
           }}
         />
-        <View style={styles.overlayText}>
+        <View style={[styles.overlayText, { backgroundColor: colors.modalOverlay }]}>
           <Text style={[styles.overlayTextContent, { color: colors.white }]}>
             Promovido por {marketNames[campaigns[0].marketId] || "Mercado"}
           </Text>
@@ -78,7 +78,7 @@ const HeroBanner = () => {
         autoplay
         autoplayTimeout={10}
         showsPagination
-        dotStyle={styles.dot}
+        dotStyle={[styles.dot, { backgroundColor: colors.overlayLight }]}
         activeDotStyle={[styles.activeDot, { backgroundColor: colors.accent }]}
       >
         {campaigns.map((campaign) => (
@@ -92,7 +92,7 @@ const HeroBanner = () => {
                     console.warn('Erro ao carregar banner:', campaign.imageUrl);
                   }}
                 />
-                <View style={styles.overlayText}>
+                <View style={[styles.overlayText, { backgroundColor: colors.modalOverlay }]}>
                   <Text style={[styles.overlayTextContent, { color: colors.white }]}>Promovido por {marketNames[campaign.marketId] || "Mercado"}</Text>
                 </View>
               </>
@@ -127,7 +127,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: SPACING.md,
     right: SPACING.md,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
     paddingHorizontal: SPACING.md,
     paddingVertical: 6,
     borderRadius: BORDER_RADIUS.sm,
@@ -137,7 +136,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   dot: {
-    backgroundColor: "rgba(255,255,255,0.5)",
     width: ICON_SIZES.xs,
     height: ICON_SIZES.xs,
     borderRadius: BORDER_RADIUS.xs,

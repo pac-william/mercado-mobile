@@ -34,7 +34,7 @@ export default function ReceiptModal({
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <View
               style={[
@@ -172,7 +172,6 @@ export default function ReceiptModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {

@@ -17,7 +17,7 @@ type AISearchNavigationProp = NativeStackNavigationProp<AIStackParamList>;
 
 export default function AISearch() {
   const navigation = useNavigation<AISearchNavigationProp>();
-  const paperTheme = useTheme();
+  const paperTheme = useTheme() as any;
   const [results, setResults] = useState<SuggestionResponse | null>(null);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -111,7 +111,7 @@ export default function AISearch() {
                 placeholder="Ex: Bolo de chocolate, Pizza"
                 onChangeText={setSearchQuery}
                 value={searchQuery}
-                style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface }]}
+                style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}
                 icon={() => <Ionicons name="sparkles-outline" size={24} color={paperTheme.colors.primary} />}
                 clearIcon={() => <Ionicons name="close-circle" size={24} color={paperTheme.colors.onSurfaceVariant} />}
                 onSubmitEditing={() => handleSearch()}
@@ -126,6 +126,7 @@ export default function AISearch() {
                   {
                     backgroundColor: paperTheme.colors.primary,
                     opacity: (loading || !searchQuery.trim()) ? 0.6 : 1,
+                    shadowColor: paperTheme.colors.modalShadow,
                   }
                 ]}
                 activeOpacity={0.7}
@@ -170,6 +171,7 @@ export default function AISearch() {
                     {
                       backgroundColor: paperTheme.colors.surface,
                       borderColor: paperTheme.colors.outline,
+                      shadowColor: paperTheme.colors.modalShadow,
                     }
                   ]}
                   activeOpacity={0.7}
@@ -202,7 +204,7 @@ export default function AISearch() {
                 <TouchableOpacity
                   style={[
                     styles.receiptCard,
-                    { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                    { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline, shadowColor: paperTheme.colors.modalShadow },
                   ]}
                   activeOpacity={0.7}
                   onPress={() => {
@@ -229,7 +231,7 @@ export default function AISearch() {
                 <TouchableOpacity
                   style={[
                     styles.receiptCard,
-                    { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                    { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline, shadowColor: paperTheme.colors.modalShadow },
                   ]}
                   activeOpacity={0.7}
                   onPress={() => {
@@ -284,7 +286,7 @@ export default function AISearch() {
                       key={market.id}
                       style={[
                         styles.marketCard,
-                        { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline },
+                        { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline, shadowColor: paperTheme.colors.modalShadow },
                       ]}
                       activeOpacity={0.7}
                       onPress={() => {
@@ -392,7 +394,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 15,
     elevation: 3,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -405,7 +406,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 3,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
@@ -452,7 +452,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -495,7 +494,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 12,
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -573,7 +571,6 @@ const styles = StyleSheet.create({
   receiptCard: {
     borderRadius: 12,
     borderWidth: 1,
-    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,

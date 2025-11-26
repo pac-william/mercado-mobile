@@ -544,7 +544,7 @@ export default function MarketProductsScreen() {
             onPress={() => handleAddProduct(product)}
             style={[styles.quantityButton, { backgroundColor: paperTheme.colors.primary }]}
           >
-            <Ionicons name="add" size={18} color="white" />
+            <Ionicons name="add" size={18} color={paperTheme.colors.onPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -564,7 +564,7 @@ export default function MarketProductsScreen() {
   };
 
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={[styles.header, { borderBottomColor: paperTheme.colors.borderLight }]}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <Ionicons name="chevron-back" size={24} color={paperTheme.colors.onSurface} />
       </TouchableOpacity>
@@ -686,9 +686,9 @@ export default function MarketProductsScreen() {
         animationType="slide"
         onRequestClose={handleCloseModal}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
           <View style={[styles.modalContent, { backgroundColor: paperTheme.colors.surface, paddingBottom: Math.max(insets.bottom, 20) }]}>
-            <View style={styles.modalHeader}>
+            <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.borderLight }]}>
               <Text style={[styles.modalTitle, { color: paperTheme.colors.onSurface }]}>
                 Escolher Alternativa
               </Text>
@@ -776,7 +776,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   backButton: {
     marginRight: 12,
@@ -933,7 +932,6 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
   },
   modalContent: {
@@ -948,7 +946,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   modalTitle: {
     fontSize: 18,

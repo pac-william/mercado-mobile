@@ -144,7 +144,7 @@ export default function AddressesScreen() {
   };
 
   const renderAddressItem = ({ item }: { item: any }) => (
-    <View style={[styles.addressCard, { backgroundColor: paperTheme.colors.surface }]}>
+    <View style={[styles.addressCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
       <TouchableOpacity
         onPress={() => handleEditAddress(item.id)}
         activeOpacity={0.7}
@@ -153,14 +153,14 @@ export default function AddressesScreen() {
           <Text style={[styles.addressName, { color: paperTheme.colors.onSurface }]}>{item.name}</Text>
           <View style={styles.headerActions}>
             {item.isFavorite && (
-              <Ionicons name="star" size={20} color="#FFD700" style={styles.favoriteIcon} />
+              <Ionicons name="star" size={20} color={paperTheme.colors.favoriteIcon} style={styles.favoriteIcon} />
             )}
             <TouchableOpacity
               onPress={() => handleDeleteAddress(item.id, item.name)}
               style={styles.deleteButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="trash-outline" size={20} color="#d32f2f" />
+              <Ionicons name="trash-outline" size={20} color={paperTheme.colors.errorText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -217,8 +217,8 @@ export default function AddressesScreen() {
             ListFooterComponent={
               addresses.length < 3 ? (
                 <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
-                    <Ionicons name="add" size={30} color="white" />
+                  <TouchableOpacity style={[styles.addButton, { backgroundColor: paperTheme.colors.buttonPrimary, shadowColor: paperTheme.colors.modalShadow }]} onPress={handleAddAddress}>
+                    <Ionicons name="add" size={30} color={paperTheme.colors.white} />
                   </TouchableOpacity>
                 </View>
               ) : null
@@ -233,8 +233,8 @@ export default function AddressesScreen() {
             </Text>
             {addresses.length < 3 && (
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
-                  <Ionicons name="add" size={30} color="white" />
+                <TouchableOpacity style={[styles.addButton, { backgroundColor: paperTheme.colors.buttonPrimary, shadowColor: paperTheme.colors.modalShadow }]} onPress={handleAddAddress}>
+                  <Ionicons name="add" size={30} color={paperTheme.colors.white} />
                 </TouchableOpacity>
               </View>
             )}
@@ -286,7 +286,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -342,7 +341,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
   },
   buttonContainer: {
     paddingHorizontal: 16,
@@ -353,10 +351,8 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#2E7D32',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

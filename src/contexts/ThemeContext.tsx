@@ -48,6 +48,11 @@ const lightTheme = {
     statusCancelled: '#F44336',
     statusDefault: '#757575',
     textShadow: 'rgba(0, 0, 0, 0.5)',
+    discountBadge: '#FF6B6B',
+    favoriteIcon: '#FFD700',
+    favoriteText: '#8b6914',
+    borderLight: 'rgba(0,0,0,0.1)',
+    overlayLight: 'rgba(255,255,255,0.5)',
   },
 };
 
@@ -95,6 +100,11 @@ const darkTheme = {
     statusCancelled: '#EF5350',
     statusDefault: '#9E9E9E',
     textShadow: 'rgba(0, 0, 0, 0.7)',
+    discountBadge: '#FF5252',
+    favoriteIcon: '#FFB74D',
+    favoriteText: '#E65100',
+    borderLight: 'rgba(255,255,255,0.1)',
+    overlayLight: 'rgba(255,255,255,0.3)',
   },
 };
 

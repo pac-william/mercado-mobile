@@ -156,12 +156,12 @@ export default function ProductDetail({ route }: Props) {
             position: 'absolute',
             top: 16,
             right: 16,
-            backgroundColor: '#FF6B6B',
+            backgroundColor: paperTheme.colors.discountBadge,
             paddingHorizontal: 12,
             paddingVertical: 6,
             borderRadius: 20,
           }}>
-            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>
+            <Text style={{ color: paperTheme.colors.white, fontWeight: 'bold', fontSize: 12 }}>
               -20%
             </Text>
           </View>
@@ -172,7 +172,7 @@ export default function ProductDetail({ route }: Props) {
           marginHorizontal: 16,
           marginTop: 20,
           borderRadius: 24, 
-          shadowColor: '#000',
+          shadowColor: paperTheme.colors.modalShadow,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
           shadowRadius: 12,
@@ -246,7 +246,7 @@ export default function ProductDetail({ route }: Props) {
                   key={star} 
                   name="star" 
                   size={20} 
-                  color="#FFD700" 
+                  color={paperTheme.colors.favoriteIcon} 
                 />
               ))}
             </View>
@@ -282,7 +282,7 @@ export default function ProductDetail({ route }: Props) {
           marginHorizontal: 16,
           marginTop: 16,
           borderRadius: 24, 
-          shadowColor: '#000',
+          shadowColor: paperTheme.colors.modalShadow,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.1,
           shadowRadius: 12,
