@@ -6,6 +6,11 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, Touchabl
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "../../components/layout/header";
+import EmptyState from "../../components/ui/EmptyState";
+import LoadingScreen from "../../components/ui/LoadingScreen";
+import { getOrderStatusColor, getOrderStatusText } from "../../utils/orderStatus";
+import { formatCurrency, formatOrderDate } from "../../utils/format";
+import StatusBadge from "../../components/ui/StatusBadge";
 import { Order } from "../../domain/orderDomain";
 import { getOrders as getOrdersLocal } from "../../domain/order/orderStorage";
 import { useSession } from "../../hooks/useSession";
@@ -13,48 +18,6 @@ import { SettingsStackParamList } from "../../navigation/types";
 import { getOrders } from "../../services/orderService";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
-const getStatusColor = (status: string, colors: any) => {
-  switch (status?.toUpperCase()) {
-    case 'PENDENTE':
-    case 'PENDING':
-      return colors.statusPending;
-    case 'CONFIRMADO':
-    case 'CONFIRMED':
-      return colors.statusConfirmed;
-    case 'PREPARANDO':
-    case 'PREPARING':
-      return colors.statusPreparing;
-    case 'SAIU_PARA_ENTREGA':
-    case 'OUT_FOR_DELIVERY':
-      return colors.statusOutForDelivery;
-    case 'ENTREGUE':
-    case 'DELIVERED':
-      return colors.statusDelivered;
-    case 'CANCELADO':
-    case 'CANCELLED':
-      return colors.statusCancelled;
-    default:
-      return colors.statusDefault;
-  }
-};
-
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    'PENDENTE': 'Pendente',
-    'PENDING': 'Pendente',
-    'CONFIRMADO': 'Confirmado',
-    'CONFIRMED': 'Confirmado',
-    'PREPARANDO': 'Preparando',
-    'PREPARING': 'Preparando',
-    'SAIU_PARA_ENTREGA': 'Saiu para entrega',
-    'OUT_FOR_DELIVERY': 'Saiu para entrega',
-    'ENTREGUE': 'Entregue',
-    'DELIVERED': 'Entregue',
-    'CANCELADO': 'Cancelado',
-    'CANCELLED': 'Cancelado',
-  };
-  return statusMap[status?.toUpperCase()] || status || 'Pendente';
-};
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'Orders'>;
 
@@ -170,8 +133,6 @@ export default function OrdersScreen() {
   }, [sessionUser?.id, fetchOrders]);
 
   const renderItem = ({ item }: { item: Order }) => {
-    const statusColor = getStatusColor(item.status || 'PENDENTE', paperTheme.colors);
-    const statusText = getStatusText(item.status || 'PENDENTE');
     
     const totalValue = item.total || item.totalPrice || 0;
     
@@ -191,30 +152,19 @@ export default function OrdersScreen() {
                 Pedido #{item.id.slice(0, 8).toUpperCase()}
               </Text>
               <Text style={[styles.orderDate, { color: paperTheme.colors.onSurfaceVariant }]}>
-                {new Date(item.createdAt).toLocaleDateString("pt-BR", {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatOrderDate(item.createdAt)}
               </Text>
             </View>
           </View>
         </View>
         
         <View style={styles.orderBody}>
-          <View style={[styles.statusBadge, { backgroundColor: statusColor + '20', borderColor: statusColor }]}>
-            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-            <Text style={[styles.orderStatus, { color: statusColor }]}>
-              {statusText}
-            </Text>
-          </View>
+          <StatusBadge status={item.status || 'PENDENTE'} />
           
           <View style={styles.orderTotalContainer}>
             <Text style={[styles.orderTotalLabel, { color: paperTheme.colors.onSurfaceVariant }]}>Total</Text>
             <Text style={[styles.orderTotal, { color: paperTheme.colors.onSurface }]}>
-              R$ {totalValue.toFixed(2)}
+              {formatCurrency(totalValue)}
             </Text>
           </View>
         </View>
@@ -245,12 +195,7 @@ export default function OrdersScreen() {
       )}
 
       {loading && orders.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-          <Text style={[styles.loadingText, { color: paperTheme.colors.onBackground }]}>
-            Carregando pedidos...
-          </Text>
-        </View>
+        <LoadingScreen message="Carregando pedidos..." />
       ) : (
         <FlatList
           data={orders}
@@ -274,17 +219,15 @@ export default function OrdersScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="receipt-outline" size={80} color={paperTheme.colors.onSurfaceVariant} />
-              <Text style={[styles.emptyText, { color: paperTheme.colors.onSurface }]}>
-                Nenhum pedido encontrado
-              </Text>
-              <Text style={[styles.emptySubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
-                {offline 
-                  ? "Conecte-se à internet para sincronizar seus pedidos"
-                  : "Seus pedidos aparecerão aqui quando você fizer uma compra"}
-              </Text>
-            </View>
+            <EmptyState
+              icon="receipt-outline"
+              title="Nenhum pedido encontrado"
+              subtitle={offline 
+                ? "Conecte-se à internet para sincronizar seus pedidos"
+                : "Seus pedidos aparecerão aqui quando você fizer uma compra"}
+              iconSize={80}
+              showHeader={false}
+            />
           }
         />
       )}
@@ -374,27 +317,6 @@ const styles = StyleSheet.create({
   },
   emptyListContainer: {
     flexGrow: 1,
-  },
-  emptyContainer: { 
-    alignItems: "center", 
-    justifyContent: "center", 
-    marginTop: SPACING.xxxl * 2 + SPACING.xlBase,
-    paddingHorizontal: SPACING.xxl,
-  },
-  emptyText: { 
-    fontSize: FONT_SIZE.lgPlus,
-    marginTop: SPACING.lg,
-    fontWeight: '600',
-  },
-  emptySubtext: {
-    fontSize: FONT_SIZE.md,
-    marginTop: SPACING.xs,
-    textAlign: 'center',
-  },
-  loadingContainer: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
   },
   loadingText: { 
     marginTop: SPACING.smPlus,

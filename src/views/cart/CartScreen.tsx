@@ -19,11 +19,14 @@ import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import CustomModal from '../../components/ui/CustomModal';
 import Button from '../../components/ui/Button';
+import LoadingScreen from '../../components/ui/LoadingScreen';
+import EmptyState from '../../components/ui/EmptyState';
 import { CartItem, useCart } from '../../contexts/CartContext';
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
 import { getCart, mapCartItemResponseToCartItem, removeCartItem, clearCart as clearCartAPI, updateCartItem } from '../../services/cartService';
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
+import { formatCurrency } from '../../utils/format';
 
 
 type CartScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -212,33 +215,16 @@ const CartScreen: React.FC = () => {
   };
 
   if (loading || sessionLoading) {
-    return (
-      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-        <Header />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-          <Text style={[styles.loadingText, { color: paperTheme.colors.onSurface }]}>
-            Carregando carrinho...
-          </Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Carregando carrinho..." />;
   }
 
   if (cartState.items.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-        <Header />
-        <View style={styles.emptyContainer}>
-          <Ionicons name="cart-outline" size={SPACING.xxxl * 2} color={paperTheme.colors.outline} />
-          <Text style={[styles.emptyTitle, { color: paperTheme.colors.onBackground }]}>
-            Carrinho Vazio
-          </Text>
-          <Text style={[styles.emptyText, { color: paperTheme.colors.onSurface }]}>
-            Adicione alguns produtos ao seu carrinho para começar suas compras
-          </Text>
-        </View>
-      </View>
+      <EmptyState
+        icon="cart-outline"
+        title="Carrinho Vazio"
+        message="Adicione alguns produtos ao seu carrinho para começar suas compras"
+      />
     );
   }
 
@@ -313,7 +299,7 @@ const CartScreen: React.FC = () => {
                     </View>
 
                     <Text style={[styles.itemPrice, { color: paperTheme.colors.primary }]}>
-                      R$ {item.price.toFixed(2)}
+                      {formatCurrency(item.price)}
                     </Text>
                   </View>
                 </View>
@@ -393,7 +379,7 @@ const CartScreen: React.FC = () => {
                   Subtotal
                 </Text>
                 <Text style={[styles.subtotalValue, { color: paperTheme.colors.primary }]}>
-                  R$ {(item.price * item.quantity).toFixed(2)}
+                  {formatCurrency(item.price * item.quantity)}
                 </Text>
               </View>
             </View>
@@ -405,7 +391,7 @@ const CartScreen: React.FC = () => {
                     Subtotal {group.marketName}
                   </Text>
                   <Text style={[styles.groupTotalValue, { color: paperTheme.colors.primary }]}>
-                    R$ {group.total.toFixed(2)}
+                    {formatCurrency(group.total)}
                   </Text>
                 </View>
 
@@ -443,7 +429,7 @@ const CartScreen: React.FC = () => {
                   Total Geral
                 </Text>
                 <Text style={[styles.generalTotalValue, { color: paperTheme.colors.primary }]}>
-                  R$ {cartState.total.toFixed(2)}
+                  {formatCurrency(cartState.total)}
                 </Text>
               </View>
               <Text style={[styles.generalTotalSubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
@@ -474,34 +460,6 @@ export default CartScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: SPACING.lg,
-    fontSize: FONT_SIZE.lg,
-    opacity: 0.7,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xxl,
-  },
-  emptyTitle: {
-    fontSize: FONT_SIZE.xxxl,
-    fontWeight: 'bold',
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.xs,
-  },
-  emptyText: {
-    fontSize: FONT_SIZE.lg,
-    textAlign: 'center',
-    lineHeight: SPACING.xl,
-    opacity: 0.7,
   },
   keyboardView: {
     flex: 1,

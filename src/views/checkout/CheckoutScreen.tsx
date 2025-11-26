@@ -17,6 +17,7 @@ import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import CustomModal from '../../components/ui/CustomModal';
 import Button from '../../components/ui/Button';
+import LoadingScreen from '../../components/ui/LoadingScreen';
 import { CartItem, useCart } from '../../contexts/CartContext';
 import { OrderCreateDTO } from '../../domain/orderDomain';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
@@ -25,6 +26,8 @@ import { useSession } from '../../hooks/useSession';
 import { Address, getUserAddresses } from '../../services/addressService';
 import { createOrder } from '../../services/orderService';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
+import { formatCurrency, formatOrderDate } from '../../utils/format';
+import Card from '../../components/ui/Card';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 type CheckoutScreenRouteProp = RouteProp<HomeStackParamList, 'Checkout'>;
@@ -186,7 +189,7 @@ export default function CheckoutScreen() {
 
       showSuccess(
         'Compra Finalizada! 🎉',
-        `Pedido #${newOrder.id} criado com sucesso!\n\nTotal: R$ ${checkoutTotal.toFixed(2)}`,
+        `Pedido #${newOrder.id} criado com sucesso!\n\nTotal: ${formatCurrency(checkoutTotal)}`,
         {
           text: 'Ver Pedidos',
           onPress: () => {
@@ -245,17 +248,7 @@ export default function CheckoutScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-        <Header />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-          <Text style={[styles.loadingText, { color: paperTheme.colors.onSurface }]}>
-            Carregando...
-          </Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Carregando..." />;
   }
 
   return (
@@ -275,7 +268,7 @@ export default function CheckoutScreen() {
           showsVerticalScrollIndicator={true}
           indicatorStyle={paperTheme.dark ? 'white' : 'default'}
         >
-          <View style={[styles.card, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+          <Card style={styles.card}>
             <Text style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
               Resumo do Pedido
             </Text>
@@ -288,7 +281,7 @@ export default function CheckoutScreen() {
                 Subtotal ({checkoutItemCount} {checkoutItemCount === 1 ? 'item' : 'itens'})
               </Text>
               <Text style={{ color: paperTheme.colors.onSurface, fontWeight: '600' }}>
-                R$ {checkoutTotal.toFixed(2)}
+                {formatCurrency(checkoutTotal)}
               </Text>
             </View>
             <View style={[styles.totalRow, { borderTopColor: paperTheme.colors.outline }]}>
@@ -296,12 +289,12 @@ export default function CheckoutScreen() {
                 Total
               </Text>
               <Text style={[styles.totalValue, { color: paperTheme.colors.primary }]}>
-                R$ {checkoutTotal.toFixed(2)}
+                {formatCurrency(checkoutTotal)}
               </Text>
             </View>
-          </View>
+          </Card>
 
-          <View style={[styles.card, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+          <Card style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
                 Endereço de Entrega
@@ -385,9 +378,9 @@ export default function CheckoutScreen() {
                 ))}
               </View>
             )}
-          </View>
+          </Card>
 
-          <View style={[styles.card, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+          <Card style={styles.card}>
             <Text style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
               Forma de Pagamento
             </Text>
@@ -430,7 +423,7 @@ export default function CheckoutScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
+          </Card>
         </ScrollView>
 
         <View style={[
@@ -447,7 +440,7 @@ export default function CheckoutScreen() {
               Total
             </Text>
             <Text style={[styles.footerTotalValue, { color: paperTheme.colors.primary }]}>
-              R$ {checkoutTotal.toFixed(2)}
+              {formatCurrency(checkoutTotal)}
             </Text>
           </View>
           
@@ -483,16 +476,6 @@ export default function CheckoutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: SPACING.lg,
-    fontSize: FONT_SIZE.lg,
-    opacity: 0.7,
   },
   keyboardView: {
     flex: 1,

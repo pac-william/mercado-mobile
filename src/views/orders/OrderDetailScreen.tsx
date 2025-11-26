@@ -6,6 +6,11 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "../../components/layout/header";
+import LoadingScreen from "../../components/ui/LoadingScreen";
+import { getOrderStatusColor, getOrderStatusText } from "../../utils/orderStatus";
+import { formatCurrency, formatOrderDate } from "../../utils/format";
+import StatusBadge from "../../components/ui/StatusBadge";
+import Card from "../../components/ui/Card";
 import { getOrderById } from "../../services/orderService";
 import { getProductById } from "../../services/productService";
 import { Order, OrderItem } from "../../domain/orderDomain";
@@ -19,48 +24,6 @@ interface OrderItemWithProduct extends OrderItem {
   productImage?: string;
 }
 
-const getStatusColor = (status: string, colors: any) => {
-  switch (status?.toUpperCase()) {
-    case 'PENDENTE':
-    case 'PENDING':
-      return colors.statusPending;
-    case 'CONFIRMADO':
-    case 'CONFIRMED':
-      return colors.statusConfirmed;
-    case 'PREPARANDO':
-    case 'PREPARING':
-      return colors.statusPreparing;
-    case 'SAIU_PARA_ENTREGA':
-    case 'OUT_FOR_DELIVERY':
-      return colors.statusOutForDelivery;
-    case 'ENTREGUE':
-    case 'DELIVERED':
-      return colors.statusDelivered;
-    case 'CANCELADO':
-    case 'CANCELLED':
-      return colors.statusCancelled;
-    default:
-      return colors.statusDefault;
-  }
-};
-
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    'PENDENTE': 'Pendente',
-    'PENDING': 'Pendente',
-    'CONFIRMADO': 'Confirmado',
-    'CONFIRMED': 'Confirmado',
-    'PREPARANDO': 'Preparando',
-    'PREPARING': 'Preparando',
-    'SAIU_PARA_ENTREGA': 'Saiu para entrega',
-    'OUT_FOR_DELIVERY': 'Saiu para entrega',
-    'ENTREGUE': 'Entregue',
-    'DELIVERED': 'Entregue',
-    'CANCELADO': 'Cancelado',
-    'CANCELLED': 'Cancelado',
-  };
-  return statusMap[status?.toUpperCase()] || status || 'Pendente';
-};
 
 export default function OrderDetailScreen() {
   const route = useRoute();
@@ -121,17 +84,7 @@ export default function OrderDetailScreen() {
   }, [orderId]);
 
   if (loading) {
-    return (
-      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-        <Header />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-          <Text style={[styles.loadingText, { color: paperTheme.colors.onBackground }]}>
-            Carregando detalhes do pedido...
-          </Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Carregando detalhes do pedido..." />;
   }
 
   if (error || !order) {
@@ -152,8 +105,6 @@ export default function OrderDetailScreen() {
   }
 
   const totalValue = order.total || order.totalPrice || 0;
-  const statusColor = getStatusColor(order.status || 'PENDING', paperTheme.colors);
-  const statusText = getStatusText(order.status || 'PENDING');
 
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
@@ -168,7 +119,7 @@ export default function OrderDetailScreen() {
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
         {/* Card de informações do pedido */}
-        <View style={[styles.orderInfoCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+        <Card style={styles.orderInfoCard}>
           <View style={styles.orderHeader}>
             <View style={styles.orderHeaderLeft}>
               <Ionicons name="receipt-outline" size={ICON_SIZES.xxl + SPACING.xs} color={paperTheme.colors.tertiary} />
@@ -177,24 +128,13 @@ export default function OrderDetailScreen() {
                   Pedido #{order.id.slice(0, 8).toUpperCase()}
                 </Text>
                 <Text style={[styles.orderDate, { color: paperTheme.colors.onSurfaceVariant }]}>
-                  {new Date(order.createdAt).toLocaleDateString("pt-BR", {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {formatOrderDate(order.createdAt)}
                 </Text>
               </View>
             </View>
           </View>
 
-          <View style={[styles.statusContainer, { backgroundColor: statusColor + '20', borderColor: statusColor }]}>
-            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-            <Text style={[styles.statusText, { color: statusColor }]}>
-              {statusText}
-            </Text>
-          </View>
+          <StatusBadge status={order.status || 'PENDING'} />
 
           {order.paymentMethod && (
             <View style={styles.paymentInfo}>
@@ -204,10 +144,10 @@ export default function OrderDetailScreen() {
               </Text>
             </View>
           )}
-        </View>
+        </Card>
 
         {/* Lista de itens */}
-        <View style={[styles.itemsCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+        <Card style={styles.itemsCard}>
           <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
             Itens do Pedido ({orderItems.length})
           </Text>
@@ -240,7 +180,7 @@ export default function OrderDetailScreen() {
                       Quantidade: {item.quantity}
                     </Text>
                     <Text style={[styles.itemPrice, { color: paperTheme.colors.primary }]}>
-                      R$ {(item.price * item.quantity).toFixed(2)}
+                      {formatCurrency(item.price * item.quantity)}
                     </Text>
                   </View>
                 </View>
@@ -251,7 +191,7 @@ export default function OrderDetailScreen() {
               Nenhum item encontrado
             </Text>
           )}
-        </View>
+        </Card>
 
         {/* Resumo do pedido */}
         <View style={[styles.summaryCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
@@ -260,7 +200,7 @@ export default function OrderDetailScreen() {
               Total dos itens
             </Text>
             <Text style={[styles.summaryValue, { color: paperTheme.colors.onSurface }]}>
-              R$ {totalValue.toFixed(2)}
+              {formatCurrency(totalValue)}
             </Text>
           </View>
           <View style={[styles.divider, { backgroundColor: paperTheme.colors.outline }]} />
@@ -269,7 +209,7 @@ export default function OrderDetailScreen() {
               Total
             </Text>
             <Text style={[styles.totalValue, { color: paperTheme.colors.primary }]}>
-              R$ {totalValue.toFixed(2)}
+              {formatCurrency(totalValue)}
             </Text>
           </View>
         </View>
@@ -281,16 +221,6 @@ export default function OrderDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xxl,
-  },
-  loadingText: {
-    marginTop: SPACING.lg,
-    fontSize: FONT_SIZE.lg,
   },
   errorContainer: {
     flex: 1,

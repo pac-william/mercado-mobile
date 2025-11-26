@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { useCart } from "../../contexts/CartContext";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { formatCurrency } from "../../utils/format";
 import { SPACING, FONT_SIZE, BORDER_RADIUS } from "../../constants/styles";
 
 export default function Cart() {
@@ -71,7 +72,7 @@ export default function Cart() {
           renderItem={({ item }) => (
             <View style={styles.item}>
               <Text style={styles.title}>{item.name} ({item.quantity}x)</Text>
-              <Text style={styles.price}>R$ {(item.price * item.quantity).toFixed(2)}</Text>
+              <Text style={styles.price}>{formatCurrency(item.price * item.quantity)}</Text>
               <View style={styles.buttons}>
                 <TouchableOpacity onPress={() => decreaseQty(item.id)}>
                   <Text style={styles.btn}>➖</Text>
@@ -86,7 +87,7 @@ export default function Cart() {
       )}
 
       <View style={styles.footer}>
-        <Text style={styles.total}>Total: R$ {total.toFixed(2)}</Text>
+        <Text style={styles.total}>Total: {formatCurrency(total)}</Text>
         <TouchableOpacity style={styles.checkoutBtn}>
           <Text style={styles.checkoutText}>Finalizar Pedido</Text>
         </TouchableOpacity>

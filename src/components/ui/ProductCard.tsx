@@ -2,6 +2,7 @@ import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, ViewStyle } from "react-native";
 import { Text } from "react-native-paper";
 import { isValidImageUri } from "../../utils/imageUtils";
+import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 
@@ -92,7 +93,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </Text>
         )}
         <Text style={[styles.productPrice, { color: paperTheme.colors.primary }]}>
-          R$ {price.toFixed(2)}
+          {formatCurrency(price)}
         </Text>
       </View>
     </TouchableOpacity>

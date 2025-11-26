@@ -6,11 +6,13 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "../../components/layout/header";
+import EmptyState from "../../components/ui/EmptyState";
 import SearchItens, { SearchResults } from "../../components/ui/SearchItens";
 import HeroBanner from "../../components/ui/Hero";
 import CategoriesGrid from "../../components/ui/CategoriesGrid";
 import { SearchStackParamList } from "../../navigation/types";
 import { isValidImageUri } from "../../utils/imageUtils";
+import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<SearchStackParamList>;
@@ -75,7 +77,7 @@ export default function Search() {
           {item.name}
         </Text>
         <Text style={[styles.productPrice, { color: paperTheme.colors.primary }]}>
-          R$ {item.price.toFixed(2)}
+          {formatCurrency(item.price)}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
@@ -140,15 +142,13 @@ export default function Search() {
         )}
 
         {hasSearched && !hasResults && (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={ICON_SIZES.xxxl + ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />
-            <Text style={[styles.emptyText, { color: paperTheme.colors.onSurface }]}>
-              Nenhum resultado encontrado
-            </Text>
-            <Text style={[styles.emptySubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
-              Tente buscar por outro termo
-            </Text>
-          </View>
+          <EmptyState
+            icon="search-outline"
+            title="Nenhum resultado encontrado"
+            subtitle="Tente buscar por outro termo"
+            iconSize={ICON_SIZES.xxxl + ICON_SIZES.xl}
+            showHeader={false}
+          />
         )}
 
         {hasProducts && results && (
@@ -263,21 +263,5 @@ const styles = StyleSheet.create({
   },
   marketAddress: {
     fontSize: FONT_SIZE.sm + 1,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.xxxl + SPACING.xlBase,
-    paddingHorizontal: SPACING.xxl,
-  },
-  emptyText: {
-    fontSize: FONT_SIZE.lgPlus,
-    fontWeight: "600",
-    marginTop: SPACING.lg,
-  },
-  emptySubtext: {
-    fontSize: FONT_SIZE.md,
-    marginTop: SPACING.xs,
-    textAlign: "center",
   },
 });

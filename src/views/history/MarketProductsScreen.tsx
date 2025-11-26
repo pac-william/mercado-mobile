@@ -25,6 +25,7 @@ import { Suggestion } from "../../types/suggestion";
 import { useCart } from "../../contexts/CartContext";
 import { useSession } from "../../hooks/useSession";
 import { addItemToCart, addMultipleItemsToCart, updateCartItem, removeCartItem } from "../../services/cartService";
+import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 type MarketProductsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -525,7 +526,7 @@ export default function MarketProductsScreen() {
             </Text>
           )}
           <Text style={[styles.productPrice, { color: paperTheme.colors.primary }]}>
-            R$ {product.price.toFixed(2)}
+            {formatCurrency(product.price)}
           </Text>
         </View>
       </View>
@@ -652,7 +653,7 @@ export default function MarketProductsScreen() {
             <Text style={[styles.totalLabel, { color: paperTheme.colors.onSurface }]}>
               Total ({itemCount} {itemCount === 1 ? "item" : "itens"})
             </Text>
-            <Text style={[styles.totalValue, { color: paperTheme.colors.primary }]}>R$ {total.toFixed(2)}</Text>
+            <Text style={[styles.totalValue, { color: paperTheme.colors.primary }]}>{formatCurrency(total)}</Text>
           </View>
           {!hasProductsInCart ? (
             <Button
@@ -745,7 +746,7 @@ export default function MarketProductsScreen() {
                         </Text>
                       )}
                       <Text style={[styles.alternativePrice, { color: paperTheme.colors.primary }]}>
-                        R$ {item.price.toFixed(2)}
+                        {formatCurrency(item.price)}
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />

@@ -11,6 +11,7 @@ import { useModal } from "../../hooks/useModal";
 import { useSession } from "../../hooks/useSession";
 import { addItemToCart } from "../../services/cartService";
 import { Ionicons } from "@expo/vector-icons";
+import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type ProductDetailRouteProp = RouteProp<HomeStackParamList, "ProductDetail">;
@@ -154,10 +155,10 @@ export default function ProductDetail({ route }: Props) {
               variant="headlineMedium"
               style={[styles.price, { color: paperTheme.colors.primary }]}
             >
-              R$ {product.price.toFixed(2)}
+              {formatCurrency(product.price)}
             </Text>
             <Text style={[styles.oldPrice, { color: paperTheme.colors.onSurfaceVariant }]}>
-              R$ {(product.price * 1.25).toFixed(2)}
+              {formatCurrency(product.price * 1.25)}
             </Text>
           </View>
 

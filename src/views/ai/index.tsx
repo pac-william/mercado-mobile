@@ -13,6 +13,7 @@ import { useUserLocation } from "../../hooks/useUserLocation";
 import { Suggestion } from "../../types/suggestion";
 import ReceiptModal from "../../components/ui/ReceiptModal";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, SHADOWS, ICON_SIZES } from "../../constants/styles";
 
 type AISearchNavigationProp = NativeStackNavigationProp<AIStackParamList>;
@@ -567,7 +568,7 @@ export default function AISearch() {
                             </View>
                             <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.primaryContainer }]}>
                               <Text style={[styles.marketPriceText, { color: paperTheme.colors.onPrimaryContainer }]}>
-                                R$ {market.totalPrice.toFixed(2)}
+                                {formatCurrency(market.totalPrice)}
                               </Text>
                             </View>
                           </View>

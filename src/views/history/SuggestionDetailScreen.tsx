@@ -18,6 +18,7 @@ import { getSuggestionById } from "../../services/suggestionService";
 import { Suggestion } from "../../types/suggestion";
 import { useMarketLoader } from "../../hooks/useMarketLoader";
 import { formatDistance } from "../../utils/distance";
+import { formatCurrency } from "../../utils/format";
 import { useUserLocation } from "../../hooks/useUserLocation";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
@@ -199,7 +200,7 @@ export default function SuggestionDetailScreen() {
                         </View>
                         <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.primaryContainer }]}>
                           <Text style={[styles.marketPriceText, { color: paperTheme.colors.onPrimaryContainer }]}>
-                            R$ {market.totalPrice.toFixed(2)}
+                            {formatCurrency(market.totalPrice)}
                           </Text>
                         </View>
                       </View>
