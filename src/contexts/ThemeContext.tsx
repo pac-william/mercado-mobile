@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { MD3LightTheme, MD3DarkTheme, PaperProvider, useTheme as usePaperTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { CustomMD3Theme } from '../types/theme';
 
 const THEME_KEY = '@mercado_mobile:theme';
 
 // Tema claro customizado
-const lightTheme = {
+const lightTheme: CustomMD3Theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
@@ -57,7 +58,7 @@ const lightTheme = {
 };
 
 // Tema escuro customizado
-const darkTheme = {
+const darkTheme: CustomMD3Theme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
@@ -111,7 +112,7 @@ const darkTheme = {
 type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
-  theme: typeof lightTheme | typeof darkTheme;
+  theme: CustomMD3Theme;
   isDark: boolean;
   toggleTheme: () => Promise<void>;
   setTheme: (mode: ThemeMode) => Promise<void>;

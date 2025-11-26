@@ -12,12 +12,13 @@ import { formatDistance } from "../../utils/distance";
 import { useUserLocation } from "../../hooks/useUserLocation";
 import { Suggestion } from "../../types/suggestion";
 import ReceiptModal from "../../components/ui/ReceiptModal";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, SHADOWS, ICON_SIZES } from "../../constants/styles";
 
 type AISearchNavigationProp = NativeStackNavigationProp<AIStackParamList>;
 
 export default function AISearch() {
   const navigation = useNavigation<AISearchNavigationProp>();
-  const paperTheme = useTheme() as any;
   const [results, setResults] = useState<SuggestionResponse | null>(null);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,6 +28,235 @@ export default function AISearch() {
   const { getUserLocation, locationLoading } = useUserLocation();
   const [receiptModalVisible, setReceiptModalVisible] = useState(false);
   const [receiptModalMode, setReceiptModalMode] = useState<'recipe' | 'instructions'>('recipe');
+
+  const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollContent: {
+      paddingBottom: SPACING.xxxl * 2,
+    },
+    searchSection: {
+      paddingHorizontal: SPACING.lg,
+      paddingTop: SPACING.lg,
+    },
+    searchInputContainer: {
+      marginTop: SPACING.xlBase,
+    },
+    searchBarContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    searchbar: {
+      flex: 1,
+      borderRadius: BORDER_RADIUS.lgPlus,
+      ...SHADOWS.medium,
+      marginRight: SPACING.xs,
+    },
+    searchButton: {
+      width: ICON_SIZES.xxxl,
+      height: ICON_SIZES.xxxl,
+      borderRadius: BORDER_RADIUS.lgPlus,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...SHADOWS.medium,
+    },
+    titleContainer: {
+      alignItems: "center",
+      marginBottom: SPACING.xs,
+    },
+    title: {
+      fontSize: FONT_SIZE.xxxl,
+      fontWeight: "bold",
+      marginTop: SPACING.xs,
+      textAlign: "center",
+      color: theme.colors.onBackground,
+    },
+    subtitle: {
+      fontSize: FONT_SIZE.md,
+      marginTop: SPACING.xs,
+      textAlign: "center",
+      lineHeight: SPACING.xlBase,
+      color: theme.colors.onSurfaceVariant,
+    },
+    suggestionsContainer: {
+      paddingHorizontal: SPACING.lg,
+      marginTop: SPACING.xxl,
+    },
+    suggestionsTitle: {
+      fontSize: FONT_SIZE.xl,
+      fontWeight: "bold",
+      marginBottom: SPACING.xs,
+      color: theme.colors.onBackground,
+    },
+    suggestionsSubtitle: {
+      fontSize: FONT_SIZE.sm + 1,
+      marginBottom: SPACING.xlBase,
+      color: theme.colors.onSurfaceVariant,
+    },
+    suggestionsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+    },
+    suggestionCard: {
+      width: "48%",
+      padding: SPACING.lg,
+      borderRadius: BORDER_RADIUS.lg,
+      marginBottom: SPACING.md,
+      borderWidth: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      ...SHADOWS.medium,
+    },
+    suggestionText: {
+      fontSize: FONT_SIZE.sm + 1,
+      fontWeight: "500",
+      marginLeft: SPACING.xs,
+      flex: 1,
+      color: theme.colors.onSurface,
+    },
+    loadingContainer: {
+      paddingVertical: SPACING.xxxl + SPACING.xlBase,
+      alignItems: "center",
+      paddingHorizontal: SPACING.xxl,
+    },
+    loadingText: {
+      marginTop: SPACING.lg,
+      fontSize: FONT_SIZE.lg,
+      fontWeight: "600",
+      textAlign: "center",
+      color: theme.colors.onSurfaceVariant,
+    },
+    loadingSubtext: {
+      marginTop: SPACING.xs,
+      fontSize: FONT_SIZE.md,
+      textAlign: "center",
+      opacity: 0.7,
+      color: theme.colors.onSurfaceVariant,
+    },
+    marketsContainer: {
+      paddingHorizontal: SPACING.lg,
+      marginTop: SPACING.xl,
+      paddingBottom: SPACING.xl,
+    },
+    marketsTitle: {
+      fontSize: FONT_SIZE.xl,
+      fontWeight: "bold",
+      marginBottom: SPACING.lg,
+      color: theme.colors.onBackground,
+    },
+    marketCard: {
+      borderRadius: BORDER_RADIUS.lg,
+      borderWidth: 1,
+      marginBottom: SPACING.md,
+      ...SHADOWS.medium,
+    },
+    marketCardContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: SPACING.lg,
+    },
+    marketLogo: {
+      width: ICON_SIZES.xxxl + ICON_SIZES.xl,
+      height: ICON_SIZES.xxxl + ICON_SIZES.xl,
+      borderRadius: BORDER_RADIUS.xxl + SPACING.xs,
+      marginRight: SPACING.md,
+    },
+    marketLogoPlaceholder: {
+      width: ICON_SIZES.xxxl + ICON_SIZES.xl,
+      height: ICON_SIZES.xxxl + ICON_SIZES.xl,
+      borderRadius: BORDER_RADIUS.xxl + SPACING.xs,
+      marginRight: SPACING.md,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    marketInfo: {
+      flex: 1,
+    },
+    marketName: {
+      fontSize: FONT_SIZE.lg,
+      fontWeight: "600",
+      marginBottom: SPACING.xs,
+      color: theme.colors.onSurface,
+    },
+    marketAddress: {
+      fontSize: FONT_SIZE.sm + 1,
+      marginBottom: SPACING.xs,
+      color: theme.colors.onSurfaceVariant,
+    },
+    marketBadges: {
+      flexDirection: "row",
+      gap: SPACING.xs,
+    },
+    marketBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: SPACING.xs,
+      paddingVertical: SPACING.xs,
+      borderRadius: BORDER_RADIUS.xs,
+      gap: SPACING.xs,
+    },
+    marketDistanceBadge: {
+      borderWidth: 1,
+    },
+    marketBadgeText: {
+      fontSize: FONT_SIZE.sm,
+      fontWeight: "500",
+    },
+    marketPriceText: {
+      fontSize: FONT_SIZE.md,
+      fontWeight: "bold",
+    },
+    emptyMarketsContainer: {
+      paddingVertical: ICON_SIZES.xxxl + ICON_SIZES.xl,
+      alignItems: "center",
+      paddingHorizontal: SPACING.xxl,
+    },
+    emptyMarketsText: {
+      fontSize: FONT_SIZE.md,
+      marginTop: SPACING.md,
+      textAlign: "center",
+      color: theme.colors.onSurfaceVariant,
+    },
+    receiptCardsContainer: {
+      paddingHorizontal: SPACING.lg,
+      marginTop: SPACING.xl,
+      gap: SPACING.md,
+    },
+    receiptCard: {
+      borderRadius: BORDER_RADIUS.lg,
+      borderWidth: 1,
+      ...SHADOWS.medium,
+    },
+    receiptCardContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: SPACING.lg,
+    },
+    receiptCardIcon: {
+      width: ICON_SIZES.xxxl,
+      height: ICON_SIZES.xxxl,
+      borderRadius: BORDER_RADIUS.xxl,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: SPACING.md,
+    },
+    receiptCardInfo: {
+      flex: 1,
+    },
+    receiptCardTitle: {
+      fontSize: FONT_SIZE.lg,
+      fontWeight: "600",
+      marginBottom: SPACING.xs,
+      color: theme.colors.onSurface,
+    },
+    receiptCardSubtitle: {
+      fontSize: FONT_SIZE.sm + 1,
+      color: theme.colors.onSurfaceVariant,
+    },
+  }));
 
   const recipeSuggestions = [
     "Receita de bolo de chocolate",
@@ -86,7 +316,7 @@ export default function AISearch() {
   }, [searchQuery]);
 
   return (
-    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+    <View style={styles.container}>
       <Header />
       
       <ScrollView
@@ -96,11 +326,11 @@ export default function AISearch() {
       >
         <View style={styles.searchSection}>
           <View style={styles.titleContainer}>
-            <Ionicons name="sparkles" size={32} color={paperTheme.colors.primary} />
-            <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>
+            <Ionicons name="sparkles" size={ICON_SIZES.xxl} color={paperTheme.colors.primary} />
+            <Text style={styles.title}>
               Pesquise por Receitas
             </Text>
-            <Text style={[styles.subtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+            <Text style={styles.subtitle}>
               Descreva o que você quer cozinhar e nossa IA vai sugerir os ingredientes necessários
             </Text>
           </View>
@@ -112,8 +342,8 @@ export default function AISearch() {
                 onChangeText={setSearchQuery}
                 value={searchQuery}
                 style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}
-                icon={() => <Ionicons name="sparkles-outline" size={24} color={paperTheme.colors.primary} />}
-                clearIcon={() => <Ionicons name="close-circle" size={24} color={paperTheme.colors.onSurfaceVariant} />}
+                icon={() => <Ionicons name="sparkles-outline" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />}
+                clearIcon={() => <Ionicons name="close-circle" size={ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />}
                 onSubmitEditing={() => handleSearch()}
                 inputStyle={{ color: paperTheme.colors.onSurface }}
                 placeholderTextColor={paperTheme.colors.onSurfaceVariant}
@@ -134,7 +364,7 @@ export default function AISearch() {
                 {loading ? (
                   <ActivityIndicator size="small" color={paperTheme.colors.onPrimary} />
                 ) : (
-                  <Ionicons name="search" size={20} color={paperTheme.colors.onPrimary} />
+                  <Ionicons name="search" size={ICON_SIZES.lg} color={paperTheme.colors.onPrimary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -144,10 +374,10 @@ export default function AISearch() {
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-            <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
+            <Text style={styles.loadingText}>
               Buscando receitas e ingredientes...
             </Text>
-            <Text style={[styles.loadingSubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
+            <Text style={styles.loadingSubtext}>
               Nossa IA está analisando sua busca
             </Text>
           </View>
@@ -155,10 +385,10 @@ export default function AISearch() {
 
         {!results && !loading && (
           <View style={styles.suggestionsContainer}>
-            <Text style={[styles.suggestionsTitle, { color: paperTheme.colors.onBackground }]}>
+            <Text style={styles.suggestionsTitle}>
               💡 Sugestões de Receitas
             </Text>
-            <Text style={[styles.suggestionsSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+            <Text style={styles.suggestionsSubtitle}>
               Toque em uma sugestão para ver os ingredientes
             </Text>
             
@@ -182,11 +412,11 @@ export default function AISearch() {
                 >
                   <Ionicons 
                     name="restaurant-outline" 
-                    size={20} 
+                    size={ICON_SIZES.lg} 
                     color={paperTheme.colors.primary} 
                   />
                   <Text 
-                    style={[styles.suggestionText, { color: paperTheme.colors.onSurface }]}
+                    style={styles.suggestionText}
                     numberOfLines={2}
                   >
                     {suggestion}
@@ -214,17 +444,17 @@ export default function AISearch() {
                 >
                   <View style={styles.receiptCardContent}>
                     <View style={[styles.receiptCardIcon, { backgroundColor: paperTheme.colors.primaryContainer }]}>
-                      <Ionicons name="book-outline" size={24} color={paperTheme.colors.onPrimaryContainer} />
+                      <Ionicons name="book-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onPrimaryContainer} />
                     </View>
                     <View style={styles.receiptCardInfo}>
-                      <Text style={[styles.receiptCardTitle, { color: paperTheme.colors.onSurface }]}>
+                      <Text style={styles.receiptCardTitle}>
                         Receita
                       </Text>
-                      <Text style={[styles.receiptCardSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                      <Text style={styles.receiptCardSubtitle}>
                         Ver ingredientes e informações
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+                    <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
                   </View>
                 </TouchableOpacity>
 
@@ -241,17 +471,17 @@ export default function AISearch() {
                 >
                   <View style={styles.receiptCardContent}>
                     <View style={[styles.receiptCardIcon, { backgroundColor: paperTheme.colors.secondaryContainer }]}>
-                      <Ionicons name="restaurant-outline" size={24} color={paperTheme.colors.onSecondaryContainer} />
+                      <Ionicons name="restaurant-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSecondaryContainer} />
                     </View>
                     <View style={styles.receiptCardInfo}>
-                      <Text style={[styles.receiptCardTitle, { color: paperTheme.colors.onSurface }]}>
+                      <Text style={styles.receiptCardTitle}>
                         Modo de Preparo
                       </Text>
-                      <Text style={[styles.receiptCardSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                      <Text style={styles.receiptCardSubtitle}>
                         Ver passos de preparação
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+                    <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
                   </View>
                 </TouchableOpacity>
               </View>
@@ -260,7 +490,7 @@ export default function AISearch() {
             {locationLoading && (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-                <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                <Text style={styles.loadingText}>
                   Buscando sua localização...
                 </Text>
               </View>
@@ -269,13 +499,13 @@ export default function AISearch() {
             {loadingMarkets ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-                <Text style={[styles.loadingText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                <Text style={styles.loadingText}>
                   Buscando mercados próximos...
                 </Text>
               </View>
             ) : markets.length > 0 ? (
               <View style={styles.marketsContainer}>
-                <Text style={[styles.marketsTitle, { color: paperTheme.colors.onBackground }]}>
+                <Text style={styles.marketsTitle}>
                   Mercados Disponíveis
                 </Text>
                 {markets.map((market) => {
@@ -302,15 +532,15 @@ export default function AISearch() {
                           <Image source={{ uri: market.logo }} style={styles.marketLogo} />
                         ) : (
                           <View style={[styles.marketLogoPlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                            <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
+                            <Ionicons name="storefront-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />
                           </View>
                         )}
                         <View style={styles.marketInfo}>
-                          <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
+                          <Text style={styles.marketName}>
                             {market.name}
                           </Text>
                           {market.address && (
-                            <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                            <Text style={styles.marketAddress} numberOfLines={1}>
                               {market.address}
                             </Text>
                           )}
@@ -323,14 +553,14 @@ export default function AISearch() {
                                   { borderColor: paperTheme.colors.secondary, backgroundColor: paperTheme.colors.surface },
                                 ]}
                               >
-                                <Ionicons name="navigate-outline" size={12} color={paperTheme.colors.secondary} />
+                                <Ionicons name="navigate-outline" size={ICON_SIZES.sm} color={paperTheme.colors.secondary} />
                                 <Text style={[styles.marketBadgeText, { color: paperTheme.colors.secondary }]}>
                                   {distanceLabel}
                                 </Text>
                               </View>
                             )}
                             <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                              <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
+                              <Ionicons name="cube-outline" size={ICON_SIZES.sm} color={paperTheme.colors.primary} />
                               <Text style={[styles.marketBadgeText, { color: paperTheme.colors.primary }]}>
                                 {market.productCount} {market.productCount === 1 ? "produto" : "produtos"}
                               </Text>
@@ -342,7 +572,7 @@ export default function AISearch() {
                             </View>
                           </View>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+                        <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
                       </View>
                     </TouchableOpacity>
                   );
@@ -350,8 +580,8 @@ export default function AISearch() {
               </View>
             ) : markets.length === 0 && !loadingMarkets ? (
               <View style={styles.emptyMarketsContainer}>
-                <Ionicons name="storefront-outline" size={48} color={paperTheme.colors.onSurfaceVariant} />
-                <Text style={[styles.emptyMarketsText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                <Ionicons name="storefront-outline" size={ICON_SIZES.xxxl + ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />
+                <Text style={styles.emptyMarketsText}>
                   Nenhum mercado encontrado com estes produtos
                 </Text>
               </View>
@@ -371,234 +601,4 @@ export default function AISearch() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 80,
-  },
-  searchSection: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  searchInputContainer: {
-    marginTop: 20,
-  },
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchbar: {
-    flex: 1,
-    borderRadius: 15,
-    elevation: 3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    marginRight: 8,
-  },
-  searchButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-  },
-  titleContainer: {
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginTop: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  suggestionsContainer: {
-    paddingHorizontal: 16,
-    marginTop: 32,
-  },
-  suggestionsTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  suggestionsSubtitle: {
-    fontSize: 13,
-    marginBottom: 20,
-  },
-  suggestionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  suggestionCard: {
-    width: "48%",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  suggestionText: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginLeft: 8,
-    flex: 1,
-  },
-  loadingContainer: {
-    paddingVertical: 60,
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  loadingSubtext: {
-    marginTop: 8,
-    fontSize: 14,
-    textAlign: "center",
-    opacity: 0.7,
-  },
-  marketsContainer: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-    paddingBottom: 24,
-  },
-  marketsTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  marketCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 12,
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  marketCardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-  },
-  marketLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 12,
-  },
-  marketLogoPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  marketInfo: {
-    flex: 1,
-  },
-  marketName: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  marketAddress: {
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  marketBadges: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  marketBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
-  },
-  marketDistanceBadge: {
-    borderWidth: 1,
-  },
-  marketBadgeText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  marketPriceText: {
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  emptyMarketsContainer: {
-    paddingVertical: 48,
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  emptyMarketsText: {
-    fontSize: 14,
-    marginTop: 12,
-    textAlign: "center",
-  },
-  receiptCardsContainer: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-    gap: 12,
-  },
-  receiptCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  receiptCardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-  },
-  receiptCardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  receiptCardInfo: {
-    flex: 1,
-  },
-  receiptCardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  receiptCardSubtitle: {
-    fontSize: 13,
-  },
-});
 

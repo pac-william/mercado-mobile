@@ -15,12 +15,13 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { useTheme as usePaperTheme } from 'react-native-paper';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import { formatCEP, searchAddressByCEP, validateCEP } from '../../services/cepService';
 import { Address, createAddress, getAddressById, updateAddress } from '../../services/addressService';
 import { reverseGeocode } from '../../services/geocodingService';
+import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
 
 type AddEditAddressScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -41,7 +42,7 @@ interface RouteParams {
 
 export default function AddEditAddressScreen() {
   const navigation = useNavigation<AddEditAddressScreenNavigationProp>();
-  const paperTheme = usePaperTheme();
+  const paperTheme = useCustomTheme();
   const route = useRoute();
   const { addressId, initialData, onAddressAdded } = (route.params as RouteParams) || {};
   const [address, setAddress] = useState<Address | null>(null);
@@ -116,7 +117,6 @@ export default function AddEditAddressScreen() {
         const newAddress = await createAddress(addressData);
         Alert.alert('Sucesso', 'Endereço adicionado com sucesso!');
         
-        // Se tiver callback, chama antes de voltar
         if (onAddressAdded) {
           onAddressAdded(newAddress);
         }
@@ -537,51 +537,51 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: SPACING.xxxl * 2 + SPACING.xlBase,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xlBase,
   },
   title: {
-    fontSize: 28,
+    fontSize: FONT_SIZE.displaySm,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: SPACING.xs,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
   },
   form: {
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
   },
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   locationButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   label: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: SPACING.xs,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
+    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    fontSize: FONT_SIZE.lg,
   },
   inputError: {
   },
@@ -590,57 +590,57 @@ const styles = StyleSheet.create({
   },
   cepLoading: {
     position: 'absolute',
-    right: 16,
-    top: 12,
+    right: SPACING.lg,
+    top: SPACING.md,
   },
   errorText: {
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs,
   },
   favoriteToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 24,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.xl,
     borderWidth: 1,
   },
   favoriteToggleActive: {
   },
   favoriteText: {
-    fontSize: 16,
-    marginLeft: 12,
+    fontSize: FONT_SIZE.lg,
+    marginLeft: SPACING.md,
   },
   favoriteTextActive: {
     fontWeight: '600',
   },
   buttonContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    gap: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xlBase,
+    gap: SPACING.md,
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 8,
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
   },
   cancelButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
   saveButton: {
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 8,
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
   },
   saveButtonDisabled: {
   },
   saveButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
 });

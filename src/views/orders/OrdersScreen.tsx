@@ -3,7 +3,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "../../components/layout/header";
 import { Order } from "../../domain/orderDomain";
@@ -11,6 +11,7 @@ import { getOrders as getOrdersLocal } from "../../domain/order/orderStorage";
 import { useSession } from "../../hooks/useSession";
 import { SettingsStackParamList } from "../../navigation/types";
 import { getOrders } from "../../services/orderService";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 const getStatusColor = (status: string, colors: any) => {
   switch (status?.toUpperCase()) {
@@ -61,7 +62,7 @@ const ORDERS_CACHE_TTL = 1000 * 60 * 2;
 
 export default function OrdersScreen() {
   const navigation = useNavigation<OrdersScreenNavigationProp>();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
   const { user: sessionUser } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -184,7 +185,7 @@ export default function OrdersScreen() {
       >
         <View style={styles.orderHeader}>
           <View style={styles.orderHeaderLeft}>
-            <Ionicons name="receipt-outline" size={24} color={paperTheme.colors.tertiary} />
+            <Ionicons name="receipt-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
             <View style={styles.orderInfo}>
               <Text style={[styles.orderId, { color: paperTheme.colors.onSurface }]}>
                 Pedido #{item.id.slice(0, 8).toUpperCase()}
@@ -220,7 +221,7 @@ export default function OrdersScreen() {
         
         {item.delivererId && (
           <View style={[styles.delivererInfo, { borderTopColor: paperTheme.colors.outline }]}>
-            <Ionicons name="bicycle-outline" size={16} color={paperTheme.colors.onSurfaceVariant} />
+            <Ionicons name="bicycle-outline" size={ICON_SIZES.md} color={paperTheme.colors.onSurfaceVariant} />
             <Text style={[styles.delivererText, { color: paperTheme.colors.onSurfaceVariant }]}>
               Entregador atribuído
             </Text>
@@ -236,7 +237,7 @@ export default function OrdersScreen() {
 
       {offline && (
         <View style={[styles.offlineBanner, { backgroundColor: paperTheme.colors.errorContainer }]}>
-          <Ionicons name="wifi-outline" size={18} color={paperTheme.colors.onErrorContainer} />
+          <Ionicons name="wifi-outline" size={ICON_SIZES.lg + SPACING.micro} color={paperTheme.colors.onErrorContainer} />
           <Text style={[styles.offlineText, { color: paperTheme.colors.onErrorContainer }]}>
             Modo offline: exibindo pedidos salvos localmente
           </Text>
@@ -294,93 +295,82 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
-    // backgroundColor será aplicado dinamicamente via props
   },
   listContainer: {
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingTop: SPACING.xs,
+    paddingBottom: SPACING.xs,
   },
   orderCard: {
-    // backgroundColor será aplicado dinamicamente via props
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    padding: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginHorizontal: SPACING.lg,
+    marginVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    ...SHADOWS.medium,
   },
   orderHeader: { 
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   orderHeaderLeft: {
     flexDirection: "row", 
     alignItems: "center",
   },
   orderInfo: {
-    marginLeft: 12,
+    marginLeft: SPACING.md,
     flex: 1,
   },
   orderId: { 
-    fontSize: 16, 
+    fontSize: FONT_SIZE.lg, 
     fontWeight: "600",
-    // color será aplicado dinamicamente via props
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   orderDate: { 
-    fontSize: 12,
-    // color será aplicado dinamicamente via props
+    fontSize: FONT_SIZE.sm,
   },
   orderBody: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: SPACING.xs,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: SPACING.smPlus,
+    paddingVertical: SPACING.xsPlus,
+    borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
+    width: SPACING.xs,
+    height: SPACING.xs,
+    borderRadius: SPACING.xs,
+    marginRight: SPACING.xsPlus,
   },
   orderStatus: { 
-    fontSize: 12, 
+    fontSize: FONT_SIZE.sm, 
     fontWeight: "600",
   },
   orderTotalContainer: {
     alignItems: 'flex-end',
   },
   orderTotalLabel: {
-    fontSize: 11,
-    // color será aplicado dinamicamente via props
-    marginBottom: 2,
+    fontSize: FONT_SIZE.sm - 1,
+    marginBottom: SPACING.micro,
   },
   orderTotal: { 
-    fontSize: 18,
-    // color será aplicado dinamicamente via props
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "bold" 
   },
   delivererInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: SPACING.xs,
+    paddingTop: SPACING.xs,
     borderTopWidth: 1,
-    // borderTopColor será aplicado dinamicamente via props
   },
   delivererText: {
-    fontSize: 12,
-    // color será aplicado dinamicamente via props
-    marginLeft: 6,
+    fontSize: FONT_SIZE.sm,
+    marginLeft: SPACING.xsPlus,
   },
   emptyListContainer: {
     flexGrow: 1,
@@ -388,19 +378,17 @@ const styles = StyleSheet.create({
   emptyContainer: { 
     alignItems: "center", 
     justifyContent: "center", 
-    marginTop: 100,
-    paddingHorizontal: 32,
+    marginTop: SPACING.xxxl * 2 + SPACING.xlBase,
+    paddingHorizontal: SPACING.xxl,
   },
   emptyText: { 
-    fontSize: 18,
-    // color será aplicado dinamicamente via props
-    marginTop: 16,
+    fontSize: FONT_SIZE.lgPlus,
+    marginTop: SPACING.lg,
     fontWeight: '600',
   },
   emptySubtext: {
-    fontSize: 14,
-    // color será aplicado dinamicamente via props
-    marginTop: 8,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs,
     textAlign: 'center',
   },
   loadingContainer: { 
@@ -409,25 +397,22 @@ const styles = StyleSheet.create({
     alignItems: "center" 
   },
   loadingText: { 
-    marginTop: 10,
-    // color será aplicado dinamicamente via props
+    marginTop: SPACING.smPlus,
   },
   offlineBanner: {
-    // backgroundColor será aplicado dinamicamente via props
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 8,
-    borderRadius: 8,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.xs,
+    marginBottom: SPACING.xs,
+    borderRadius: BORDER_RADIUS.md,
   },
   offlineText: { 
-    // color será aplicado dinamicamente via props
-    marginLeft: 8, 
-    fontSize: 13,
+    marginLeft: SPACING.xs, 
+    fontSize: FONT_SIZE.sm + 1,
     fontWeight: '500',
   },
 });

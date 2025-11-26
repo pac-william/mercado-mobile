@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 
 const { width } = Dimensions.get('window');
 
@@ -100,7 +101,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
         <View style={[styles.modalContainer, { backgroundColor: colors.modalSurface, shadowColor: colors.modalShadow }]}>
           {/* Header com ícone */}
           <View style={[styles.iconContainer, { backgroundColor }]}>
-            <Ionicons name={icon} size={48} color={color} />
+            <Ionicons name={icon} size={ICON_SIZES.xxxl + ICON_SIZES.sm} color={color} />
           </View>
 
           {/* Conteúdo */}
@@ -137,7 +138,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
           {/* Botão de fechar */}
           {showCloseButton && (
             <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.surfaceLight }]} onPress={onClose}>
-              <Ionicons name="close" size={24} color={colors.textSecondary} />
+              <Ionicons name="close" size={ICON_SIZES.xl} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -151,48 +152,48 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.xlBase,
   },
   modalContainer: {
-    borderRadius: 24,
+    borderRadius: BORDER_RADIUS.xxl,
     width: width * 0.9,
-    maxWidth: 400,
-    shadowOffset: { width: 0, height: 10 },
+    maxWidth: SPACING.xxxl * 10,
+    shadowOffset: { width: 0, height: SPACING.smPlus },
     shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowRadius: SPACING.xlBase,
+    elevation: SPACING.smPlus,
     position: 'relative',
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: SPACING.xxxl * 2,
+    height: SPACING.xxxl * 2,
+    borderRadius: SPACING.xxxl,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
-    marginTop: -40,
-    marginBottom: 20,
+    marginTop: -SPACING.xxxl,
+    marginBottom: SPACING.xlBase,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: SPACING.xl,
+    paddingBottom: SPACING.xl,
     alignItems: 'center',
   },
   title: {
-    fontSize: 22,
+    fontSize: FONT_SIZE.xxl + SPACING.micro,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 28,
+    marginBottom: SPACING.md,
+    lineHeight: FONT_SIZE.displaySm,
   },
   message: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 24,
+    lineHeight: SPACING.xl,
+    marginBottom: SPACING.xl,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
   },
   buttonContainer: {
@@ -202,32 +203,29 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 16,
+    paddingVertical: SPACING.md + SPACING.micro,
+    borderRadius: BORDER_RADIUS.xl,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    marginRight: 6,
+    marginRight: SPACING.xsPlus,
   },
   button: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 16,
+    paddingVertical: SPACING.md + SPACING.micro,
+    borderRadius: BORDER_RADIUS.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 6,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginLeft: SPACING.xsPlus,
+    ...SHADOWS.medium,
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: SPACING.lg,
+    right: SPACING.lg,
+    width: SPACING.xxl,
+    height: SPACING.xxl,
+    borderRadius: BORDER_RADIUS.xl,
     justifyContent: 'center',
     alignItems: 'center',
   },

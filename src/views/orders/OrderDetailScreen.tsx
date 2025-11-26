@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator } from "react-native";
-import { useTheme } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import { getOrderById } from "../../services/orderService";
 import { getProductById } from "../../services/productService";
 import { Order, OrderItem } from "../../domain/orderDomain";
 import { SettingsStackParamList } from "../../navigation/types";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type OrderDetailScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'OrderDetail'>;
 
@@ -64,7 +65,7 @@ const getStatusText = (status: string) => {
 export default function OrderDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation<OrderDetailScreenNavigationProp>();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
   const { orderId } = route.params as { orderId: string };
 
@@ -82,7 +83,6 @@ export default function OrderDetailScreen() {
         const orderData = await getOrderById(orderId);
         setOrder(orderData);
 
-        // Buscar detalhes dos produtos para cada item
         if (orderData.items && orderData.items.length > 0) {
           const itemsWithProducts = await Promise.all(
             orderData.items.map(async (item) => {
@@ -139,7 +139,7 @@ export default function OrderDetailScreen() {
       <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
         <Header />
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color={paperTheme.colors.error} />
+          <Ionicons name="alert-circle-outline" size={ICON_SIZES.xxxl + ICON_SIZES.xl} color={paperTheme.colors.error} />
           <Text style={[styles.errorText, { color: paperTheme.colors.onSurface }]}>
             Erro ao carregar pedido
           </Text>
@@ -161,8 +161,8 @@ export default function OrderDetailScreen() {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom + 100, 120),
-          paddingTop: 10,
+          paddingBottom: Math.max(insets.bottom + SPACING.xxxl * 2 + SPACING.xlBase, SPACING.xxxl * 3),
+          paddingTop: SPACING.smPlus,
         }}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
@@ -171,7 +171,7 @@ export default function OrderDetailScreen() {
         <View style={[styles.orderInfoCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
           <View style={styles.orderHeader}>
             <View style={styles.orderHeaderLeft}>
-              <Ionicons name="receipt-outline" size={32} color={paperTheme.colors.tertiary} />
+              <Ionicons name="receipt-outline" size={ICON_SIZES.xxl + SPACING.xs} color={paperTheme.colors.tertiary} />
               <View style={styles.orderInfo}>
                 <Text style={[styles.orderId, { color: paperTheme.colors.onSurface }]}>
                   Pedido #{order.id.slice(0, 8).toUpperCase()}
@@ -198,7 +198,7 @@ export default function OrderDetailScreen() {
 
           {order.paymentMethod && (
             <View style={styles.paymentInfo}>
-              <Ionicons name="card-outline" size={20} color={paperTheme.colors.onSurfaceVariant} />
+              <Ionicons name="card-outline" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
               <Text style={[styles.paymentText, { color: paperTheme.colors.onSurfaceVariant }]}>
                 Método de pagamento: {order.paymentMethod === 'CREDIT_CARD' ? 'Cartão de Crédito' : order.paymentMethod}
               </Text>
@@ -286,121 +286,115 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: SPACING.xxl,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginTop: SPACING.lg,
+    fontSize: FONT_SIZE.lg,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: SPACING.xxl,
   },
   errorText: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
-    marginTop: 16,
+    marginTop: SPACING.lg,
   },
   errorSubtext: {
-    fontSize: 14,
-    marginTop: 8,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs,
     textAlign: 'center',
   },
   orderInfoCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 16,
-    padding: 20,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xlBase,
+    ...SHADOWS.large,
   },
   orderHeader: {
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   orderHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   orderInfo: {
-    marginLeft: 12,
+    marginLeft: SPACING.md,
     flex: 1,
   },
   orderId: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   orderDate: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
   },
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
     alignSelf: 'flex-start',
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
+    width: SPACING.smPlus,
+    height: SPACING.smPlus,
+    borderRadius: SPACING.xs + 1,
+    marginRight: SPACING.xs,
   },
   statusText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
   },
   paymentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: SPACING.xs,
   },
   paymentText: {
-    fontSize: 14,
-    marginLeft: 8,
+    fontSize: FONT_SIZE.md,
+    marginLeft: SPACING.xs,
   },
   itemsCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 16,
-    padding: 20,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xlBase,
+    ...SHADOWS.large,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 16,
+    marginBottom: SPACING.lg,
+    paddingBottom: SPACING.lg,
     borderBottomWidth: 1,
   },
   productImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
+    width: SPACING.xxxl + SPACING.xlBase,
+    height: SPACING.xxxl + SPACING.xlBase,
+    borderRadius: BORDER_RADIUS.md,
+    marginRight: SPACING.md,
   },
   itemInfo: {
     flex: 1,
   },
   productName: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: SPACING.xs,
   },
   itemDetails: {
     flexDirection: 'row',
@@ -408,51 +402,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemQuantity: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
   },
   itemPrice: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
   },
   noItemsText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     textAlign: 'center',
-    paddingVertical: 20,
+    paddingVertical: SPACING.xlBase,
   },
   summaryCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 20,
-    borderRadius: 16,
-    padding: 20,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.xlBase,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xlBase,
+    ...SHADOWS.large,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 8,
+    marginVertical: SPACING.xs,
   },
   summaryLabel: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
   },
   summaryValue: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
   divider: {
     height: 1,
-    marginVertical: 12,
+    marginVertical: SPACING.md,
   },
   totalLabel: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
   },
   totalValue: {
-    fontSize: 24,
+    fontSize: FONT_SIZE.xxxl,
     fontWeight: 'bold',
   },
 });

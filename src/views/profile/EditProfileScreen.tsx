@@ -6,20 +6,21 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserUpdateDTO } from 'dtos/userDTO';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActionSheetIOS, ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useTheme as usePaperTheme } from 'react-native-paper';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SettingsStackParamList } from '../../../App';
 import CustomModal from '../../components/ui/CustomModal';
 import { useUserProfile } from '../../contexts/UserProfileContext';
-import { User } from '../../domain/userDomain';
+import { User } from '../../types/user';
 import { usePermissions } from '../../hooks/usePermissions';
 import { getUserMe, updateUserMe } from '../../services/userService';
+import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
 
 type EditProfileScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'EditProfile'>;
 
 const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
-  const paperTheme = usePaperTheme();
+  const paperTheme = useCustomTheme();
   const permissions = usePermissions();
   const { profile: contextProfile, setLocalPhoto: setProfilePhoto, applyProfileUpdate, localPhoto } = useUserProfile();
   const [user, setUser] = useState<User | null>(null);
@@ -399,23 +400,23 @@ const EditProfileScreen: React.FC = () => {
       flex: 1,
     },
     scrollContent: {
-      padding: 16,
-      paddingBottom: 100,
+      padding: SPACING.lg,
+      paddingBottom: SPACING.xxxl * 2 + SPACING.xlBase,
     },
     title: {
-      fontSize: 28,
+      fontSize: FONT_SIZE.displaySm,
       fontWeight: 'bold',
-      marginBottom: 24,
+      marginBottom: SPACING.xl,
     },
     profileSection: {
       alignItems: 'center',
-      marginBottom: 24,
+      marginBottom: SPACING.xl,
     },
     avatarContainer: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      marginBottom: 16,
+      width: SPACING.jumbo * 2,
+      height: SPACING.jumbo * 2,
+      borderRadius: SPACING.jumbo,
+      marginBottom: SPACING.lg,
       overflow: 'hidden',
       justifyContent: 'center',
       alignItems: 'center',
@@ -425,72 +426,72 @@ const EditProfileScreen: React.FC = () => {
       height: '100%',
     },
     avatarPlaceholder: {
-      fontSize: 32,
+      fontSize: FONT_SIZE.displayMd,
     },
     uploadButton: {
-      paddingVertical: 12,
-      paddingHorizontal: 24,
-      borderRadius: 8,
-      minWidth: 140,
+      paddingVertical: SPACING.md,
+      paddingHorizontal: SPACING.xl,
+      borderRadius: BORDER_RADIUS.md,
+      minWidth: SPACING.xxxl * 3 + SPACING.xlBase,
       alignItems: 'center',
       justifyContent: 'center',
     },
     uploadButtonText: {
-      fontSize: 16,
+      fontSize: FONT_SIZE.lg,
       fontWeight: '600',
     },
     formGroup: {
-      marginBottom: 16,
+      marginBottom: SPACING.lg,
     },
     label: {
-      fontSize: 16,
+      fontSize: FONT_SIZE.lg,
       fontWeight: '600',
-      marginBottom: 8,
+      marginBottom: SPACING.xs,
     },
     input: {
       borderWidth: 1,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      fontSize: 16,
+      borderRadius: BORDER_RADIUS.md,
+      paddingHorizontal: SPACING.lg,
+      paddingVertical: SPACING.md,
+      fontSize: FONT_SIZE.lg,
     },
     inputError: {
     },
     inputNormal: {
     },
     errorText: {
-      fontSize: 14,
-      marginTop: 4,
+      fontSize: FONT_SIZE.md,
+      marginTop: SPACING.xs,
     },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: 8,
-      marginBottom: 16,
-      gap: 12,
+      marginTop: SPACING.xs,
+      marginBottom: SPACING.lg,
+      gap: SPACING.md,
     },
     cancelButton: {
       flex: 1,
-      paddingVertical: 16,
-      borderRadius: 8,
+      paddingVertical: SPACING.lg,
+      borderRadius: BORDER_RADIUS.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
     cancelButtonText: {
-      fontSize: 16,
+      fontSize: FONT_SIZE.lg,
       fontWeight: '600',
     },
     saveButton: {
       flex: 1,
-      paddingVertical: 16,
-      borderRadius: 8,
+      paddingVertical: SPACING.lg,
+      borderRadius: BORDER_RADIUS.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
     saveButtonDisabled: {
     },
     saveButtonText: {
-      fontSize: 16,
+      fontSize: FONT_SIZE.lg,
       fontWeight: '600',
     },
   });

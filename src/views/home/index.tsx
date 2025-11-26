@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     },
     scrollViewContent: {
         padding: SPACING.lg,
-        paddingBottom: 200, 
+        paddingBottom: SPACING.xxxl * 5, 
     },
     marketInfoCard: {
         flexDirection: 'row',
@@ -434,8 +434,8 @@ const styles = StyleSheet.create({
         ...SHADOWS.large,
     },
     marketImage: {
-        width: 80,
-        height: 80,
+        width: SPACING.xxxl * 2,
+        height: SPACING.xxxl * 2,
         borderRadius: BORDER_RADIUS.lg,
         marginRight: SPACING.lg,
     },
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     },
     marketAddress: {
         fontSize: FONT_SIZE.md,
-        lineHeight: 20,
+        lineHeight: SPACING.xlBase,
     },
     marketDistanceContainer: {
         marginTop: SPACING.sm,
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     productList: {
-        minHeight: 250,
+        minHeight: SPACING.xxxl * 6 + SPACING.xlBase,
     },
     listFooter: {
         justifyContent: 'center',

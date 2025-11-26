@@ -7,7 +7,8 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,12 +17,13 @@ import { Header } from "../../components/layout/header";
 import { getUserSuggestions, getSuggestionById } from "../../services/suggestionService";
 import { Suggestion, SuggestionListItem } from "../../types/suggestion";
 import { formatDate, getRelativeTime } from "../../utils/dateUtils";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type HistoryScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function HistoryScreen() {
   const navigation = useNavigation<HistoryScreenNavigationProp>();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -116,13 +118,13 @@ export default function HistoryScreen() {
 
           <View style={styles.badgesContainer}>
             <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-              <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
+              <Ionicons name="cube-outline" size={ICON_SIZES.sm} color={paperTheme.colors.primary} />
               <Text style={[styles.badgeText, { color: paperTheme.colors.onSurfaceVariant }]}>
                 {essentialProducts.length} essenciais
               </Text>
             </View>
             <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-              <Ionicons name="bag-outline" size={12} color={paperTheme.colors.primary} />
+              <Ionicons name="bag-outline" size={ICON_SIZES.sm} color={paperTheme.colors.primary} />
               <Text style={[styles.badgeText, { color: paperTheme.colors.onSurfaceVariant }]}>
                 {totalProducts} produtos
               </Text>
@@ -137,7 +139,7 @@ export default function HistoryScreen() {
             </Text>
             <Ionicons
               name="chevron-forward"
-              size={16}
+              size={ICON_SIZES.md}
               color={paperTheme.colors.primary}
             />
           </View>
@@ -153,7 +155,7 @@ export default function HistoryScreen() {
       <View style={styles.emptyContainer}>
         <Ionicons
           name="bag-outline"
-          size={64}
+          size={ICON_SIZES.xxxl + ICON_SIZES.xl}
           color={paperTheme.colors.onSurfaceVariant}
         />
         <Text
@@ -188,7 +190,7 @@ export default function HistoryScreen() {
             size="large"
             color={paperTheme.colors.primary}
           />
-          <Text style={{ color: paperTheme.colors.onBackground, marginTop: 10 }}>
+          <Text style={{ color: paperTheme.colors.onBackground, marginTop: SPACING.smPlus }}>
             Carregando...
           </Text>
         </View>
@@ -208,14 +210,14 @@ export default function HistoryScreen() {
         >
           <Ionicons
             name="chevron-back"
-            size={24}
+            size={ICON_SIZES.xl}
             color={paperTheme.colors.onSurface}
           />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Ionicons
             name="sparkles"
-            size={28}
+            size={ICON_SIZES.xlPlus}
             color={paperTheme.colors.primary}
           />
           <Text style={[styles.title, { color: paperTheme.colors.onSurface }]}>
@@ -276,109 +278,106 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
     borderBottomWidth: 1,
   },
   backButton: {
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: SPACING.xs,
   },
   title: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: "bold",
   },
   errorContainer: {
-    padding: 16,
+    padding: SPACING.lg,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     textAlign: "center",
   },
   list: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xxl,
   },
   emptyList: {
     flexGrow: 1,
   },
   suggestionCard: {
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    marginBottom: 16,
-    padding: 16,
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: SPACING.lg,
+    padding: SPACING.lg,
+    ...SHADOWS.medium,
   },
   cardContent: {
     flex: 1,
   },
   cardHeader: {
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   taskText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   dateText: {
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
   },
   badgesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
+    gap: SPACING.xs,
+    marginBottom: SPACING.md,
   },
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    gap: SPACING.xs,
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.lg,
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: FONT_SIZE.sm - 1,
     fontWeight: "500",
   },
   viewMoreContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: SPACING.xs,
   },
   viewMoreText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: "500",
-    marginRight: 4,
+    marginRight: SPACING.xs,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
-    paddingVertical: 60,
+    paddingHorizontal: SPACING.xxl,
+    paddingVertical: SPACING.xxxl + SPACING.xlBase,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "600",
-    marginTop: 16,
+    marginTop: SPACING.lg,
     textAlign: "center",
   },
   emptySubtitle: {
-    fontSize: 14,
-    marginTop: 8,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs,
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: SPACING.xlBase,
   },
   footerLoader: {
-    marginVertical: 16,
+    marginVertical: SPACING.lg,
   },
 });
 

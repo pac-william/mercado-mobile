@@ -4,6 +4,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { getCategories } from '../../services/categoryService';
 import { Category } from '../../domain/categoryDomain';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 
 interface CategoryFilterProps {
   selectedCategoryIds: string[];
@@ -113,7 +114,7 @@ export default function CategoryFilter({
               {isSelected && (
                 <Ionicons
                   name="checkmark-circle"
-                  size={16}
+                  size={ICON_SIZES.md}
                   color={paperTheme.colors.onPrimary}
                   style={styles.checkIcon}
                 />
@@ -128,37 +129,37 @@ export default function CategoryFilter({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   label: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   categoriesContainer: {
-    gap: 8,
+    gap: SPACING.xs,
   },
   categoryChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.smPlus,
+    borderRadius: BORDER_RADIUS.xlBase,
     borderWidth: 1,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '500',
   },
   checkIcon: {
-    marginLeft: 6,
+    marginLeft: SPACING.xsPlus,
   },
   loadingContainer: {
-    paddingVertical: 20,
+    paddingVertical: SPACING.xlBase,
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontStyle: 'italic',
   },
 });

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Animated, Image, Platform, StatusBar, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Text, useTheme } from "react-native-paper";
+import { ActivityIndicator, Text } from "react-native-paper";
 import { useTheme as useAppTheme } from "../../contexts/ThemeContext";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { SPACING, FONT_SIZE } from "../../constants/styles";
 
 export default function SplashScreen() {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const { isDark } = useAppTheme();
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
@@ -62,7 +64,7 @@ export default function SplashScreen() {
 }
 
 export function InitialLoadingScreen() {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const { isDark } = useAppTheme();
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
@@ -124,24 +126,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: SPACING.xl,
   },
   logoContainer: {
-    marginBottom: 48,
+    marginBottom: SPACING.jumbo,
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: SPACING.xxxl * 5,
+    height: SPACING.xxxl * 5,
   },
   loadingContainer: {
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: SPACING.lg,
     fontWeight: "600",
   },
   subtitleText: {
-    marginTop: 8,
+    marginTop: SPACING.xs,
     textAlign: "center",
   },
 });

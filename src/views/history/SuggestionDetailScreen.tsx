@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,13 +19,14 @@ import { Suggestion } from "../../types/suggestion";
 import { useMarketLoader } from "../../hooks/useMarketLoader";
 import { formatDistance } from "../../utils/distance";
 import { useUserLocation } from "../../hooks/useUserLocation";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 type SuggestionDetailScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function SuggestionDetailScreen() {
   const navigation = useNavigation<SuggestionDetailScreenNavigationProp>();
   const route = useRoute();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const { suggestionId } = route.params as { suggestionId: string };
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function SuggestionDetailScreen() {
             size="large"
             color={paperTheme.colors.primary}
           />
-          <Text style={{ color: paperTheme.colors.onBackground, marginTop: 10 }}>
+          <Text style={{ color: paperTheme.colors.onBackground, marginTop: SPACING.smPlus }}>
             Carregando...
           </Text>
         </View>
@@ -85,7 +87,7 @@ export default function SuggestionDetailScreen() {
         <Header />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color={paperTheme.colors.onSurface} />
+            <Ionicons name="chevron-back" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: paperTheme.colors.onSurface }]}>
             Escolher Mercado
@@ -94,7 +96,7 @@ export default function SuggestionDetailScreen() {
         <View style={styles.errorContainer}>
           <Ionicons
             name="alert-circle-outline"
-            size={64}
+            size={ICON_SIZES.xxxl + ICON_SIZES.xl}
             color={paperTheme.colors.error}
           />
           <Text
@@ -114,7 +116,7 @@ export default function SuggestionDetailScreen() {
       <Header />
       <View style={[styles.header, { borderBottomColor: paperTheme.colors.borderLight }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={paperTheme.colors.onSurface} />
+          <Ionicons name="chevron-back" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: paperTheme.colors.onSurface }]}>
           Escolher Mercado
@@ -132,7 +134,7 @@ export default function SuggestionDetailScreen() {
           </Text>
           {markets.length === 0 ? (
             <View style={styles.emptyMarketsContainer}>
-              <Ionicons name="storefront-outline" size={48} color={paperTheme.colors.onSurfaceVariant} />
+              <Ionicons name="storefront-outline" size={SPACING.jumbo} color={paperTheme.colors.onSurfaceVariant} />
               <Text style={[styles.emptyText, { color: paperTheme.colors.onSurfaceVariant }]}>
                 Nenhum mercado encontrado
               </Text>
@@ -162,7 +164,7 @@ export default function SuggestionDetailScreen() {
                       <Image source={{ uri: market.logo }} style={styles.marketLogo} />
                     ) : (
                       <View style={[styles.marketLogoPlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                        <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
+                        <Ionicons name="storefront-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />
                       </View>
                     )}
                     <View style={styles.marketInfo}>
@@ -183,14 +185,14 @@ export default function SuggestionDetailScreen() {
                               { borderColor: paperTheme.colors.secondary, backgroundColor: paperTheme.colors.surface },
                             ]}
                           >
-                            <Ionicons name="navigate-outline" size={12} color={paperTheme.colors.secondary} />
+                            <Ionicons name="navigate-outline" size={ICON_SIZES.sm} color={paperTheme.colors.secondary} />
                             <Text style={[styles.marketBadgeText, { color: paperTheme.colors.secondary }]}>
                               {distanceLabel}
                             </Text>
                           </View>
                         )}
                         <View style={[styles.marketBadge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                          <Ionicons name="cube-outline" size={12} color={paperTheme.colors.primary} />
+                          <Ionicons name="cube-outline" size={ICON_SIZES.sm} color={paperTheme.colors.primary} />
                           <Text style={[styles.marketBadgeText, { color: paperTheme.colors.primary }]}>
                             {market.productCount} {market.productCount === 1 ? "produto" : "produtos"}
                           </Text>
@@ -202,7 +204,7 @@ export default function SuggestionDetailScreen() {
                         </View>
                       </View>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+                    <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
                   </View>
                 </TouchableOpacity>
               );
@@ -226,111 +228,111 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
     borderBottomWidth: 1,
   },
   backButton: {
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "600",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xxl,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: SPACING.xxl,
   },
   errorText: {
-    fontSize: 16,
-    marginTop: 16,
+    fontSize: FONT_SIZE.lg,
+    marginTop: SPACING.lg,
     textAlign: "center",
   },
   marketsSection: {
-    marginTop: 8,
+    marginTop: SPACING.xs,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "600",
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   emptyMarketsContainer: {
     alignItems: "center",
-    paddingVertical: 48,
+    paddingVertical: SPACING.jumbo,
   },
   emptyText: {
-    fontSize: 14,
-    marginTop: 12,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.md,
   },
   marketLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    marginRight: 12,
+    width: SPACING.xxxl + SPACING.lg,
+    height: SPACING.xxxl + SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    marginRight: SPACING.md,
   },
   marketLogoPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    marginRight: 12,
+    width: SPACING.xxxl + SPACING.lg,
+    height: SPACING.xxxl + SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    marginRight: SPACING.md,
     justifyContent: "center",
     alignItems: "center",
   },
   marketCard: {
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: SPACING.md,
     overflow: "hidden",
   },
   marketCardContent: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    padding: SPACING.lg,
   },
   marketInfo: {
     flex: 1,
   },
   marketName: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   marketAddress: {
-    fontSize: 12,
-    marginBottom: 8,
+    fontSize: FONT_SIZE.sm,
+    marginBottom: SPACING.xs,
   },
   marketBadges: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginTop: 4,
+    gap: SPACING.xs,
+    marginTop: SPACING.xs,
   },
   marketBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    gap: SPACING.xs,
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.md,
   },
   marketDistanceBadge: {
     borderWidth: 1,
   },
   marketBadgeText: {
-    fontSize: 11,
+    fontSize: FONT_SIZE.sm - 1,
     fontWeight: "500",
   },
   marketPriceText: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md - 1,
     fontWeight: "600",
   },
 });

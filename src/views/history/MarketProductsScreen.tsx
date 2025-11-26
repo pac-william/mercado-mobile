@@ -9,7 +9,8 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,6 +25,7 @@ import { Suggestion } from "../../types/suggestion";
 import { useCart } from "../../contexts/CartContext";
 import { useSession } from "../../hooks/useSession";
 import { addItemToCart, addMultipleItemsToCart, updateCartItem, removeCartItem } from "../../services/cartService";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 type MarketProductsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -37,7 +39,7 @@ interface ProductWithQuantity extends Product {
 export default function MarketProductsScreen() {
   const navigation = useNavigation<MarketProductsScreenNavigationProp>();
   const route = useRoute();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
   const { suggestionId, marketId, products: cachedProducts } = route.params as { 
     suggestionId: string; 
@@ -507,14 +509,14 @@ export default function MarketProductsScreen() {
       ]}
     >
       <View style={styles.productContent}>
-        {renderImage(product.image, 80, 24)}
+        {renderImage(product.image, SPACING.xxxl * 2, ICON_SIZES.xl)}
         <View style={styles.productInfo}>
           <View style={styles.productHeader}>
             <Text style={[styles.productName, { color: paperTheme.colors.onSurface }]} numberOfLines={2}>
               {product.name}
             </Text>
             <TouchableOpacity onPress={() => handleShowAlternatives(product)} style={styles.replaceButton}>
-              <Ionicons name="swap-horizontal" size={18} color={paperTheme.colors.primary} />
+              <Ionicons name="swap-horizontal" size={ICON_SIZES.xlPlus} color={paperTheme.colors.primary} />
             </TouchableOpacity>
           </View>
           {product.unit && (
@@ -535,7 +537,7 @@ export default function MarketProductsScreen() {
             disabled={product.quantity === 0}
             style={[styles.quantityButton, { backgroundColor: product.quantity === 0 ? paperTheme.colors.surfaceVariant : paperTheme.colors.primary }]}
           >
-            <Ionicons name="remove" size={18} color={product.quantity === 0 ? paperTheme.colors.onSurfaceVariant : "white"} />
+            <Ionicons name="remove" size={ICON_SIZES.xlPlus} color={product.quantity === 0 ? paperTheme.colors.onSurfaceVariant : "white"} />
           </TouchableOpacity>
           <View style={styles.quantityValue}>
             <Text style={[styles.quantityText, { color: paperTheme.colors.onSurface }]}>{product.quantity}</Text>
@@ -544,7 +546,7 @@ export default function MarketProductsScreen() {
             onPress={() => handleAddProduct(product)}
             style={[styles.quantityButton, { backgroundColor: paperTheme.colors.primary }]}
           >
-            <Ionicons name="add" size={18} color={paperTheme.colors.onPrimary} />
+            <Ionicons name="add" size={ICON_SIZES.xlPlus} color={paperTheme.colors.onPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -566,7 +568,7 @@ export default function MarketProductsScreen() {
   const renderHeader = () => (
     <View style={[styles.header, { borderBottomColor: paperTheme.colors.borderLight }]}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="chevron-back" size={24} color={paperTheme.colors.onSurface} />
+        <Ionicons name="chevron-back" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
       </TouchableOpacity>
       {market && (
         <View style={styles.headerContent}>
@@ -598,7 +600,7 @@ export default function MarketProductsScreen() {
         <Header />
         {renderHeader()}
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color={paperTheme.colors.error} />
+          <Ionicons name="alert-circle-outline" size={ICON_SIZES.xxxl + ICON_SIZES.xl} color={paperTheme.colors.error} />
           <Text style={[styles.errorText, { color: paperTheme.colors.error }]}>{error || "Erro ao carregar produtos"}</Text>
         </View>
       </View>
@@ -621,7 +623,7 @@ export default function MarketProductsScreen() {
       >
         {products.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="cube-outline" size={64} color={paperTheme.colors.onSurfaceVariant} />
+            <Ionicons name="cube-outline" size={ICON_SIZES.xxxl + ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />
             <Text style={[styles.emptyText, { color: paperTheme.colors.onSurfaceVariant }]}>
               Nenhum produto encontrado
             </Text>
@@ -693,7 +695,7 @@ export default function MarketProductsScreen() {
                 Escolher Alternativa
               </Text>
               <TouchableOpacity onPress={handleCloseModal} style={styles.modalCloseButton}>
-                <Ionicons name="close" size={24} color={paperTheme.colors.onSurface} />
+                <Ionicons name="close" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
               </TouchableOpacity>
             </View>
             {currentProduct && (
@@ -715,7 +717,7 @@ export default function MarketProductsScreen() {
               </View>
             ) : alternatives.length === 0 ? (
               <View style={styles.modalEmptyContainer}>
-                <Ionicons name="cube-outline" size={48} color={paperTheme.colors.onSurfaceVariant} />
+                <Ionicons name="cube-outline" size={SPACING.jumbo} color={paperTheme.colors.onSurfaceVariant} />
                 <Text style={[styles.modalEmptyText, { color: paperTheme.colors.onSurfaceVariant }]}>
                   Nenhuma alternativa encontrada
                 </Text>
@@ -732,7 +734,7 @@ export default function MarketProductsScreen() {
                     ]}
                     onPress={() => handleReplaceProduct(item)}
                   >
-                    {renderImage(item.image, 60, 20)}
+                    {renderImage(item.image, SPACING.xxxl + SPACING.xlBase, ICON_SIZES.xl)}
                     <View style={styles.alternativeInfo}>
                       <Text style={[styles.alternativeName, { color: paperTheme.colors.onSurface }]} numberOfLines={2}>
                         {item.name}
@@ -746,7 +748,7 @@ export default function MarketProductsScreen() {
                         R$ {item.price.toFixed(2)}
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+                    <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
                   </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.modalListContent}
@@ -773,26 +775,26 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
     borderBottomWidth: 1,
   },
   backButton: {
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   headerContent: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: SPACING.xs,
   },
   marketLogo: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: SPACING.xxl,
+    height: SPACING.xxl,
+    borderRadius: BORDER_RADIUS.md,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "600",
     flex: 1,
   },
@@ -800,53 +802,53 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: SPACING.lg,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: SPACING.xxl,
   },
   errorText: {
-    fontSize: 16,
-    marginTop: 16,
+    fontSize: FONT_SIZE.lg,
+    marginTop: SPACING.lg,
     textAlign: "center",
   },
   emptyContainer: {
     alignItems: "center",
-    paddingVertical: 48,
+    paddingVertical: SPACING.jumbo,
   },
   emptyText: {
-    fontSize: 14,
-    marginTop: 12,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.md,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   sectionHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
   },
   productCard: {
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    marginBottom: 12,
-    padding: 16,
+    marginBottom: SPACING.md,
+    padding: SPACING.lg,
   },
   productContent: {
     flexDirection: "row",
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   imageBase: {
-    borderRadius: 12,
-    marginRight: 12,
+    borderRadius: BORDER_RADIUS.lg,
+    marginRight: SPACING.md,
   },
   imagePlaceholder: {
     justifyContent: "center",
@@ -860,23 +862,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   productName: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
     flex: 1,
-    marginRight: 8,
+    marginRight: SPACING.xs,
   },
   replaceButton: {
-    padding: 4,
+    padding: SPACING.xs,
   },
   productUnit: {
-    fontSize: 12,
-    marginBottom: 8,
+    fontSize: FONT_SIZE.sm,
+    marginBottom: SPACING.xs,
   },
   productPrice: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "bold",
   },
   quantityContainer: {
@@ -885,49 +887,49 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   quantityLabel: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: "600",
   },
   quantityControls: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 20,
-    paddingHorizontal: 4,
-    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: SPACING.xs,
   },
   quantityButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: SPACING.xxxl - SPACING.xs,
+    height: SPACING.xxxl - SPACING.xs,
+    borderRadius: SPACING.lgPlus,
     justifyContent: "center",
     alignItems: "center",
   },
   quantityValue: {
-    minWidth: 40,
+    minWidth: SPACING.xxxl,
     alignItems: "center",
-    marginHorizontal: 10,
+    marginHorizontal: SPACING.smPlus,
   },
   quantityText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
   },
   footer: {
     borderTopWidth: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg,
   },
   totalContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   totalLabel: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.md + 1,
     fontWeight: "600",
   },
   totalValue: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: "bold",
   },
   modalOverlay: {
@@ -935,80 +937,80 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: BORDER_RADIUS.xl,
+    borderTopRightRadius: BORDER_RADIUS.xl,
     maxHeight: "80%",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "600",
   },
   modalCloseButton: {
-    padding: 4,
+    padding: SPACING.xs,
   },
   currentProductCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 8,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
   },
   currentProductLabel: {
-    fontSize: 12,
-    marginBottom: 4,
+    fontSize: FONT_SIZE.sm,
+    marginBottom: SPACING.xs,
   },
   currentProductName: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: "600",
   },
   modalLoadingContainer: {
-    paddingVertical: 48,
+    paddingVertical: SPACING.jumbo,
     alignItems: "center",
   },
   modalLoadingText: {
-    fontSize: 14,
-    marginTop: 12,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.md,
   },
   modalEmptyContainer: {
-    paddingVertical: 48,
+    paddingVertical: SPACING.jumbo,
     alignItems: "center",
   },
   modalEmptyText: {
-    fontSize: 14,
-    marginTop: 12,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.md,
   },
   modalListContent: {
-    padding: 16,
+    padding: SPACING.lg,
   },
   alternativeCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    padding: 12,
-    marginBottom: 12,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
   alternativeInfo: {
     flex: 1,
   },
   alternativeName: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.md + 1,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   alternativeUnit: {
-    fontSize: 12,
-    marginBottom: 4,
+    fontSize: FONT_SIZE.sm,
+    marginBottom: SPACING.xs,
   },
   alternativePrice: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
   },
 });

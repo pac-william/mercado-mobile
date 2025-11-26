@@ -6,12 +6,13 @@ import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme as usePaperTheme } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { HomeStackParamList } from "../../../App";
 import { useUserProfile } from "../../contexts/UserProfileContext";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import api from "../../services/api";
 import { Session, SessionUser } from "../../types/session";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 interface ProfileButtonProps {
   buttonStyle?: any;
@@ -19,7 +20,7 @@ interface ProfileButtonProps {
 
 export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
-  const paperTheme = usePaperTheme();
+  const paperTheme = useCustomTheme();
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -330,7 +331,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
           )}
         </View>
       ) : (
-        <Ionicons name="person-outline" size={24} color={paperTheme.colors.tertiary} />
+        <Ionicons name="person-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
       )}
     </TouchableOpacity>
   );
@@ -338,21 +339,21 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
 const styles = StyleSheet.create({
   button: {
-    padding: 8,
-    borderRadius: 10,
-    marginLeft: 8,
+    padding: SPACING.xs,
+    borderRadius: BORDER_RADIUS.mdPlus,
+    marginLeft: SPACING.xs,
     position: 'relative',
   },
   userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: SPACING.xxl,
+    height: SPACING.xxl,
+    borderRadius: BORDER_RADIUS.xl,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   userAvatarText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
   },
 });

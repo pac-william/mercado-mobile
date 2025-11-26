@@ -7,11 +7,12 @@ import { Market } from "../../domain/marketDomain";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../../../App";
+import { SPACING } from "../../constants/styles";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
-const cardMargin = 16;
+const cardMargin = SPACING.lg;
 const numColumns = 2;
 const cardWidth = (width - cardMargin * (numColumns + 1)) / numColumns;
 
@@ -69,15 +70,15 @@ const CategoriesGrid = () => {
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 16,
+        marginTop: SPACING.lg,
         flex: 1,
     },
     list: {
-        paddingBottom: 100,
+        paddingBottom: SPACING.xxxl * 2 + SPACING.xlBase,
         justifyContent: 'center',
     },
     loadingContainer: {
-        marginTop: 16,
+        marginTop: SPACING.lg,
         alignItems: "center",
         justifyContent: 'center',
         flex: 1,

@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   },
   text: {
     marginLeft: SPACING.sm,
-    fontSize: 13,
+    fontSize: FONT_SIZE.sm + 1,
     fontWeight: '500',
     textAlign: 'center',
     flex: 1,

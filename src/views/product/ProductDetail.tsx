@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, Image, ScrollView, TouchableOpacity, Dimensions } from "react-native";
-import { Text, Button, Divider, useTheme } from "react-native-paper";
+import { View, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { Text, Button, Divider } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
@@ -10,6 +11,7 @@ import { useModal } from "../../hooks/useModal";
 import { useSession } from "../../hooks/useSession";
 import { addItemToCart } from "../../services/cartService";
 import { Ionicons } from "@expo/vector-icons";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type ProductDetailRouteProp = RouteProp<HomeStackParamList, "ProductDetail">;
 
@@ -25,7 +27,7 @@ export default function ProductDetail({ route }: Props) {
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
   const { isAuthenticated } = useSession();
   const navigation = useNavigation();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAddToCart = async () => {
@@ -118,139 +120,73 @@ export default function ProductDetail({ route }: Props) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
       <ScrollView 
-        style={{ flex: 1 }}
-        contentContainerStyle={{ 
-          paddingBottom: 100, 
-          paddingTop: 10 
-        }}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
-        
-        <View style={{
-          height: 320,
-          backgroundColor: paperTheme.colors.surface,
-          marginHorizontal: 16,
-          marginTop: 10,
-          borderRadius: 24,
-          shadowColor: paperTheme.colors.modalShadow,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.15,
-          shadowRadius: 16,
-          elevation: 8,
-          overflow: 'hidden'
-        }}>
+        <View style={[styles.imageContainer, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
           <Image
             source={{ uri: product.image }}
-            style={{
-              width: "100%",
-              height: "100%",
-              resizeMode: "contain",
-            }}
+            style={styles.productImage}
           />
           
-          <View style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            backgroundColor: paperTheme.colors.discountBadge,
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            borderRadius: 20,
-          }}>
-            <Text style={{ color: paperTheme.colors.white, fontWeight: 'bold', fontSize: 12 }}>
+          <View style={[styles.discountBadge, { backgroundColor: paperTheme.colors.discountBadge }]}>
+            <Text style={[styles.discountText, { color: paperTheme.colors.white }]}>
               -20%
             </Text>
           </View>
         </View>
 
-        <View style={{ 
-          backgroundColor: paperTheme.colors.surface, 
-          marginHorizontal: 16,
-          marginTop: 20,
-          borderRadius: 24, 
-          shadowColor: paperTheme.colors.modalShadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          elevation: 6,
-          padding: 24,
-        }}>
+        <View style={[styles.infoCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
           <Text
             variant="headlineSmall"
-            style={{ 
-              fontWeight: "bold", 
-              marginBottom: 12,
-              color: paperTheme.colors.onSurface,
-              lineHeight: 28
-            }}
+            style={[styles.productName, { color: paperTheme.colors.onSurface }]}
           >
             {product.name}
           </Text>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <View style={styles.priceRow}>
             <Text
               variant="headlineMedium"
-              style={{
-                fontWeight: "bold",
-                color: paperTheme.colors.primary,
-                fontSize: 28,
-                marginRight: 12
-              }}
+              style={[styles.price, { color: paperTheme.colors.primary }]}
             >
               R$ {product.price.toFixed(2)}
             </Text>
-            <Text
-              style={{
-                color: paperTheme.colors.onSurfaceVariant,
-                fontSize: 16,
-                textDecorationLine: 'line-through'
-              }}
-            >
+            <Text style={[styles.oldPrice, { color: paperTheme.colors.onSurfaceVariant }]}>
               R$ {(product.price * 1.25).toFixed(2)}
             </Text>
           </View>
 
-          <Divider style={{ marginVertical: 16, backgroundColor: paperTheme.colors.outline }} />
+          <Divider style={[styles.divider, { backgroundColor: paperTheme.colors.outline }]} />
 
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            marginBottom: 20,
-            backgroundColor: paperTheme.colors.surfaceVariant,
-            padding: 16,
-            borderRadius: 16
-          }}>
-            <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.tertiary} />
-            <View style={{ marginLeft: 12, flex: 1 }}>
-              <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
+          <View style={[styles.marketInfo, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+            <Ionicons name="storefront-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
+            <View style={styles.marketInfoText}>
+              <Text style={[styles.marketInfoLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
                 Disponível em:
               </Text>
-              <Text style={{ fontWeight: "600", color: paperTheme.colors.onSurface, fontSize: 16 }}>
+              <Text style={[styles.marketInfoValue, { color: paperTheme.colors.onSurface }]}>
                 {product.marketName}
               </Text>
             </View>
           </View>
 
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            marginBottom: 24 
-          }}>
-            <View style={{ flexDirection: 'row', marginRight: 12 }}>
+          <View style={styles.ratingRow}>
+            <View style={styles.stars}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <Ionicons 
                   key={star} 
                   name="star" 
-                  size={20} 
+                  size={ICON_SIZES.lg} 
                   color={paperTheme.colors.favoriteIcon} 
                 />
               ))}
             </View>
-            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14 }}>
+            <Text style={[styles.ratingText, { color: paperTheme.colors.onSurfaceVariant }]}>
               (4.8) • 127 avaliações
             </Text>
           </View>
@@ -260,67 +196,42 @@ export default function ProductDetail({ route }: Props) {
             onPress={handleAddToCart}
             disabled={isAdding}
             loading={isAdding}
-            style={{ 
-              borderRadius: 16, 
-              paddingVertical: 8,
-              backgroundColor: paperTheme.colors.primary,
-              shadowColor: paperTheme.colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 6
-            }}
-            labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
-            icon={() => <Ionicons name="cart" size={20} color={paperTheme.colors.onPrimary} />}
+            style={[styles.addButton, { backgroundColor: paperTheme.colors.primary, shadowColor: paperTheme.colors.primary }]}
+            labelStyle={styles.addButtonLabel}
+            icon={() => <Ionicons name="cart" size={ICON_SIZES.lg} color={paperTheme.colors.onPrimary} />}
           >
             {isAdding ? 'Adicionando...' : 'Adicionar ao Carrinho'}
           </Button>
         </View>
 
-        <View style={{ 
-          backgroundColor: paperTheme.colors.surface, 
-          marginHorizontal: 16,
-          marginTop: 16,
-          borderRadius: 24, 
-          shadowColor: paperTheme.colors.modalShadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          elevation: 6,
-          padding: 24,
-        }}>
-          <Text style={{ 
-            fontSize: 18, 
-            fontWeight: 'bold', 
-            marginBottom: 16,
-            color: paperTheme.colors.onSurface
-          }}>
+        <View style={[styles.detailsCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+          <Text style={[styles.detailsTitle, { color: paperTheme.colors.onSurface }]}>
             Detalhes do Produto
           </Text>
           
-          <View style={{ marginBottom: 12 }}>
-            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
+          <View style={styles.detailItem}>
+            <Text style={[styles.detailLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
               Categoria
             </Text>
-            <Text style={{ fontWeight: '600', color: paperTheme.colors.onSurface }}>
+            <Text style={[styles.detailValue, { color: paperTheme.colors.onSurface }]}>
               Alimentos
             </Text>
           </View>
           
-          <View style={{ marginBottom: 12 }}>
-            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
+          <View style={styles.detailItem}>
+            <Text style={[styles.detailLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
               Peso/Volume
             </Text>
-            <Text style={{ fontWeight: '600', color: paperTheme.colors.onSurface }}>
+            <Text style={[styles.detailValue, { color: paperTheme.colors.onSurface }]}>
               500g
             </Text>
           </View>
           
           <View>
-            <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: 14, marginBottom: 4 }}>
+            <Text style={[styles.detailLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
               Validade
             </Text>
-            <Text style={{ fontWeight: '600', color: paperTheme.colors.onSurface }}>
+            <Text style={[styles.detailValue, { color: paperTheme.colors.onSurface }]}>
               30 dias
             </Text>
           </View>
@@ -339,3 +250,138 @@ export default function ProductDetail({ route }: Props) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: SPACING.jumbo * 2 + SPACING.xlBase,
+    paddingTop: SPACING.smPlus,
+  },
+  imageContainer: {
+    height: SPACING.xxxl * 8,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.smPlus,
+    borderRadius: BORDER_RADIUS.xxl,
+    shadowOffset: { width: 0, height: SPACING.xs },
+    shadowOpacity: 0.15,
+    shadowRadius: SPACING.lg,
+    elevation: SPACING.xs,
+    overflow: 'hidden',
+  },
+  productImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: SPACING.lg,
+    right: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xsPlus,
+    borderRadius: BORDER_RADIUS.xl,
+  },
+  discountText: {
+    fontWeight: 'bold',
+    fontSize: FONT_SIZE.sm,
+  },
+  infoCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.xlBase,
+    borderRadius: BORDER_RADIUS.xxl,
+    ...SHADOWS.large,
+    padding: SPACING.xl,
+  },
+  productName: {
+    fontWeight: "bold",
+    marginBottom: SPACING.md,
+    lineHeight: FONT_SIZE.displaySm,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  price: {
+    fontWeight: "bold",
+    fontSize: FONT_SIZE.displaySm,
+    marginRight: SPACING.md,
+  },
+  oldPrice: {
+    fontSize: FONT_SIZE.lg,
+    textDecorationLine: 'line-through',
+  },
+  divider: {
+    marginVertical: SPACING.lg,
+  },
+  marketInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.xlBase,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+  },
+  marketInfoText: {
+    marginLeft: SPACING.md,
+    flex: 1,
+  },
+  marketInfoLabel: {
+    fontSize: FONT_SIZE.md,
+    marginBottom: SPACING.xs,
+  },
+  marketInfoValue: {
+    fontWeight: "600",
+    fontSize: FONT_SIZE.lg,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.xl,
+  },
+  stars: {
+    flexDirection: 'row',
+    marginRight: SPACING.md,
+  },
+  ratingText: {
+    fontSize: FONT_SIZE.md,
+  },
+  addButton: {
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: SPACING.xs,
+    ...SHADOWS.large,
+  },
+  addButtonLabel: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+  },
+  detailsCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xxl,
+    shadowOffset: { width: 0, height: SPACING.xs },
+    shadowOpacity: 0.1,
+    shadowRadius: SPACING.md,
+    elevation: 6,
+    padding: SPACING.xl,
+  },
+  detailsTitle: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: 'bold',
+    marginBottom: SPACING.lg,
+  },
+  detailItem: {
+    marginBottom: SPACING.md,
+  },
+  detailLabel: {
+    fontSize: FONT_SIZE.md,
+    marginBottom: SPACING.xs,
+  },
+  detailValue: {
+    fontWeight: '600',
+  },
+});

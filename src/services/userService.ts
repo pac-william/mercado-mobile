@@ -1,5 +1,5 @@
-import { User } from "domain/userDomain";
-import { UserUpdateDTO } from "dtos/userDTO";
+import { User } from "../types/user";
+import { UserUpdateDTO } from "../dtos/userDTO";
 import api from "./api";
 
 export const getUserMe = async (): Promise<User> => {

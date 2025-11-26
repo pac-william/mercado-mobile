@@ -106,20 +106,20 @@ const HeroBanner = () => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 180,
+    height: SPACING.xxxl * 4 + SPACING.xlBase,
     borderRadius: BORDER_RADIUS.lg,
     overflow: "hidden",
-    marginTop: 10,
+    marginTop: SPACING.smPlus,
     position: "relative",
   },
   slideContainer: {
-    width: width - 32,
-    height: 180,
+    width: width - SPACING.xxl,
+    height: SPACING.xxxl * 4 + SPACING.xlBase,
     position: "relative",
   },
   image: {
-    width: width - 32,
-    height: 180,
+    width: width - SPACING.xxl,
+    height: SPACING.xxxl * 4 + SPACING.xlBase,
     borderRadius: BORDER_RADIUS.lg,
     resizeMode: "cover",
   },
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     top: SPACING.md,
     right: SPACING.md,
     paddingHorizontal: SPACING.md,
-    paddingVertical: 6,
+    paddingVertical: SPACING.xsPlus,
     borderRadius: BORDER_RADIUS.sm,
   },
   overlayTextContent: {
@@ -139,13 +139,13 @@ const styles = StyleSheet.create({
     width: ICON_SIZES.xs,
     height: ICON_SIZES.xs,
     borderRadius: BORDER_RADIUS.xs,
-    marginHorizontal: 3,
+    marginHorizontal: SPACING.micro + 1,
   },
   activeDot: {
     width: ICON_SIZES.xs,
     height: ICON_SIZES.xs,
     borderRadius: BORDER_RADIUS.xs,
-    marginHorizontal: 3,
+    marginHorizontal: SPACING.micro + 1,
   },
 });
 

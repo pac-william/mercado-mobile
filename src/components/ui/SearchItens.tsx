@@ -1,9 +1,11 @@
 import * as React from "react";
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Searchbar, useTheme } from "react-native-paper";
+import { View, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Searchbar } from "react-native-paper";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { getProducts } from "../../services/productService";
 import { getMarkets } from "../../services/marketService";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { SPACING, BORDER_RADIUS, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 export interface SearchResults {
   products: any[];
@@ -16,7 +18,39 @@ interface SearchItensProps {
 }
 
 const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digite produto ou mercado" }) => {
-  const paperTheme = useTheme();
+  const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
+    container: {
+      marginBottom: SPACING.lg,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    searchbar: {
+      flex: 1,
+      marginRight: SPACING.xs,
+      borderRadius: BORDER_RADIUS.xl,
+      elevation: SHADOWS.medium.elevation,
+      shadowColor: theme.colors.modalShadow,
+      shadowOffset: SHADOWS.medium.shadowOffset,
+      shadowOpacity: SHADOWS.medium.shadowOpacity,
+      shadowRadius: SHADOWS.medium.shadowRadius,
+      backgroundColor: theme.colors.surface,
+    },
+    searchButton: {
+      width: SPACING.jumbo,
+      height: SPACING.jumbo,
+      borderRadius: BORDER_RADIUS.xl,
+      justifyContent: "center",
+      alignItems: "center",
+      elevation: SHADOWS.medium.elevation,
+      shadowColor: theme.colors.modalShadow,
+      shadowOffset: SHADOWS.medium.shadowOffset,
+      shadowOpacity: SHADOWS.medium.shadowOpacity,
+      shadowRadius: SHADOWS.medium.shadowRadius,
+      backgroundColor: theme.colors.primary,
+    },
+  }));
   const [searchQuery, setSearchQuery] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
@@ -48,9 +82,9 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
           placeholder={placeholder}
           onChangeText={setSearchQuery}
           value={searchQuery}
-          style={[styles.searchbar, { backgroundColor: paperTheme.colors.surface, marginRight: 8, shadowColor: paperTheme.colors.modalShadow }]}
-          icon={() => <Ionicons name="sparkles-outline" size={24} color={paperTheme.colors.primary} />}
-          clearIcon={() => <Ionicons name="close-circle" size={24} color={paperTheme.colors.onSurfaceVariant} />}
+          style={styles.searchbar}
+          icon={() => <Ionicons name="sparkles-outline" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />}
+          clearIcon={() => <Ionicons name="close-circle" size={ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />}
           onSubmitEditing={handleSearch} 
           inputStyle={{ color: paperTheme.colors.onSurface }}
           placeholderTextColor={paperTheme.colors.onSurfaceVariant}
@@ -58,54 +92,18 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
         <TouchableOpacity
           onPress={handleSearch}
           disabled={loading}
-          style={[
-            styles.searchButton,
-            {
-              backgroundColor: paperTheme.colors.primary,
-              opacity: loading ? 0.6 : 1,
-              shadowColor: paperTheme.colors.modalShadow,
-            }
-          ]}
+          style={[styles.searchButton, loading && { opacity: 0.6 }]}
           activeOpacity={0.7}
         >
           {loading ? (
             <ActivityIndicator size="small" color={paperTheme.colors.onPrimary} />
           ) : (
-            <Ionicons name="search" size={20} color={paperTheme.colors.onPrimary} />
+            <Ionicons name="search" size={ICON_SIZES.lg} color={paperTheme.colors.onPrimary} />
           )}
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { 
-    marginBottom: 16 
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchbar: {
-    flex: 1,
-    borderRadius: 15,
-    elevation: 3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-  },
-  searchButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-  },
-});
 
 export default SearchItens;

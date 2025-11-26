@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, Text } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
 
 interface PriceFilterProps {
   minPrice?: number;
@@ -136,34 +137,34 @@ export default function PriceFilter({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   label: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   inputsContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: SPACING.md,
   },
   inputWrapper: {
     flex: 1,
   },
   inputLabel: {
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: FONT_SIZE.md,
+    marginBottom: SPACING.xs,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
+    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.smPlus,
+    fontSize: FONT_SIZE.lg,
   },
   errorText: {
-    fontSize: 12,
-    marginTop: 8,
+    fontSize: FONT_SIZE.sm,
+    marginTop: SPACING.xs,
   },
 });
 

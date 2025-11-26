@@ -13,7 +13,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import PriceFilter from './PriceFilter';
 import CategoryFilter from './CategoryFilter';
-import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 
 interface FilterModalProps {
   visible: boolean;
@@ -94,7 +94,7 @@ export default function FilterModal({
                   <TouchableOpacity onPress={onClose}>
                     <Ionicons
                       name="close"
-                      size={24}
+                      size={ICON_SIZES.xl}
                       color={paperTheme.colors.onSurface}
                     />
                   </TouchableOpacity>
@@ -169,16 +169,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: BORDER_RADIUS.xlBase,
+    borderTopRightRadius: BORDER_RADIUS.xlBase,
     maxHeight: '80%',
-    paddingBottom: 20,
+    paddingBottom: SPACING.xlBase,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.xlBase,
     paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
   },
@@ -187,19 +187,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalBody: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: SPACING.xlBase,
+    paddingTop: SPACING.xlBase,
   },
   modalFooter: {
     flexDirection: 'row',
     gap: SPACING.md,
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.xlBase,
     paddingTop: SPACING.lg,
     borderTopWidth: 1,
   },
   clearButton: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: SPACING.md + SPACING.micro,
     borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   applyButton: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: SPACING.md + SPACING.micro,
     borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',

@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
@@ -20,10 +19,12 @@ import CustomModal from '../../components/ui/CustomModal';
 import Button from '../../components/ui/Button';
 import { CartItem, useCart } from '../../contexts/CartContext';
 import { OrderCreateDTO } from '../../domain/orderDomain';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
 import { Address, getUserAddresses } from '../../services/addressService';
 import { createOrder } from '../../services/orderService';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 type CheckoutScreenRouteProp = RouteProp<HomeStackParamList, 'Checkout'>;
@@ -38,7 +39,7 @@ const PAYMENT_METHODS = [
 export default function CheckoutScreen() {
   const navigation = useNavigation<CheckoutScreenNavigationProp>();
   const route = useRoute<CheckoutScreenRouteProp>();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
   const { state: cartState, clearCart, removeItem } = useCart();
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
@@ -79,30 +80,24 @@ export default function CheckoutScreen() {
   const loadAddresses = useCallback(async () => {
     try {
       setLoading(true);
-      // Usa getUserAddresses como no AddressesScreen, mas filtra apenas os ativos
       const response = await getUserAddresses(1, 100);
-      // Converter null para undefined para compatibilidade de tipos (como no AddressesScreen)
       const addressesList = (response.addresses || [])
-        .filter(addr => addr.isActive) // Filtra apenas endereços ativos
+        .filter(addr => addr.isActive)
         .map(addr => ({
           ...addr,
           complement: addr.complement ?? undefined
         }));
       setAddresses(addressesList);
       
-      // Se tiver endereços e nenhum selecionado, seleciona o favorito ou o primeiro
       if (addressesList.length > 0) {
         setSelectedAddress(prev => {
-          // Se já tem um selecionado e ele ainda existe na lista, mantém
           if (prev && addressesList.find(addr => addr.id === prev.id)) {
             return prev;
           }
-          // Caso contrário, seleciona o favorito ou o primeiro
           const favorite = addressesList.find(addr => addr.isFavorite);
           return favorite || addressesList[0];
         });
       } else {
-        // Se não tiver endereços, limpa a seleção
         setSelectedAddress(null);
       }
     } catch (error) {
@@ -120,7 +115,6 @@ export default function CheckoutScreen() {
     }
   }, [isAuthenticated]);
 
-  // Recarrega endereços quando a tela ganha foco (ex: quando volta de adicionar endereço)
   useFocusEffect(
     useCallback(() => {
       if (isAuthenticated) {
@@ -130,10 +124,7 @@ export default function CheckoutScreen() {
   );
 
   const handleAddAddress = () => {
-    navigation.navigate('AddAddress', {
-      // O callback será chamado no AddEditAddressScreen
-      // e os endereços serão recarregados via useFocusEffect
-    } as any);
+    navigation.navigate('AddAddress', {} as any);
   };
 
   const handleSelectAddress = (address: Address) => {
@@ -172,12 +163,11 @@ export default function CheckoutScreen() {
     try {
       setCreatingOrder(true);
 
-      // Converte o paymentMethod para o formato esperado pelo backend
       const paymentMethodObj = PAYMENT_METHODS.find(m => m.id === selectedPaymentMethod);
       const backendPaymentMethod = paymentMethodObj?.backendValue || selectedPaymentMethod.toUpperCase();
 
       const orderData: OrderCreateDTO = {
-        userId: user?.sub || '',
+        userId: user?.id || '',
         marketId: checkoutMarketId,
         items: checkoutItems.map((item) => ({
           productId: item.id,
@@ -201,7 +191,6 @@ export default function CheckoutScreen() {
           text: 'Ver Pedidos',
           onPress: () => {
             hideModal();
-            // Navega para a tela de pedidos (pode estar em SettingsStack)
             navigation.getParent()?.navigate('SettingsStack', { screen: 'Orders' } as any);
           },
           style: 'success',
@@ -222,13 +211,11 @@ export default function CheckoutScreen() {
         status: error.response?.status,
       });
       
-      // Extrai mensagem de erro mais detalhada
       let errorMessage = 'Não foi possível processar seu pedido. Tente novamente.';
       
       if (error.response?.data) {
         const errorData = error.response.data;
         
-        // Se for erro de validação do Zod, mostra os erros específicos
         if (errorData.issues && Array.isArray(errorData.issues)) {
           const validationErrors = errorData.issues.map((issue: any) => {
             const path = issue.path?.join('.') || 'campo';
@@ -259,20 +246,11 @@ export default function CheckoutScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
+      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
         <Header />
-        <View style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-          <Text style={{
-            marginTop: 16,
-            fontSize: 16,
-            color: paperTheme.colors.onSurface,
-            opacity: 0.7
-          }}>
+          <Text style={[styles.loadingText, { color: paperTheme.colors.onSurface }]}>
             Carregando...
           </Text>
         </View>
@@ -281,41 +259,24 @@ export default function CheckoutScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={styles.keyboardView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : SPACING.xlBase}
       >
         <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{
-            paddingBottom: Math.max(insets.bottom + 200, 220),
-            paddingTop: 10
-          }}
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Math.max(insets.bottom + SPACING.jumbo * 4 + SPACING.xlBase, SPACING.jumbo * 4 + SPACING.xlBase) }
+          ]}
           showsVerticalScrollIndicator={true}
           indicatorStyle={paperTheme.dark ? 'white' : 'default'}
         >
-          {/* Resumo do Pedido */}
-          <View style={{
-            backgroundColor: paperTheme.colors.surface,
-            marginHorizontal: 16,
-            marginTop: 16,
-            borderRadius: 16,
-            padding: 20,
-            shadowColor: paperTheme.colors.modalShadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
-          }}>
-            <Text style={{
-              fontSize: 20,
-              fontWeight: 'bold',
-              color: paperTheme.colors.onSurface,
-              marginBottom: 16
-            }}>
+          <View style={[styles.card, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+            <Text style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
               Resumo do Pedido
             </Text>
             <View style={{
@@ -330,99 +291,39 @@ export default function CheckoutScreen() {
                 R$ {checkoutTotal.toFixed(2)}
               </Text>
             </View>
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginTop: 12,
-              paddingTop: 12,
-              borderTopWidth: 1,
-              borderTopColor: paperTheme.colors.outline
-            }}>
-              <Text style={{
-                fontSize: 18,
-                fontWeight: 'bold',
-                color: paperTheme.colors.onSurface
-              }}>
+            <View style={[styles.totalRow, { borderTopColor: paperTheme.colors.outline }]}>
+              <Text style={[styles.totalLabel, { color: paperTheme.colors.onSurface }]}>
                 Total
               </Text>
-              <Text style={{
-                fontSize: 24,
-                fontWeight: 'bold',
-                color: paperTheme.colors.primary
-              }}>
+              <Text style={[styles.totalValue, { color: paperTheme.colors.primary }]}>
                 R$ {checkoutTotal.toFixed(2)}
               </Text>
             </View>
           </View>
 
-          {/* Seleção de Endereço */}
-          <View style={{
-            backgroundColor: paperTheme.colors.surface,
-            marginHorizontal: 16,
-            marginTop: 16,
-            borderRadius: 16,
-            padding: 20,
-            shadowColor: paperTheme.colors.modalShadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
-          }}>
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 16
-            }}>
-              <Text style={{
-                fontSize: 20,
-                fontWeight: 'bold',
-                color: paperTheme.colors.onSurface
-              }}>
+          <View style={[styles.card, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+            <View style={styles.cardHeader}>
+              <Text style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
                 Endereço de Entrega
               </Text>
               <TouchableOpacity
                 onPress={handleAddAddress}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  backgroundColor: paperTheme.colors.primary,
-                  borderRadius: 20,
-                }}
+                style={[styles.addButton, { backgroundColor: paperTheme.colors.primary }]}
               >
-                <Ionicons name="add" size={18} color={paperTheme.colors.onPrimary} />
-                <Text style={{ color: paperTheme.colors.onPrimary, fontSize: 12, marginLeft: 4, fontWeight: '600' }}>
+                <Ionicons name="add" size={ICON_SIZES.lg} color={paperTheme.colors.onPrimary} />
+                <Text style={[styles.addButtonText, { color: paperTheme.colors.onPrimary }]}>
                   Novo
                 </Text>
               </TouchableOpacity>
             </View>
 
             {addresses.length === 0 ? (
-              <View style={{
-                padding: 20,
-                alignItems: 'center',
-                backgroundColor: paperTheme.colors.surfaceVariant,
-                borderRadius: 12,
-              }}>
-                <Ionicons name="location-outline" size={48} color={paperTheme.colors.outline} />
-                <Text style={{
-                  marginTop: 12,
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: paperTheme.colors.onSurface,
-                  marginBottom: 8
-                }}>
+              <View style={[styles.emptyAddressContainer, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                <Ionicons name="location-outline" size={SPACING.jumbo} color={paperTheme.colors.outline} />
+                <Text style={[styles.emptyAddressTitle, { color: paperTheme.colors.onSurface }]}>
                   Nenhum endereço cadastrado
                 </Text>
-                <Text style={{
-                  fontSize: 14,
-                  color: paperTheme.colors.onSurface,
-                  opacity: 0.7,
-                  textAlign: 'center',
-                  marginBottom: 16
-                }}>
+                <Text style={[styles.emptyAddressText, { color: paperTheme.colors.onSurface }]}>
                   Cadastre um endereço para continuar com a compra
                 </Text>
                 <Button
@@ -439,74 +340,45 @@ export default function CheckoutScreen() {
                   <TouchableOpacity
                     key={address.id}
                     onPress={() => handleSelectAddress(address)}
-                    style={{
-                      borderWidth: 2,
-                      borderColor: selectedAddress?.id === address.id
-                        ? paperTheme.colors.primary
-                        : paperTheme.colors.outline,
-                      borderRadius: 12,
-                      padding: 16,
-                      marginBottom: 12,
-                      backgroundColor: selectedAddress?.id === address.id
-                        ? paperTheme.colors.primaryContainer
-                        : paperTheme.colors.surfaceVariant,
-                    }}
+                    style={[
+                      styles.addressItem,
+                      {
+                        borderColor: selectedAddress?.id === address.id
+                          ? paperTheme.colors.primary
+                          : paperTheme.colors.outline,
+                        backgroundColor: selectedAddress?.id === address.id
+                          ? paperTheme.colors.primaryContainer
+                          : paperTheme.colors.surfaceVariant,
+                      }
+                    ]}
                   >
-                    <View style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: 8
-                    }}>
-                      <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                          <Text style={{
-                            fontSize: 16,
-                            fontWeight: 'bold',
-                            color: paperTheme.colors.onSurface
-                          }}>
+                    <View style={styles.addressItemContent}>
+                      <View style={styles.addressItemInfo}>
+                        <View style={styles.addressItemHeader}>
+                          <Text style={[styles.addressName, { color: paperTheme.colors.onSurface }]}>
                             {address.name}
                           </Text>
                           {address.isFavorite && (
-                            <Ionicons name="star" size={16} color={paperTheme.colors.favoriteIcon} style={{ marginLeft: 8 }} />
+                            <Ionicons name="star" size={ICON_SIZES.lg} color={paperTheme.colors.favoriteIcon} style={styles.favoriteIcon} />
                           )}
                         </View>
-                        <Text style={{
-                          fontSize: 14,
-                          color: paperTheme.colors.onSurface,
-                          opacity: 0.7,
-                          marginBottom: 2
-                        }}>
+                        <Text style={[styles.addressText, { color: paperTheme.colors.onSurface }]}>
                           {address.street}, {address.number}
                         </Text>
                         {address.complement && (
-                          <Text style={{
-                            fontSize: 14,
-                            color: paperTheme.colors.onSurface,
-                            opacity: 0.7,
-                            marginBottom: 2
-                          }}>
+                          <Text style={[styles.addressText, { color: paperTheme.colors.onSurface }]}>
                             {address.complement}
                           </Text>
                         )}
-                        <Text style={{
-                          fontSize: 14,
-                          color: paperTheme.colors.onSurface,
-                          opacity: 0.7,
-                          marginBottom: 2
-                        }}>
+                        <Text style={[styles.addressText, { color: paperTheme.colors.onSurface }]}>
                           {address.neighborhood}, {address.city} - {address.state}
                         </Text>
-                        <Text style={{
-                          fontSize: 14,
-                          color: paperTheme.colors.onSurface,
-                          opacity: 0.7
-                        }}>
+                        <Text style={[styles.addressText, { color: paperTheme.colors.onSurface }]}>
                           CEP: {address.zipCode}
                         </Text>
                       </View>
                       {selectedAddress?.id === address.id && (
-                        <Ionicons name="checkmark-circle" size={24} color={paperTheme.colors.primary} />
+                        <Ionicons name="checkmark-circle" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -515,25 +387,8 @@ export default function CheckoutScreen() {
             )}
           </View>
 
-          {/* Seleção de Forma de Pagamento */}
-          <View style={{
-            backgroundColor: paperTheme.colors.surface,
-            marginHorizontal: 16,
-            marginTop: 16,
-            borderRadius: 16,
-            padding: 20,
-            shadowColor: paperTheme.colors.modalShadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
-          }}>
-            <Text style={{
-              fontSize: 20,
-              fontWeight: 'bold',
-              color: paperTheme.colors.onSurface,
-              marginBottom: 16
-            }}>
+          <View style={[styles.card, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+            <Text style={[styles.cardTitle, { color: paperTheme.colors.onSurface }]}>
               Forma de Pagamento
             </Text>
 
@@ -542,39 +397,35 @@ export default function CheckoutScreen() {
                 <TouchableOpacity
                   key={method.id}
                   onPress={() => handleSelectPaymentMethod(method.id)}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 2,
-                    borderColor: selectedPaymentMethod === method.id
-                      ? paperTheme.colors.primary
-                      : paperTheme.colors.outline,
-                    borderRadius: 12,
-                    padding: 16,
-                    marginBottom: 12,
-                    backgroundColor: selectedPaymentMethod === method.id
-                      ? paperTheme.colors.primaryContainer
-                      : paperTheme.colors.surfaceVariant,
-                  }}
+                  style={[
+                    styles.paymentMethodItem,
+                    {
+                      borderColor: selectedPaymentMethod === method.id
+                        ? paperTheme.colors.primary
+                        : paperTheme.colors.outline,
+                      backgroundColor: selectedPaymentMethod === method.id
+                        ? paperTheme.colors.primaryContainer
+                        : paperTheme.colors.surfaceVariant,
+                    }
+                  ]}
                 >
                   <Ionicons
                     name={method.icon as any}
-                    size={24}
+                    size={ICON_SIZES.xl}
                     color={selectedPaymentMethod === method.id
                       ? paperTheme.colors.primary
                       : paperTheme.colors.onSurfaceVariant}
-                    style={{ marginRight: 12 }}
+                    style={styles.paymentMethodIcon}
                   />
-                  <Text style={{
-                    flex: 1,
-                    fontSize: 16,
-                    fontWeight: selectedPaymentMethod === method.id ? '600' : '400',
-                    color: paperTheme.colors.onSurface
-                  }}>
+                  <Text style={[
+                    styles.paymentMethodText,
+                    { color: paperTheme.colors.onSurface },
+                    selectedPaymentMethod === method.id && styles.paymentMethodTextSelected
+                  ]}>
                     {method.name}
                   </Text>
                   {selectedPaymentMethod === method.id && (
-                    <Ionicons name="checkmark-circle" size={24} color={paperTheme.colors.primary} />
+                    <Ionicons name="checkmark-circle" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -582,38 +433,20 @@ export default function CheckoutScreen() {
           </View>
         </ScrollView>
 
-        {/* Botão Finalizar */}
-        <View style={{
-          backgroundColor: paperTheme.colors.surface,
-          paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: Math.max(insets.bottom + 80, 100),
-          borderTopWidth: 1,
-          borderTopColor: paperTheme.colors.outline,
-          shadowColor: paperTheme.colors.modalShadow,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
-        }}>
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}>
-            <Text style={{ 
-              fontSize: 18, 
-              fontWeight: '600', 
-              color: paperTheme.colors.onSurface,
-            }}>
+        <View style={[
+          styles.footer,
+          {
+            backgroundColor: paperTheme.colors.surface,
+            borderTopColor: paperTheme.colors.outline,
+            shadowColor: paperTheme.colors.modalShadow,
+            paddingBottom: Math.max(insets.bottom + SPACING.xxxl * 2, SPACING.jumbo * 2 + SPACING.xlBase),
+          }
+        ]}>
+          <View style={styles.footerTotalRow}>
+            <Text style={[styles.footerTotalLabel, { color: paperTheme.colors.onSurface }]}>
               Total
             </Text>
-            <Text style={{
-              fontSize: 24,
-              fontWeight: 'bold',
-              color: paperTheme.colors.primary
-            }}>
+            <Text style={[styles.footerTotalValue, { color: paperTheme.colors.primary }]}>
               R$ {checkoutTotal.toFixed(2)}
             </Text>
           </View>
@@ -646,3 +479,164 @@ export default function CheckoutScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: SPACING.lg,
+    fontSize: FONT_SIZE.lg,
+    opacity: 0.7,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: SPACING.smPlus,
+  },
+  card: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xlBase,
+    ...SHADOWS.large,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  cardTitle: {
+    fontSize: FONT_SIZE.xl,
+    fontWeight: 'bold',
+    marginBottom: SPACING.lg,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: SPACING.md,
+    paddingTop: SPACING.md,
+    borderTopWidth: 1,
+  },
+  totalLabel: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: 'bold',
+  },
+  totalValue: {
+    fontSize: FONT_SIZE.xxxl,
+    fontWeight: 'bold',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xsPlus,
+    borderRadius: BORDER_RADIUS.xl,
+  },
+  addButtonText: {
+    fontSize: FONT_SIZE.sm,
+    marginLeft: SPACING.xs,
+    fontWeight: '600',
+  },
+  emptyAddressContainer: {
+    padding: SPACING.xlBase,
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.lg,
+  },
+  emptyAddressTitle: {
+    marginTop: SPACING.md,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '600',
+    marginBottom: SPACING.xs,
+  },
+  emptyAddressText: {
+    fontSize: FONT_SIZE.md,
+    opacity: 0.7,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+  },
+  addressItem: {
+    borderWidth: 2,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  addressItemContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SPACING.xs,
+  },
+  addressItemInfo: {
+    flex: 1,
+  },
+  addressItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
+  },
+  addressName: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+  },
+  favoriteIcon: {
+    marginLeft: SPACING.xs,
+  },
+  addressText: {
+    fontSize: FONT_SIZE.md,
+    opacity: 0.7,
+    marginBottom: SPACING.micro,
+  },
+  paymentMethodItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  paymentMethodIcon: {
+    marginRight: SPACING.md,
+  },
+  paymentMethodText: {
+    flex: 1,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '400',
+  },
+  paymentMethodTextSelected: {
+    fontWeight: '600',
+  },
+  footer: {
+    paddingHorizontal: SPACING.xlBase,
+    paddingTop: SPACING.xlBase,
+    borderTopWidth: 1,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: SPACING.xs,
+    elevation: 8,
+  },
+  footerTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  footerTotalLabel: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: '600',
+  },
+  footerTotalValue: {
+    fontSize: FONT_SIZE.xxxl,
+    fontWeight: 'bold',
+  },
+});

@@ -10,6 +10,7 @@ import {
 import { Text, useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Receipt } from '../../types/suggestion';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 
 interface ReceiptModalProps {
   visible: boolean;
@@ -54,7 +55,7 @@ export default function ReceiptModal({
                 <TouchableOpacity onPress={onClose}>
                   <Ionicons
                     name="close"
-                    size={24}
+                    size={ICON_SIZES.xl}
                     color={paperTheme.colors.onSurface}
                   />
                 </TouchableOpacity>
@@ -80,7 +81,7 @@ export default function ReceiptModal({
                         <View style={styles.badgesContainer}>
                           {receipt.prepTime > 0 && (
                             <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                              <Ionicons name="time-outline" size={14} color={paperTheme.colors.primary} />
+                              <Ionicons name="time-outline" size={ICON_SIZES.sm + SPACING.micro} color={paperTheme.colors.primary} />
                               <Text style={[styles.badgeText, { color: paperTheme.colors.primary }]}>
                                 {receipt.prepTime} min
                               </Text>
@@ -88,7 +89,7 @@ export default function ReceiptModal({
                           )}
                           {receipt.servings > 0 && (
                             <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                              <Ionicons name="people-outline" size={14} color={paperTheme.colors.primary} />
+                              <Ionicons name="people-outline" size={ICON_SIZES.sm + SPACING.micro} color={paperTheme.colors.primary} />
                               <Text style={[styles.badgeText, { color: paperTheme.colors.primary }]}>
                                 {receipt.servings} {receipt.servings === 1 ? 'porção' : 'porções'}
                               </Text>
@@ -100,7 +101,7 @@ export default function ReceiptModal({
                       {receipt.ingredients && receipt.ingredients.length > 0 && (
                         <View style={styles.section}>
                           <View style={styles.sectionHeader}>
-                            <Ionicons name="list-outline" size={20} color={paperTheme.colors.primary} />
+                            <Ionicons name="list-outline" size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
                             <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
                               Ingredientes
                             </Text>
@@ -136,7 +137,7 @@ export default function ReceiptModal({
                       {receipt.instructions && receipt.instructions.length > 0 && (
                         <View style={styles.section}>
                           <View style={styles.sectionHeader}>
-                            <Ionicons name="restaurant-outline" size={20} color={paperTheme.colors.primary} />
+                            <Ionicons name="restaurant-outline" size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
                             <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
                               Modo de Preparo
                             </Text>
@@ -175,114 +176,114 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: BORDER_RADIUS.xlBase,
+    borderTopRightRadius: BORDER_RADIUS.xlBase,
     maxHeight: '85%',
-    paddingBottom: 20,
+    paddingBottom: SPACING.xlBase,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: SPACING.xlBase,
+    paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
   },
   modalBody: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: SPACING.xlBase,
+    paddingTop: SPACING.xlBase,
   },
   contentContainer: {
-    paddingBottom: 20,
+    paddingBottom: SPACING.xlBase,
   },
   headerSection: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   recipeName: {
-    fontSize: 24,
+    fontSize: FONT_SIZE.xxxl,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: SPACING.xs,
   },
   description: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: FONT_SIZE.md,
+    lineHeight: SPACING.xlBase,
+    marginBottom: SPACING.md,
   },
   badgesContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: SPACING.xs,
     flexWrap: 'wrap',
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 6,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xsPlus,
+    borderRadius: BORDER_RADIUS.xl,
+    gap: SPACING.xsPlus,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
+    gap: SPACING.xs,
+    marginBottom: SPACING.lg,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: '600',
   },
   ingredientsList: {
-    gap: 12,
+    gap: SPACING.md,
   },
   ingredientItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: SPACING.md,
   },
   ingredientQuantity: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
-    minWidth: 80,
+    minWidth: SPACING.xxxl * 2,
   },
   ingredientName: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     flex: 1,
-    lineHeight: 20,
+    lineHeight: SPACING.xlBase,
   },
   instructionsList: {
-    gap: 16,
+    gap: SPACING.lg,
   },
   instructionItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: SPACING.md,
   },
   stepNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: ICON_SIZES.xlPlus,
+    height: ICON_SIZES.xlPlus,
+    borderRadius: BORDER_RADIUS.lgPlus,
     justifyContent: 'center',
     alignItems: 'center',
     flexShrink: 0,
   },
   stepNumberText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: 'bold',
   },
   instructionText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: FONT_SIZE.md,
+    lineHeight: SPACING.xlBase,
     flex: 1,
   },
 });

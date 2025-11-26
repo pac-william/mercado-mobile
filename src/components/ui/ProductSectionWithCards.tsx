@@ -8,6 +8,7 @@ import ProductCard from "./ProductCard";
 import { getProducts, Product } from "../../services/productService";
 import { getMarketById } from "../../services/marketService";
 import { SuggestionItem } from "../../types/suggestion";
+import { SPACING, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 interface ProductSectionWithCardsProps {
   title: string;
@@ -105,7 +106,7 @@ export default function ProductSectionWithCards({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Ionicons name={icon} size={20} color={paperTheme.colors.primary} />
+        <Ionicons name={icon} size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
         <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
           {title}
         </Text>
@@ -156,40 +157,40 @@ export default function ProductSectionWithCards({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    gap: SPACING.xs,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.xs,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "600",
   },
   productCount: {
-    fontSize: 14,
-    marginLeft: 4,
+    fontSize: FONT_SIZE.md,
+    marginLeft: SPACING.xs,
   },
   productsList: {
-    paddingLeft: 4,
-    paddingRight: 16,
+    paddingLeft: SPACING.xs,
+    paddingRight: SPACING.lg,
   },
   productCard: {
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   loadingContainer: {
-    paddingVertical: 20,
+    paddingVertical: SPACING.xlBase,
     alignItems: "center",
   },
   emptyContainer: {
-    paddingVertical: 20,
+    paddingVertical: SPACING.xlBase,
     alignItems: "center",
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
   },
 });
 

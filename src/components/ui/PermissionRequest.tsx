@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useTheme as usePaperTheme } from 'react-native-paper';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { usePermissions } from '../../hooks/usePermissions';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 
 type PermissionType = 'location' | 'camera' | 'mediaLibrary' | 'media' | 'notifications';
 
@@ -27,7 +28,7 @@ export const PermissionRequest: React.FC<PermissionRequestProps> = ({
   showStatus = false,
   autoRequest = false,
 }) => {
-  const paperTheme = usePaperTheme();
+  const paperTheme = useCustomTheme();
   const permissions = usePermissions();
   const [isRequesting, setIsRequesting] = useState(false);
 
@@ -184,7 +185,7 @@ export const PermissionRequest: React.FC<PermissionRequestProps> = ({
             ) : (
               <Ionicons
                 name={icon || permissionData.defaultIcon}
-                size={24}
+                size={ICON_SIZES.xl}
                 color={permissionData.granted ? paperTheme.colors.primary : getStatusColor()}
               />
             )}
@@ -231,7 +232,7 @@ export const PermissionRequest: React.FC<PermissionRequestProps> = ({
           {permissionData.granted && (
             <Ionicons
               name="checkmark-circle"
-              size={24}
+              size={ICON_SIZES.xl}
               color={paperTheme.colors.primary}
             />
           )}
@@ -243,44 +244,41 @@ export const PermissionRequest: React.FC<PermissionRequestProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 8,
+    marginVertical: SPACING.xs,
   },
   button: {
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    padding: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: SPACING.lg,
+    ...SHADOWS.small,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: SPACING.xxxl,
+    height: SPACING.xxxl,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   textContainer: {
     flex: 1,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   description: {
-    fontSize: 14,
-    marginTop: 2,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.micro,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
     fontWeight: '500',
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
 });
 

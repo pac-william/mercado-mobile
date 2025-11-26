@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, FlatList, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,13 +11,14 @@ import HeroBanner from "../../components/ui/Hero";
 import CategoriesGrid from "../../components/ui/CategoriesGrid";
 import { SearchStackParamList } from "../../navigation/types";
 import { isValidImageUri } from "../../utils/imageUtils";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<SearchStackParamList>;
 
 export default function Search() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const route = useRoute();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const [results, setResults] = useState<SearchResults | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -76,7 +78,7 @@ export default function Search() {
           R$ {item.price.toFixed(2)}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+      <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
     </TouchableOpacity>
   ), [navigation, paperTheme.colors]);
 
@@ -97,7 +99,7 @@ export default function Search() {
         <Image source={{ uri: item.profilePicture }} style={styles.marketImage} />
       ) : (
         <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-          <Ionicons name="storefront-outline" size={24} color={paperTheme.colors.onSurfaceVariant} />
+          <Ionicons name="storefront-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />
         </View>
       )}
       <View style={styles.marketInfo}>
@@ -110,7 +112,7 @@ export default function Search() {
           </Text>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurfaceVariant} />
+      <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
     </TouchableOpacity>
   ), [navigation, paperTheme.colors]);
 
@@ -139,7 +141,7 @@ export default function Search() {
 
         {hasSearched && !hasResults && (
           <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={64} color={paperTheme.colors.onSurfaceVariant} />
+            <Ionicons name="search-outline" size={ICON_SIZES.xxxl + ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />
             <Text style={[styles.emptyText, { color: paperTheme.colors.onSurface }]}>
               Nenhum resultado encontrado
             </Text>
@@ -198,62 +200,56 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   sectionCenter: {
-    marginVertical: 20,
+    marginVertical: SPACING.xlBase,
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "bold",
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   productItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 12,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    marginBottom: 8,
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 2,
+    marginBottom: SPACING.xs,
+    ...SHADOWS.small,
   },
   productImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
+    width: SPACING.xxxl + SPACING.xlBase,
+    height: SPACING.xxxl + SPACING.xlBase,
+    borderRadius: BORDER_RADIUS.md,
+    marginRight: SPACING.md,
   },
   productInfo: {
     flex: 1,
   },
   productName: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.md + 1,
     fontWeight: "500",
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
   },
   marketItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    borderRadius: 12,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    marginBottom: 8,
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 2,
+    marginBottom: SPACING.xs,
+    ...SHADOWS.small,
   },
   marketImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+    width: SPACING.xxxl + SPACING.xlBase,
+    height: SPACING.xxxl + SPACING.xlBase,
+    borderRadius: BORDER_RADIUS.xxl + SPACING.micro,
+    marginRight: SPACING.md,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -261,27 +257,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   marketName: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   marketAddress: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.sm + 1,
   },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 32,
+    paddingVertical: SPACING.xxxl + SPACING.xlBase,
+    paddingHorizontal: SPACING.xxl,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: "600",
-    marginTop: 16,
+    marginTop: SPACING.lg,
   },
   emptySubtext: {
-    fontSize: 14,
-    marginTop: 8,
+    fontSize: FONT_SIZE.md,
+    marginTop: SPACING.xs,
     textAlign: "center",
   },
 });

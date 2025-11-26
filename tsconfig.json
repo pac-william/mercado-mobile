@@ -5,10 +5,12 @@
     "allowJs": true,
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "forceConsistentCasingInFileNames": true,
     "target": "esnext",
-    "baseUrl": "./src"
+    "baseUrl": "./src",
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src", "App.tsx"]
+  "include": ["src", "App.tsx", "src/types/**/*"],
+  "files": ["src/types/react-native-paper.d.ts"]
 }

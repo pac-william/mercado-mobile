@@ -8,11 +8,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useTheme } from 'react-native-paper';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
@@ -32,7 +33,7 @@ const CartScreen: React.FC = () => {
   const { state: cartState, removeItem, updateQuantity, clearCart, addItem } = useCart();
   const { modalState, hideModal, showWarning } = useModal();
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -125,16 +126,13 @@ const CartScreen: React.FC = () => {
         text: 'Remover',
         onPress: async () => {
           try {
-            // Remove do contexto local primeiro para feedback imediato
             const item = cartState.items.find(i => String(i.id) === String(id));
             
-            // Se estiver autenticado e tiver cartItemId, remove da API também
             if (isAuthenticated && item?.cartItemId) {
               try {
                 await removeCartItem(item.cartItemId);
               } catch (apiError) {
                 console.error("Erro ao remover item da API:", apiError);
-                // Continua removendo localmente mesmo se der erro na API
               }
             }
             
@@ -215,20 +213,11 @@ const CartScreen: React.FC = () => {
 
   if (loading || sessionLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
+      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
         <Header />
-        <View style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-          <Text style={{
-            marginTop: 16,
-            fontSize: 16,
-            color: paperTheme.colors.onSurface,
-            opacity: 0.7
-          }}>
+          <Text style={[styles.loadingText, { color: paperTheme.colors.onSurface }]}>
             Carregando carrinho...
           </Text>
         </View>
@@ -238,31 +227,14 @@ const CartScreen: React.FC = () => {
 
   if (cartState.items.length === 0) {
     return (
-      <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
+      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
         <Header />
-        <View style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: 32
-        }}>
-          <Ionicons name="cart-outline" size={80} color={paperTheme.colors.outline} />
-          <Text style={{
-            fontSize: 24,
-            fontWeight: 'bold',
-            color: paperTheme.colors.onBackground,
-            marginTop: 16,
-            marginBottom: 8
-          }}>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="cart-outline" size={SPACING.xxxl * 2} color={paperTheme.colors.outline} />
+          <Text style={[styles.emptyTitle, { color: paperTheme.colors.onBackground }]}>
             Carrinho Vazio
           </Text>
-          <Text style={{
-            fontSize: 16,
-            color: paperTheme.colors.onSurface,
-            textAlign: 'center',
-            lineHeight: 24,
-            opacity: 0.7
-          }}>
+          <Text style={[styles.emptyText, { color: paperTheme.colors.onSurface }]}>
             Adicione alguns produtos ao seu carrinho para começar suas compras
           </Text>
         </View>
@@ -271,151 +243,76 @@ const CartScreen: React.FC = () => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: paperTheme.colors.background }}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={styles.keyboardView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : SPACING.xlBase}
       >
-        {/* Container principal com flex */}
-        <View style={{ flex: 1 }}>
+        <View style={styles.scrollContainer}>
           <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingBottom: Math.max(insets.bottom + 200, 220),
-              paddingTop: 10
-            }}
+            style={styles.scrollView}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: Math.max(insets.bottom + SPACING.jumbo * 4 + SPACING.xlBase, SPACING.jumbo * 4 + SPACING.xlBase) }
+            ]}
             showsVerticalScrollIndicator={true}
             bounces={true}
             indicatorStyle={paperTheme.dark ? 'white' : 'default'}
           >
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            backgroundColor: paperTheme.colors.surface,
-            marginHorizontal: 16,
-            marginTop: SPACING.sm,
-            borderRadius: BORDER_RADIUS.xl,
-            ...SHADOWS.large,
-          }}>
-            <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: 'bold', color: paperTheme.colors.onSurface }}>
+          <View style={[styles.headerCard, { backgroundColor: paperTheme.colors.surface }]}>
+            <Text style={[styles.headerTitle, { color: paperTheme.colors.onSurface }]}>
               Meu Carrinho ({cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'})
             </Text>
             <TouchableOpacity
               onPress={handleClearCart}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                backgroundColor: paperTheme.colors.errorBackground,
-                borderRadius: BORDER_RADIUS.full,
-              }}
+              style={[styles.clearButton, { backgroundColor: paperTheme.colors.errorBackground }]}
             >
               <Ionicons name="trash-outline" size={ICON_SIZES.sm} color={paperTheme.colors.errorText} />
-              <Text style={{ color: paperTheme.colors.errorText, fontSize: FONT_SIZE.sm, marginLeft: SPACING.xs, fontWeight: '600' }}>
+              <Text style={[styles.clearButtonText, { color: paperTheme.colors.errorText }]}>
                 Limpar
               </Text>
             </TouchableOpacity>
           </View>
 
           {groupedByMarket.map((group, groupIndex) => (
-            <View key={group.marketId} style={{ marginTop: groupIndex > 0 ? SPACING.xl : SPACING.sm }}>
-              <View style={{
-                backgroundColor: paperTheme.colors.surface,
-                marginHorizontal: SPACING.lg,
-                marginTop: SPACING.sm,
-                borderRadius: BORDER_RADIUS.xl,
-                padding: SPACING.lg,
-                ...SHADOWS.large,
-              }}>
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginBottom: SPACING.md,
-                }}>
+            <View key={group.marketId} style={[styles.groupContainer, { marginTop: groupIndex > 0 ? SPACING.xl : SPACING.sm }]}>
+              <View style={[styles.marketCard, { backgroundColor: paperTheme.colors.surface }]}>
+                <View style={styles.marketHeader}>
                   <Ionicons name="storefront" size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
-                  <Text style={{
-                    fontSize: FONT_SIZE.xl,
-                    fontWeight: 'bold',
-                    color: paperTheme.colors.onSurface,
-                    marginLeft: SPACING.sm,
-                  }}>
+                  <Text style={[styles.marketName, { color: paperTheme.colors.onSurface }]}>
                     {group.marketName}
                   </Text>
                 </View>
-                <Text style={{
-                  fontSize: FONT_SIZE.md,
-                  color: paperTheme.colors.onSurfaceVariant,
-                }}>
+                <Text style={[styles.marketItemCount, { color: paperTheme.colors.onSurfaceVariant }]}>
                   {group.itemCount} {group.itemCount === 1 ? 'item' : 'itens'}
                 </Text>
               </View>
 
               {group.items.map((item) => (
-            <View key={item.id} style={{
-              backgroundColor: paperTheme.colors.surface,
-              marginHorizontal: SPACING.lg,
-              marginTop: SPACING.sm,
-              borderRadius: BORDER_RADIUS.full,
-              shadowColor: paperTheme.colors.modalShadow,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 6,
-              overflow: 'hidden',
-            }}>
-              <View style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                padding: 14,
-                paddingBottom: 10,
-              }}>
-                <View style={{ flex: 1, flexDirection: 'row' }}>
+            <View key={item.id} style={[styles.itemCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+              <View style={styles.itemContent}>
+                <View style={styles.itemInfo}>
                   <Image
                     source={{ uri: item.image }}
-                    style={{
-                      width: 65,
-                      height: 65,
-                      borderRadius: 10,
-                      backgroundColor: paperTheme.colors.surfaceVariant,
-                    }}
+                    style={[styles.itemImage, { backgroundColor: paperTheme.colors.surfaceVariant }]}
                     resizeMode="contain"
                   />
 
-                  <View style={{ flex: 1, marginLeft: 10, justifyContent: 'space-between' }}>
+                  <View style={styles.itemDetails}>
                     <View>
-                      <Text style={{
-                        fontSize: 15,
-                        fontWeight: 'bold',
-                        color: paperTheme.colors.onSurface,
-                        marginBottom: 3,
-                        lineHeight: 20
-                      }}>
+                      <Text style={[styles.itemName, { color: paperTheme.colors.onSurface }]}>
                         {item.name}
                       </Text>
 
-                      <Text style={{
-                        fontSize: 13,
-                        color: paperTheme.colors.onSurface,
-                        opacity: 0.7,
-                        marginBottom: 4
-                      }}>
+                      <Text style={[styles.itemMarket, { color: paperTheme.colors.onSurface }]}>
                         {item.marketName}
                       </Text>
                     </View>
 
-                    <Text style={{
-                      fontSize: 17,
-                      fontWeight: 'bold',
-                      color: paperTheme.colors.primary
-                    }}>
+                    <Text style={[styles.itemPrice, { color: paperTheme.colors.primary }]}>
                       R$ {item.price.toFixed(2)}
                     </Text>
                   </View>
@@ -423,43 +320,18 @@ const CartScreen: React.FC = () => {
 
                 <TouchableOpacity
                   onPress={() => handleRemoveItem(item.id, item.name)}
-                  style={{
-                    width: 30,
-                    height: 30,
-                    backgroundColor: paperTheme.colors.errorBackground,
-                    borderRadius: 15,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginLeft: 6,
-                  }}
+                  style={[styles.removeButton, { backgroundColor: paperTheme.colors.errorBackground }]}
                 >
-                  <Ionicons name="close" size={15} color={paperTheme.colors.errorText} />
+                  <Ionicons name="close" size={ICON_SIZES.sm + SPACING.micro} color={paperTheme.colors.errorText} />
                 </TouchableOpacity>
               </View>
 
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingHorizontal: 14,
-                paddingBottom: 10,
-              }}>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: paperTheme.colors.onSurface
-                }}>
+              <View style={styles.quantityContainer}>
+                <Text style={[styles.quantityLabel, { color: paperTheme.colors.onSurface }]}>
                   Quantidade
                 </Text>
 
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: paperTheme.colors.surfaceVariant,
-                  borderRadius: 30,
-                  paddingHorizontal: 5,
-                  paddingVertical: 3,
-                }}>
+                <View style={[styles.quantityControls, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
                   <TouchableOpacity
                     onPress={async () => {
                       const newQuantity = Math.max(1, item.quantity - 1);
@@ -473,38 +345,25 @@ const CartScreen: React.FC = () => {
                         }
                       }
                     }}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: item.quantity <= 1 ? paperTheme.colors.outline : paperTheme.colors.secondary,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      shadowColor: item.quantity <= 1 ? 'transparent' : paperTheme.colors.secondary,
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: item.quantity <= 1 ? 0 : 3,
-                    }}
+                    style={[
+                      styles.quantityButton,
+                      {
+                        backgroundColor: item.quantity <= 1 ? paperTheme.colors.outline : paperTheme.colors.secondary,
+                        shadowColor: item.quantity <= 1 ? 'transparent' : paperTheme.colors.secondary,
+                        elevation: item.quantity <= 1 ? 0 : 3,
+                      }
+                    ]}
                     disabled={item.quantity <= 1}
                   >
                     <Ionicons
                       name="remove"
-                      size={18}
+                      size={ICON_SIZES.xlPlus}
                       color={item.quantity <= 1 ? paperTheme.colors.textSecondary : paperTheme.colors.white}
                     />
                   </TouchableOpacity>
 
-                  <View style={{
-                    minWidth: 40,
-                    alignItems: 'center',
-                    marginHorizontal: 10,
-                  }}>
-                    <Text style={{
-                      fontSize: 17,
-                      fontWeight: 'bold',
-                      color: paperTheme.colors.onSurface,
-                    }}>
+                  <View style={styles.quantityValue}>
+                    <Text style={[styles.quantityText, { color: paperTheme.colors.onSurface }]}>
                       {item.quantity}
                     </Text>
                   </View>
@@ -522,84 +381,30 @@ const CartScreen: React.FC = () => {
                         }
                       }
                     }}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: paperTheme.colors.secondary,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      shadowColor: paperTheme.colors.secondary,
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }}
+                    style={[styles.quantityButton, { backgroundColor: paperTheme.colors.secondary, shadowColor: paperTheme.colors.secondary }]}
                   >
-                    <Ionicons name="add" size={18} color={paperTheme.colors.white} />
+                    <Ionicons name="add" size={ICON_SIZES.xlPlus} color={paperTheme.colors.white} />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <View style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingHorizontal: 14,
-                paddingBottom: 14,
-                paddingTop: 10,
-                borderTopWidth: 1,
-                borderTopColor: paperTheme.colors.outline,
-                backgroundColor: paperTheme.colors.surfaceVariant,
-              }}>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: paperTheme.colors.onSurface
-                }}>
+              <View style={[styles.subtotalRow, { borderTopColor: paperTheme.colors.outline, backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                <Text style={[styles.subtotalLabel, { color: paperTheme.colors.onSurface }]}>
                   Subtotal
                 </Text>
-                <Text style={{
-                  fontSize: 17,
-                  fontWeight: 'bold',
-                  color: paperTheme.colors.primary
-                }}>
+                <Text style={[styles.subtotalValue, { color: paperTheme.colors.primary }]}>
                   R$ {(item.price * item.quantity).toFixed(2)}
                 </Text>
               </View>
             </View>
               ))}
 
-              <View style={{
-                backgroundColor: paperTheme.colors.surface,
-                marginHorizontal: 16,
-                marginTop: 12,
-                borderRadius: 16,
-                padding: 16,
-                shadowColor: paperTheme.colors.modalShadow,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-                elevation: 4,
-              }}>
-                <View style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 16,
-                }}>
-                  <Text style={{
-                    fontSize: 16,
-                    fontWeight: '600',
-                    color: paperTheme.colors.onSurface,
-                  }}>
+              <View style={[styles.groupTotalCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+                <View style={styles.groupTotalRow}>
+                  <Text style={[styles.groupTotalLabel, { color: paperTheme.colors.onSurface }]}>
                     Subtotal {group.marketName}
                   </Text>
-                  <Text style={{
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: paperTheme.colors.primary,
-                  }}>
+                  <Text style={[styles.groupTotalValue, { color: paperTheme.colors.primary }]}>
                     R$ {group.total.toFixed(2)}
                   </Text>
                 </View>
@@ -632,45 +437,16 @@ const CartScreen: React.FC = () => {
           ))}
 
           {groupedByMarket.length > 1 && (
-            <View style={{
-              backgroundColor: paperTheme.colors.surface,
-              marginHorizontal: 16,
-              marginTop: 24,
-              borderRadius: 16,
-              padding: 16,
-              shadowColor: paperTheme.colors.modalShadow,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 4,
-            }}>
-              <View style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 8,
-              }}>
-                <Text style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  color: paperTheme.colors.onSurface,
-                }}>
+            <View style={[styles.generalTotalCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+              <View style={styles.generalTotalRow}>
+                <Text style={[styles.generalTotalLabel, { color: paperTheme.colors.onSurface }]}>
                   Total Geral
                 </Text>
-                <Text style={{
-                  fontSize: 22,
-                  fontWeight: 'bold',
-                  color: paperTheme.colors.primary,
-                }}>
+                <Text style={[styles.generalTotalValue, { color: paperTheme.colors.primary }]}>
                   R$ {cartState.total.toFixed(2)}
                 </Text>
               </View>
-              <Text style={{
-                fontSize: 12,
-                color: paperTheme.colors.onSurfaceVariant,
-                textAlign: 'center',
-                marginTop: 8,
-              }}>
+              <Text style={[styles.generalTotalSubtext, { color: paperTheme.colors.onSurfaceVariant }]}>
                 Você tem {groupedByMarket.length} {groupedByMarket.length === 1 ? 'pedido' : 'pedidos'} separados
               </Text>
             </View>
@@ -694,3 +470,255 @@ const CartScreen: React.FC = () => {
 };
 
 export default CartScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: SPACING.lg,
+    fontSize: FONT_SIZE.lg,
+    opacity: 0.7,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xxl,
+  },
+  emptyTitle: {
+    fontSize: FONT_SIZE.xxxl,
+    fontWeight: 'bold',
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.xs,
+  },
+  emptyText: {
+    fontSize: FONT_SIZE.lg,
+    textAlign: 'center',
+    lineHeight: SPACING.xl,
+    opacity: 0.7,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: SPACING.smPlus,
+  },
+  headerCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.sm,
+    borderRadius: BORDER_RADIUS.xl,
+    ...SHADOWS.large,
+  },
+  headerTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.smPlus,
+    paddingVertical: SPACING.micro + SPACING.xs,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  clearButtonText: {
+    fontSize: FONT_SIZE.sm,
+    marginLeft: SPACING.xs,
+    fontWeight: '600',
+  },
+  groupContainer: {
+    marginTop: SPACING.sm,
+  },
+  marketCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.sm,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
+    ...SHADOWS.large,
+  },
+  marketHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  marketName: {
+    fontSize: FONT_SIZE.xl,
+    fontWeight: 'bold',
+    marginLeft: SPACING.sm,
+  },
+  marketItemCount: {
+    fontSize: FONT_SIZE.md,
+  },
+  itemCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.sm,
+    borderRadius: BORDER_RADIUS.full,
+    shadowOffset: { width: 0, height: SPACING.xs },
+    shadowOpacity: 0.1,
+    shadowRadius: SPACING.md,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  itemContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: SPACING.mdPlus,
+    paddingBottom: SPACING.smPlus,
+  },
+  itemInfo: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  itemImage: {
+    width: SPACING.xxxl + SPACING.xlBase + SPACING.micro,
+    height: SPACING.xxxl + SPACING.xlBase + SPACING.micro,
+    borderRadius: SPACING.smPlus,
+  },
+  itemDetails: {
+    flex: 1,
+    marginLeft: SPACING.smPlus,
+    justifyContent: 'space-between',
+  },
+  itemName: {
+    fontSize: FONT_SIZE.md + SPACING.micro,
+    fontWeight: 'bold',
+    marginBottom: SPACING.micro + 1,
+    lineHeight: SPACING.xlBase,
+  },
+  itemMarket: {
+    fontSize: FONT_SIZE.sm + 1,
+    opacity: 0.7,
+    marginBottom: SPACING.xs,
+  },
+  itemPrice: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: 'bold',
+  },
+  removeButton: {
+    width: SPACING.xxxl - SPACING.smPlus,
+    height: SPACING.xxxl - SPACING.smPlus,
+    borderRadius: SPACING.md + SPACING.micro,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: SPACING.xsPlus,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.mdPlus,
+    paddingBottom: SPACING.smPlus,
+  },
+  quantityLabel: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: SPACING.xxxl - SPACING.smPlus,
+    paddingHorizontal: SPACING.micro + SPACING.xs,
+    paddingVertical: SPACING.micro + 1,
+  },
+  quantityButton: {
+    width: SPACING.xxxl - SPACING.xs,
+    height: SPACING.xxxl - SPACING.xs,
+    borderRadius: SPACING.lgPlus,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: SPACING.micro },
+    shadowOpacity: 0.2,
+    shadowRadius: SPACING.xs,
+    elevation: 3,
+  },
+  quantityValue: {
+    minWidth: SPACING.xxxl,
+    alignItems: 'center',
+    marginHorizontal: SPACING.smPlus,
+  },
+  quantityText: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: 'bold',
+  },
+  subtotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.mdPlus,
+    paddingBottom: SPACING.mdPlus,
+    paddingTop: SPACING.smPlus,
+    borderTopWidth: 1,
+  },
+  subtotalLabel: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+  },
+  subtotalValue: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: 'bold',
+  },
+  groupTotalCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
+    ...SHADOWS.large,
+  },
+  groupTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  groupTotalLabel: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '600',
+  },
+  groupTotalValue: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: 'bold',
+  },
+  generalTotalCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.xl,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.lg,
+    ...SHADOWS.large,
+  },
+  generalTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
+  },
+  generalTotalLabel: {
+    fontSize: FONT_SIZE.lgPlus,
+    fontWeight: 'bold',
+  },
+  generalTotalValue: {
+    fontSize: FONT_SIZE.xxl,
+    fontWeight: 'bold',
+  },
+  generalTotalSubtext: {
+    fontSize: FONT_SIZE.sm,
+    textAlign: 'center',
+    marginTop: SPACING.xs,
+  },
+});

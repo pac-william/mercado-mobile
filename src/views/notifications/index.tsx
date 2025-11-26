@@ -1,17 +1,14 @@
 import React, { useState } from "react";
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { View, FlatList, TouchableOpacity } from "react-native";
+import { Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
 import { getRelativeTime } from "../../utils/dateUtils";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { SPACING, FONT_SIZE, BORDER_RADIUS, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type NotificationsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -61,8 +58,90 @@ const mockNotifications: Notification[] = [
 
 export default function NotificationsScreen() {
   const navigation = useNavigation<NotificationsScreenNavigationProp>();
-  const paperTheme = useTheme();
   const [notifications] = useState<Notification[]>(mockNotifications);
+  const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: SPACING.lg,
+    },
+    header: {
+      paddingVertical: SPACING.lg,
+    },
+    headerTitle: {
+      fontSize: FONT_SIZE.displaySm,
+      fontWeight: "bold",
+      color: theme.colors.onBackground,
+    },
+    list: {
+      paddingBottom: SPACING.xxxl * 2 + SPACING.xlBase,
+    },
+    notificationCard: {
+      marginBottom: SPACING.md,
+      borderRadius: BORDER_RADIUS.lg,
+      borderLeftWidth: 4,
+      backgroundColor: theme.colors.surface,
+      shadowColor: theme.colors.modalShadow,
+      ...SHADOWS.medium,
+    },
+    cardContent: {
+      flexDirection: "row",
+      padding: SPACING.lg,
+    },
+    iconContainer: {
+      width: ICON_SIZES.xxxl,
+      height: ICON_SIZES.xxxl,
+      borderRadius: BORDER_RADIUS.xxl,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: SPACING.md,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    textContainer: {
+      flex: 1,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: SPACING.xs,
+    },
+    title: {
+      fontSize: FONT_SIZE.lg,
+      flex: 1,
+      color: theme.colors.onSurface,
+    },
+    unreadDot: {
+      width: SPACING.xs,
+      height: SPACING.xs,
+      borderRadius: BORDER_RADIUS.xs,
+      marginLeft: SPACING.xs,
+      backgroundColor: theme.colors.primary,
+    },
+    message: {
+      fontSize: FONT_SIZE.md,
+      marginBottom: SPACING.xs,
+      lineHeight: SPACING.xlBase,
+      color: theme.colors.onSurfaceVariant,
+    },
+    time: {
+      fontSize: FONT_SIZE.sm,
+      color: theme.colors.onSurfaceVariant,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: SPACING.jumbo + SPACING.xxxl,
+    },
+    emptyText: {
+      fontSize: FONT_SIZE.lg,
+      marginTop: SPACING.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+  }));
 
   const getNotificationIcon = (type: string) => {
     if (type === 'order') return 'receipt-outline';
@@ -76,56 +155,44 @@ export default function NotificationsScreen() {
         style={[
           styles.notificationCard,
           {
-            backgroundColor: paperTheme.colors.surface,
-            borderLeftColor: item.read ? 'transparent' : paperTheme.colors.primary,
-            shadowColor: paperTheme.colors.modalShadow,
+            borderLeftColor: item.read ? "transparent" : paperTheme.colors.primary,
           },
         ]}
         activeOpacity={0.7}
       >
         <View style={styles.cardContent}>
-          <View style={[
-            styles.iconContainer,
-            { backgroundColor: paperTheme.colors.surfaceVariant }
-          ]}>
+          <View style={styles.iconContainer}>
             <Ionicons
               name={getNotificationIcon(item.type) as any}
-              size={24}
+              size={ICON_SIZES.xl}
               color={paperTheme.colors.primary}
             />
           </View>
           <View style={styles.textContainer}>
             <View style={styles.headerRow}>
-              <Text
-                style={[
-                  styles.title,
-                  {
-                    color: paperTheme.colors.onSurface,
-                    fontWeight: item.read ? 'normal' : 'bold',
-                  },
-                ]}
-              >
+            <Text
+              style={[
+                styles.title,
+                {
+                  fontWeight: item.read ? "normal" : "bold",
+                },
+              ]}
+            >
                 {item.title}
               </Text>
               {!item.read && (
-                <View style={[styles.unreadDot, { backgroundColor: paperTheme.colors.primary }]} />
+              <View style={styles.unreadDot} />
               )}
             </View>
-            <Text
-              style={[
-                styles.message,
-                { color: paperTheme.colors.onSurfaceVariant },
-              ]}
-              numberOfLines={2}
-            >
+          <Text
+            style={styles.message}
+            numberOfLines={2}
+          >
               {item.message}
             </Text>
-            <Text
-              style={[
-                styles.time,
-                { color: paperTheme.colors.onSurfaceVariant },
-              ]}
-            >
+          <Text
+            style={styles.time}
+          >
               {getRelativeTime(item.time.toISOString())}
             </Text>
           </View>
@@ -135,11 +202,11 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+    <View style={styles.container}>
       <Header />
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: paperTheme.colors.onBackground }]}>
+          <Text style={styles.headerTitle}>
             Notificações
           </Text>
         </View>
@@ -148,10 +215,10 @@ export default function NotificationsScreen() {
           <View style={styles.emptyContainer}>
             <Ionicons
               name="notifications-off-outline"
-              size={64}
+              size={ICON_SIZES.xxxl + ICON_SIZES.sm}
               color={paperTheme.colors.onSurfaceVariant}
             />
-            <Text style={[styles.emptyText, { color: paperTheme.colors.onSurfaceVariant }]}>
+            <Text style={styles.emptyText}>
               Nenhuma notificação
             </Text>
           </View>
@@ -168,81 +235,4 @@ export default function NotificationsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  header: {
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  list: {
-    paddingBottom: 100,
-  },
-  notificationCard: {
-    marginBottom: 12,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    padding: 16,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 16,
-    flex: 1,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  message: {
-    fontSize: 14,
-    marginBottom: 4,
-    lineHeight: 20,
-  },
-  time: {
-    fontSize: 12,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 100,
-  },
-  emptyText: {
-    fontSize: 16,
-    marginTop: 16,
-  },
-});
 

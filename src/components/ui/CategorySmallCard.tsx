@@ -48,7 +48,7 @@ const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) 
 const styles = StyleSheet.create({
   card: {
     width: cardWidth,
-    minHeight: 90,
+    minHeight: SPACING.xxxl * 2 + SPACING.xlBase,
     margin: SPACING.sm,
     borderRadius: BORDER_RADIUS.lg,
     flexDirection: "row",
@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.medium,
   },
   image: {
-    width: 60,
-    height: 60,
+    width: SPACING.xxxl + SPACING.xlBase,
+    height: SPACING.xxxl + SPACING.xlBase,
     resizeMode: "contain",
     marginRight: SPACING.md,
   },

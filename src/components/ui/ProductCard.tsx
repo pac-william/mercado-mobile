@@ -2,7 +2,7 @@ import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, ViewStyle } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { isValidImageUri } from "../../utils/imageUtils";
-import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE } from "../../constants/styles";
+import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 const { width } = Dimensions.get("window"); // pega largura da tela
 const CARD_WIDTH = width * 0.45;
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: ICON_SIZES.xxxl,
+    height: ICON_SIZES.xxxl,
     borderRadius: BORDER_RADIUS.full,
   },
   marketName: {
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: "100%",
-    height: 120,
+    height: SPACING.xxxl * 3,
     resizeMode: "contain",
   },
   footer: {
@@ -136,11 +136,11 @@ const styles = StyleSheet.create({
   productTitle: {
     fontSize: FONT_SIZE.md,
     fontWeight: "500",
-    marginBottom: 2,
+    marginBottom: SPACING.micro,
   },
   productSubtitle: {
     fontSize: FONT_SIZE.sm,
-    marginBottom: 2,
+    marginBottom: SPACING.micro,
   },
   productPrice: {
     fontSize: FONT_SIZE.lg,

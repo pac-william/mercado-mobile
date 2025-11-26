@@ -1,6 +1,8 @@
 import { Dimensions, ImageBackground, StatusBar, StyleSheet, View } from "react-native";
-import { Button, Text, useTheme } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 
 import RelaOnboarding1 from "../../assets/tela-onboarding-1.jpg";
 
@@ -9,7 +11,7 @@ interface OnboardingScreen1Props {
 }
 
 export default function OnboardingScreen1({ onNext }: OnboardingScreen1Props) {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
 
   return (
     <ImageBackground 
@@ -70,52 +72,52 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xlBase,
     justifyContent: 'flex-end',
   },
   spacer: {
     flex: 1,
   },
   textContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 40,
+    paddingHorizontal: SPACING.xlBase,
+    marginBottom: SPACING.xxxl,
   },
   title: {
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: SPACING.micro + 1,
   },
   description: {
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: SPACING.xl,
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: SPACING.micro + 1,
   },
   footer: {
     alignItems: "center",
   },
   indicators: {
     flexDirection: "row",
-    marginBottom: 30,
+    marginBottom: SPACING.xxxl - SPACING.smPlus,
   },
   indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    width: SPACING.xs,
+    height: SPACING.xs,
+    borderRadius: SPACING.xs,
+    marginHorizontal: SPACING.xs,
   },
   nextButton: {
-    borderRadius: 25,
-    paddingHorizontal: 20,
+    borderRadius: BORDER_RADIUS.xxl + SPACING.micro,
+    paddingHorizontal: SPACING.xlBase,
   },
   buttonContent: {
-    paddingVertical: 8,
+    paddingVertical: SPACING.xs,
   },
   buttonLabel: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: "600",
   },
 });

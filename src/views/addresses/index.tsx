@@ -4,19 +4,20 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useTheme as usePaperTheme } from 'react-native-paper';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useSession } from '../../hooks/useSession';
 import { formatCEP } from '../../services/cepService';
 import { Address, deleteAddress, getUserAddresses } from '../../services/addressService';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 
 type AddressesScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 export default function AddressesScreen() {
   const navigation = useNavigation<AddressesScreenNavigationProp>();
-  const paperTheme = usePaperTheme();
+  const paperTheme = useCustomTheme();
   const { user, refreshSession } = useSession();
   const permissions = usePermissions();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -26,7 +27,6 @@ export default function AddressesScreen() {
   const loadAddresses = useCallback(async () => {
     try {
       const response = await getUserAddresses(1, 100);
-      // Converter null para undefined para compatibilidade de tipos
       const addressesList = (response.addresses || []).map(addr => ({
         ...addr,
         complement: addr.complement ?? undefined
@@ -153,14 +153,14 @@ export default function AddressesScreen() {
           <Text style={[styles.addressName, { color: paperTheme.colors.onSurface }]}>{item.name}</Text>
           <View style={styles.headerActions}>
             {item.isFavorite && (
-              <Ionicons name="star" size={20} color={paperTheme.colors.favoriteIcon} style={styles.favoriteIcon} />
+              <Ionicons name="star" size={ICON_SIZES.lg} color={paperTheme.colors.favoriteIcon} style={styles.favoriteIcon} />
             )}
             <TouchableOpacity
               onPress={() => handleDeleteAddress(item.id, item.name)}
               style={styles.deleteButton}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: SPACING.smPlus, bottom: SPACING.smPlus, left: SPACING.smPlus, right: SPACING.smPlus }}
             >
-              <Ionicons name="trash-outline" size={20} color={paperTheme.colors.errorText} />
+              <Ionicons name="trash-outline" size={ICON_SIZES.lg} color={paperTheme.colors.errorText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -197,7 +197,7 @@ export default function AddressesScreen() {
             {(loadingLocation || permissions.location.loading) ? (
               <ActivityIndicator size="small" color={paperTheme.colors.primary} />
             ) : (
-              <Ionicons name="location" size={20} color={paperTheme.colors.primary} />
+              <Ionicons name="location" size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
             )}
             <Text style={[styles.locationButtonText, { color: paperTheme.colors.onSurface }]}>
               {loadingLocation ? 'Buscando localização...' : permissions.location.loading ? 'Solicitando permissão...' : 'Usar minha localização'}
@@ -218,7 +218,7 @@ export default function AddressesScreen() {
               addresses.length < 3 ? (
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity style={[styles.addButton, { backgroundColor: paperTheme.colors.buttonPrimary, shadowColor: paperTheme.colors.modalShadow }]} onPress={handleAddAddress}>
-                    <Ionicons name="add" size={30} color={paperTheme.colors.white} />
+                    <Ionicons name="add" size={ICON_SIZES.xl + SPACING.xsPlus} color={paperTheme.colors.white} />
                   </TouchableOpacity>
                 </View>
               ) : null
@@ -226,7 +226,7 @@ export default function AddressesScreen() {
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons name="location-outline" size={80} color={paperTheme.colors.outline} />
+            <Ionicons name="location-outline" size={SPACING.xxxl * 2} color={paperTheme.colors.outline} />
             <Text style={[styles.emptyTitle, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>Nenhum endereço cadastrado</Text>
             <Text style={[styles.emptyText, { color: paperTheme.colors.onSurface, opacity: 0.6 }]}>
               Adicione um endereço para facilitar suas entregas
@@ -234,7 +234,7 @@ export default function AddressesScreen() {
             {addresses.length < 3 && (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={[styles.addButton, { backgroundColor: paperTheme.colors.buttonPrimary, shadowColor: paperTheme.colors.modalShadow }]} onPress={handleAddAddress}>
-                  <Ionicons name="add" size={30} color={paperTheme.colors.white} />
+                  <Ionicons name="add" size={ICON_SIZES.xl + SPACING.xsPlus} color={paperTheme.colors.white} />
                 </TouchableOpacity>
               </View>
             )}
@@ -253,52 +253,49 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xlBase,
   },
   title: {
-    fontSize: 28,
+    fontSize: FONT_SIZE.displaySm,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: SPACING.xs,
   },
   subtitle: {
-    fontSize: 16,
-    marginBottom: 12,
+    fontSize: FONT_SIZE.lg,
+    marginBottom: SPACING.md,
   },
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    marginTop: 12,
+    marginTop: SPACING.md,
   },
   locationButtonText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
-    marginLeft: 12,
+    marginLeft: SPACING.md,
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
   },
   addressCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    ...SHADOWS.large,
   },
   addressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: SPACING.xs,
   },
   addressName: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.lgPlus,
     fontWeight: 'bold',
     flex: 1,
   },
@@ -307,31 +304,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   favoriteIcon: {
-    marginRight: 8,
+    marginRight: SPACING.xs,
   },
   deleteButton: {
-    padding: 4,
+    padding: SPACING.xs,
   },
   addressText: {
-    fontSize: 14,
-    marginBottom: 2,
+    fontSize: FONT_SIZE.md,
+    marginBottom: SPACING.micro,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: SPACING.xxl,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.xs,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: SPACING.xlBase,
   },
   loadingContainer: {
     flex: 1,
@@ -339,23 +336,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginTop: SPACING.lg,
+    fontSize: FONT_SIZE.lg,
   },
   buttonContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xlBase,
     alignItems: 'flex-end',
   },
   addButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: SPACING.xxxl + SPACING.xlBase,
+    height: SPACING.xxxl + SPACING.xlBase,
+    borderRadius: BORDER_RADIUS.xxl + SPACING.xsPlus,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    ...SHADOWS.large,
   },
 });

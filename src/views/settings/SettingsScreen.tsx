@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
-import { useTheme as usePaperTheme } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { SettingsStackParamList } from '../../../App';
 import { Header } from "../../components/layout/header";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
@@ -18,6 +18,7 @@ import { usePermissions } from "../../hooks/usePermissions";
 import { useSession } from "../../hooks/useSession";
 import api from "../../services/api";
 import { Session, SessionUser } from "../../types/session";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 type SettingsStackParamListProp = NativeStackNavigationProp<SettingsStackParamList>;
 
@@ -25,7 +26,7 @@ export default function SettingsScreen() {
 
     const navigation = useNavigation<SettingsStackParamListProp>();
     const { isDark, toggleTheme } = useTheme();
-    const paperTheme = usePaperTheme();
+    const paperTheme = useCustomTheme();
     const { user, isAuthenticated, isLoading, refreshSession, clearSession } = useSession();
     const { profile, displayPhoto, loading: loadingProfile, refreshProfile } = useUserProfile();
     const permissions = usePermissions();
@@ -177,10 +178,10 @@ export default function SettingsScreen() {
     }, []);
 
     const checkNotificationStatus = useCallback(async () => {
-        const permissionResult = await permissions.notifications.check();
+        await permissions.notifications.check();
         const userPreference = await loadNotificationPreference();
         
-        if (permissionResult.granted && userPreference) {
+        if (permissions.notifications.granted && userPreference) {
             setNotificationsEnabled(true);
         } else {
             setNotificationsEnabled(false);
@@ -413,9 +414,9 @@ export default function SettingsScreen() {
                                 style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
                                 onPress={() => navigation.navigate('EditProfile')}
                             >
-                                <Ionicons name="person-outline" size={24} color={paperTheme.colors.onSurface} />
+                                <Ionicons name="person-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Editar perfil</Text>
-                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                                <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
 
                             <TouchableOpacity 
@@ -429,7 +430,7 @@ export default function SettingsScreen() {
                                 ) : (
                                     <Ionicons 
                                         name={notificationsEnabled ? "notifications" : "notifications-outline"} 
-                                        size={24} 
+                                        size={ICON_SIZES.xl} 
                                         color={paperTheme.colors.onSurface} 
                                     />
                                 )}
@@ -447,36 +448,36 @@ export default function SettingsScreen() {
                                 style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
                                 onPress={() => navigation.navigate('AddressesMain')}
                             >
-                                <Ionicons name="location-outline" size={24} color={paperTheme.colors.onSurface} />
+                                <Ionicons name="location-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Endereços</Text>
-                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                                <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
                                 onPress={() => navigation.navigate("Cart")}
                             >
-                                <Ionicons name="cart-outline" size={24} color={paperTheme.colors.onSurface} />
+                                <Ionicons name="cart-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Carrinho</Text>
-                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                                <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={[styles.menuItem, { borderBottomColor: paperTheme.colors.outline }]}
                                 onPress={() => navigation.navigate("History")}
                             >
-                                <Ionicons name="time-outline" size={24} color={paperTheme.colors.onSurface} />
+                                <Ionicons name="time-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Histórico de sugestões</Text>
-                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                                <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
 
                             <TouchableOpacity 
                                 style={[styles.menuItem, { borderBottomWidth: 0 }]} 
                                 onPress={() => navigation.navigate("Orders")}
                             >
-                                <Ionicons name="receipt-outline" size={24} color={paperTheme.colors.onSurface} />
+                                <Ionicons name="receipt-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurface} />
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>Meus pedidos</Text>
-                                <Ionicons name="chevron-forward" size={20} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
+                                <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurface} style={{ opacity: 0.5 }} />
                             </TouchableOpacity>
                         </View>
 
@@ -490,7 +491,7 @@ export default function SettingsScreen() {
                             >
                                 <Ionicons 
                                     name={isDark ? "moon" : "moon-outline"} 
-                                    size={24} 
+                                    size={ICON_SIZES.xl} 
                                     color={paperTheme.colors.onSurface} 
                                 />
                                 <Text style={[styles.menuItemText, { color: paperTheme.colors.onSurface }]}>
@@ -513,13 +514,13 @@ export default function SettingsScreen() {
                             }]}
                             onPress={handleLogout}
                         >
-                            <Ionicons name="log-out-outline" size={24} color={paperTheme.colors.error} />
+                            <Ionicons name="log-out-outline" size={ICON_SIZES.xl} color={paperTheme.colors.error} />
                             <Text style={[styles.logoutButtonText, { color: paperTheme.colors.error }]}>Sair da conta</Text>
                         </TouchableOpacity>
                     </>
                 ) : (
                     <View style={styles.notLoggedIn}>
-                        <Ionicons name="person-circle-outline" size={80} color={paperTheme.colors.outline} />
+                        <Ionicons name="person-circle-outline" size={SPACING.xxxl * 2} color={paperTheme.colors.outline} />
                         <Text style={[styles.notLoggedInTitle, { color: paperTheme.colors.onBackground }]}>Você não está logado</Text>
                         <Text style={[styles.notLoggedInText, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
                             Faça login para acessar suas configurações e aproveitar todos os recursos do app.
@@ -529,7 +530,7 @@ export default function SettingsScreen() {
                             onPress={handleLogin}
                             disabled={!request}
                         >
-                            <Ionicons name="log-in-outline" size={24} color={paperTheme.colors.onPrimary} />
+                            <Ionicons name="log-in-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onPrimary} />
                             <Text style={[styles.loginButtonText, { color: paperTheme.colors.onPrimary }]}>Fazer login</Text>
                         </TouchableOpacity>
                     </View>
@@ -547,26 +548,23 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingHorizontal: 16,
-        paddingBottom: 100,
+        paddingHorizontal: SPACING.lg,
+        paddingBottom: SPACING.xxxl * 2 + SPACING.xlBase,
     },
     profileSection: {
         alignItems: "center",
-        paddingVertical: 32,
-        marginTop: 16,
-        borderRadius: 16,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        paddingVertical: SPACING.xxl,
+        marginTop: SPACING.lg,
+        borderRadius: BORDER_RADIUS.xl,
+        ...SHADOWS.large,
     },
     avatarLarge: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: SPACING.xxxl * 2,
+        height: SPACING.xxxl * 2,
+        borderRadius: SPACING.xxxl,
         justifyContent: "center",
         alignItems: "center",
-        marginBottom: 16,
+        marginBottom: SPACING.lg,
         overflow: "hidden",
     },
     avatarImage: {
@@ -574,109 +572,100 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     avatarLargeText: {
-        fontSize: 32,
+        fontSize: FONT_SIZE.displayMd,
         fontWeight: "bold",
     },
     userName: {
-        fontSize: 24,
+        fontSize: FONT_SIZE.xxxl,
         fontWeight: "bold",
-        marginBottom: 4,
+        marginBottom: SPACING.xs,
     },
     userEmail: {
-        fontSize: 14,
+        fontSize: FONT_SIZE.md,
     },
     section: {
-        marginTop: 16,
-        borderRadius: 16,
-        paddingVertical: 8,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        marginTop: SPACING.lg,
+        borderRadius: BORDER_RADIUS.xl,
+        paddingVertical: SPACING.xs,
+        ...SHADOWS.large,
     },
     sectionTitle: {
-        fontSize: 12,
+        fontSize: FONT_SIZE.sm,
         fontWeight: "bold",
         textTransform: "uppercase",
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 8,
+        paddingHorizontal: SPACING.lg,
+        paddingTop: SPACING.xs,
+        paddingBottom: SPACING.xs,
     },
     menuItem: {
         flexDirection: "row",
         alignItems: "center",
-        paddingVertical: 16,
-        paddingHorizontal: 16,
+        paddingVertical: SPACING.lg,
+        paddingHorizontal: SPACING.lg,
         borderBottomWidth: 1,
     },
     menuItemText: {
         flex: 1,
-        fontSize: 16,
-        marginLeft: 16,
+        fontSize: FONT_SIZE.lg,
+        marginLeft: SPACING.lg,
     },
     logoutButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        marginTop: 24,
-        marginBottom: 32,
-        paddingVertical: 16,
-        borderRadius: 16,
+        marginTop: SPACING.xl,
+        marginBottom: SPACING.xxl,
+        paddingVertical: SPACING.lg,
+        borderRadius: BORDER_RADIUS.xl,
         borderWidth: 2,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        ...SHADOWS.large,
     },
     logoutButtonText: {
-        fontSize: 16,
+        fontSize: FONT_SIZE.lg,
         fontWeight: "bold",
-        marginLeft: 8,
+        marginLeft: SPACING.xs,
     },
     notLoggedIn: {
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: 32,
-        paddingVertical: 100,
+        paddingHorizontal: SPACING.xxl,
+        paddingVertical: SPACING.xxxl * 2 + SPACING.xlBase,
     },
     notLoggedInTitle: {
-        fontSize: 20,
+        fontSize: FONT_SIZE.xl,
         fontWeight: "bold",
-        marginTop: 16,
-        marginBottom: 8,
+        marginTop: SPACING.lg,
+        marginBottom: SPACING.xs,
     },
     notLoggedInText: {
-        fontSize: 14,
+        fontSize: FONT_SIZE.md,
         textAlign: "center",
-        lineHeight: 20,
-        marginBottom: 24,
+        lineHeight: SPACING.xlBase,
+        marginBottom: SPACING.xl,
     },
     loginButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 14,
-        paddingHorizontal: 32,
-        borderRadius: 12,
-        marginTop: 8,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 4,
+        paddingVertical: SPACING.md + SPACING.micro,
+        paddingHorizontal: SPACING.xxl,
+        borderRadius: BORDER_RADIUS.lg,
+        marginTop: SPACING.xs,
+        ...SHADOWS.large,
     },
     loginButtonText: {
-        fontSize: 16,
+        fontSize: FONT_SIZE.lg,
         fontWeight: "bold",
-        marginLeft: 8,
+        marginLeft: SPACING.xs,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        paddingVertical: 100,
+        paddingVertical: SPACING.xxxl * 2 + SPACING.xlBase,
     },
     loadingText: {
-        marginTop: 16,
-        fontSize: 16,
+        marginTop: SPACING.lg,
+        fontSize: FONT_SIZE.lg,
     },
 });

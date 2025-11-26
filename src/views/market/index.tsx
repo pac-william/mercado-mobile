@@ -307,8 +307,8 @@ const styles = StyleSheet.create({
     ...SHADOWS.small,
   },
   marketImage: {
-    width: 80,
-    height: 80,
+    width: SPACING.xxxl * 2,
+    height: SPACING.xxxl * 2,
     borderRadius: BORDER_RADIUS.lg,
     marginRight: SPACING.lg,
   },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   marketAddress: {
     fontSize: FONT_SIZE.md,
-    lineHeight: 20,
+    lineHeight: SPACING.xlBase,
   },
   categoryContainer: {
     marginBottom: SPACING.xxl,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md,
   },
   emptyContainer: {
-    paddingVertical: 60,
+    paddingVertical: SPACING.xxxl + SPACING.xlBase,
     alignItems: 'center',
   },
   noProductsText: {

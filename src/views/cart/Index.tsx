@@ -1,59 +1,76 @@
-import React, { useContext } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import { useTheme } from "react-native-paper";
-import { CartContext } from "../../contexts/CartContext";
+import React from "react";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { useCart } from "../../contexts/CartContext";
+import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { SPACING, FONT_SIZE, BORDER_RADIUS } from "../../constants/styles";
 
 export default function Cart() {
-  const paperTheme = useTheme();
-  const { cart, addToCart, removeFromCart } = useContext(CartContext);
+  const { state, addItem, removeItem, updateQuantity } = useCart();
+  const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
+    container: { flex: 1, padding: SPACING.lg, backgroundColor: theme.colors.white },
+    header: { fontSize: FONT_SIZE.xxl, fontWeight: "bold", marginBottom: SPACING.lg },
+    empty: {
+      textAlign: "center",
+      marginTop: SPACING.jumbo + SPACING.micro,
+      fontSize: FONT_SIZE.xl,
+      color: theme.colors.textSecondary,
+    },
+    item: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: SPACING.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    title: { fontSize: FONT_SIZE.lg, flex: 1 },
+    price: { fontSize: FONT_SIZE.lg, fontWeight: "bold", marginHorizontal: SPACING.smPlus },
+    buttons: { flexDirection: "row" },
+    btn: { fontSize: FONT_SIZE.xl, marginHorizontal: SPACING.xsPlus },
+    footer: { paddingTop: SPACING.xlBase, borderTopWidth: 1, borderTopColor: theme.colors.outline, marginTop: SPACING.lg },
+    total: { fontSize: FONT_SIZE.xxl, fontWeight: "bold", marginBottom: SPACING.md },
+    checkoutBtn: {
+      padding: SPACING.mdPlus,
+      borderRadius: BORDER_RADIUS.md,
+      alignItems: "center",
+      backgroundColor: theme.colors.buttonSuccess,
+    },
+    checkoutText: { fontSize: FONT_SIZE.xl, fontWeight: "bold", color: theme.colors.white },
+  }));
 
-  const increaseQty = (id: number) => {
-    const item = cart.find(i => i.id === id);
-    if (item) addToCart(item);
+  const increaseQty = (id: string) => {
+    const item = state.items.find((i) => i.id === id);
+    if (item) {
+      updateQuantity(id, item.quantity + 1);
+    }
   };
 
-  const decreaseQty = (id: number) => {
-    const item = cart.find(i => i.id === id);
+  const decreaseQty = (id: string) => {
+    const item = state.items.find((i) => i.id === id);
     if (item) {
       if (item.quantity > 1) {
-        removeFromCart(id);
-        addToCart({ ...item, quantity: item.quantity - 1 });
+        updateQuantity(id, item.quantity - 1);
       } else {
-        removeFromCart(id);
+        removeItem(id);
       }
     }
   };
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16 },
-    header: { fontSize: 22, fontWeight: "bold", marginBottom: 16 },
-    empty: { textAlign: "center", marginTop: 50, fontSize: 18 },
-    item: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1 },
-    title: { fontSize: 16, flex: 1 },
-    price: { fontSize: 16, fontWeight: "bold", marginHorizontal: 10 },
-    buttons: { flexDirection: "row" },
-    btn: { fontSize: 20, marginHorizontal: 8 },
-    footer: { paddingTop: 20, borderTopWidth: 1, marginTop: 16 },
-    total: { fontSize: 20, fontWeight: "bold", marginBottom: 12 },
-    checkoutBtn: { padding: 14, borderRadius: 8, alignItems: "center" },
-    checkoutText: { fontSize: 18, fontWeight: "bold" },
-  });
+  const total = state.items.reduce((sum: number, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <View style={[styles.container, { backgroundColor: paperTheme.colors.white }]}>
+    <View style={styles.container}>
       <Text style={styles.header}>🛒 Carrinho</Text>
 
-      {cart.length === 0 ? (
-        <Text style={[styles.empty, { color: paperTheme.colors.textSecondary }]}>Seu carrinho está vazio</Text>
+      {state.items.length === 0 ? (
+        <Text style={styles.empty}>Seu carrinho está vazio</Text>
       ) : (
         <FlatList
-          data={cart}
-          keyExtractor={(item) => item.id.toString()}
+          data={state.items}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={[styles.item, { borderBottomColor: paperTheme.colors.outline }]}>
-              <Text style={styles.title}>{item.title} ({item.quantity}x)</Text>
+            <View style={styles.item}>
+              <Text style={styles.title}>{item.name} ({item.quantity}x)</Text>
               <Text style={styles.price}>R$ {(item.price * item.quantity).toFixed(2)}</Text>
               <View style={styles.buttons}>
                 <TouchableOpacity onPress={() => decreaseQty(item.id)}>
@@ -68,10 +85,10 @@ export default function Cart() {
         />
       )}
 
-      <View style={[styles.footer, { borderTopColor: paperTheme.colors.outline }]}>
+      <View style={styles.footer}>
         <Text style={styles.total}>Total: R$ {total.toFixed(2)}</Text>
-        <TouchableOpacity style={[styles.checkoutBtn, { backgroundColor: paperTheme.colors.buttonSuccess }]}>
-          <Text style={[styles.checkoutText, { color: paperTheme.colors.white }]}>Finalizar Pedido</Text>
+        <TouchableOpacity style={styles.checkoutBtn}>
+          <Text style={styles.checkoutText}>Finalizar Pedido</Text>
         </TouchableOpacity>
       </View>
     </View>

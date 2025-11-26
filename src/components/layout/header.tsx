@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme as usePaperTheme } from "react-native-paper";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../../contexts/CartContext";
 import { ProfileButton } from "../ui/ProfileButton";
@@ -13,7 +13,7 @@ const Logo = require("../../../assets/logotipo.png");
 export const Header: React.FC = () => {
   const navigation = useNavigation<any>();
   const { state: cartState } = useCart();
-  const paperTheme = usePaperTheme();
+  const paperTheme = useCustomTheme();
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: paperTheme.colors.surface }]}>
@@ -69,9 +69,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    minHeight: 60
+    minHeight: SPACING.xxxl + SPACING.xlBase
   },
-  logo: { width: 80, height: 50, borderRadius: BORDER_RADIUS.full },
+  logo: { 
+    width: SPACING.xxxl * 2, 
+    height: SPACING.xxxl + SPACING.xlBase, 
+    borderRadius: BORDER_RADIUS.full 
+  },
   title: {
     fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
@@ -81,7 +85,7 @@ const styles = StyleSheet.create({
   buttonsContainer: { flexDirection: "row" },
   button: {
     padding: SPACING.sm,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS.mdPlus,
     marginLeft: SPACING.sm,
     position: 'relative'
   },
@@ -89,9 +93,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -SPACING.xs,
     right: -SPACING.xs,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    borderRadius: BORDER_RADIUS.mdPlus,
+    minWidth: SPACING.xlBase,
+    height: SPACING.xlBase,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: SPACING.xs,
@@ -104,9 +108,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -SPACING.xs,
     right: -SPACING.xs,
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
+    borderRadius: BORDER_RADIUS.mdPlus,
+    minWidth: SPACING.lgPlus,
+    height: SPACING.lgPlus,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: SPACING.xs,

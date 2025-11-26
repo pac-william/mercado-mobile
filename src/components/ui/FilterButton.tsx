@@ -40,7 +40,7 @@ export default function FilterButton({ title, onPress, hasActiveFilters = false 
 const styles = StyleSheet.create({
   container: {
     borderRadius: BORDER_RADIUS.md,
-    paddingVertical: 10,
+    paddingVertical: SPACING.smPlus,
     paddingHorizontal: SPACING.lg,
     borderWidth: 1,
   },
