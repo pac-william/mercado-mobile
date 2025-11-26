@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, Text } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 
 interface PriceFilterProps {
   minPrice?: number;
@@ -16,7 +16,7 @@ export default function PriceFilter({
   onMinPriceChange,
   onMaxPriceChange,
 }: PriceFilterProps) {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const [minPriceText, setMinPriceText] = useState(minPrice?.toString() || '');
   const [maxPriceText, setMaxPriceText] = useState(maxPrice?.toString() || '');
   const [error, setError] = useState<string | null>(null);

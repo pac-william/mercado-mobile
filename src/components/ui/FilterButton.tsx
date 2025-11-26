@@ -1,8 +1,9 @@
 import { AntDesign } from '@expo/vector-icons';
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 
 interface FilterButtonProps {
   title: string;
@@ -11,7 +12,7 @@ interface FilterButtonProps {
 }
 
 export default function FilterButton({ title, onPress, hasActiveFilters = false }: FilterButtonProps) {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   return (
     <TouchableOpacity 

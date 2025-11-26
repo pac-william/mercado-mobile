@@ -1,8 +1,9 @@
 import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions, ViewStyle } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { isValidImageUri } from "../../utils/imageUtils";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 
 const { width } = Dimensions.get("window"); // pega largura da tela
 const CARD_WIDTH = width * 0.45;
@@ -28,7 +29,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onPress,
   style 
 }) => {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
 
   return (
     <TouchableOpacity 

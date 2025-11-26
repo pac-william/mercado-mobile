@@ -9,11 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import PriceFilter from './PriceFilter';
 import CategoryFilter from './CategoryFilter';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 
 interface FilterModalProps {
   visible: boolean;
@@ -34,7 +35,7 @@ export default function FilterModal({
   onClear,
   currentFilters,
 }: FilterModalProps) {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
   const [categoryIds, setCategoryIds] = useState<string[]>(currentFilters.categoryIds || []);
@@ -169,8 +170,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: BORDER_RADIUS.xlBase,
-    borderTopRightRadius: BORDER_RADIUS.xlBase,
+    borderTopLeftRadius: BORDER_RADIUS.xl,
+    borderTopRightRadius: BORDER_RADIUS.xl,
     maxHeight: '80%',
     paddingBottom: SPACING.xlBase,
   },

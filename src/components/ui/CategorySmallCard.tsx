@@ -1,7 +1,7 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, Image, Dimensions, View } from "react-native";
-import { useTheme } from "react-native-paper";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE } from "../../constants/styles";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 
 const { width } = Dimensions.get("window");
 const cardWidth = (width / 2) - 32;
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) => {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
 
   return (
     <TouchableOpacity 

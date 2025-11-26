@@ -1,8 +1,9 @@
 import React from "react";
 import { TouchableOpacity, View, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 
 export type ButtonVariant = "primary" | "secondary" | "outline" | "text" | "ghost";
 export type ButtonSize = "small" | "medium" | "large";
@@ -37,7 +38,7 @@ export default function Button({
   style,
   textStyle,
 }: ButtonProps) {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   const getButtonStyles = (): ViewStyle => {
     const baseStyle: ViewStyle = {

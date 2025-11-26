@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { getCategories } from '../../services/categoryService';
 import { Category } from '../../domain/categoryDomain';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 
 interface CategoryFilterProps {
   selectedCategoryIds: string[];
@@ -15,7 +16,7 @@ export default function CategoryFilter({
   selectedCategoryIds,
   onCategoryChange,
 }: CategoryFilterProps) {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.smPlus,
-    borderRadius: BORDER_RADIUS.xlBase,
+    borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
   },
   categoryText: {

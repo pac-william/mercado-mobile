@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { View, FlatList, StyleSheet, ActivityIndicator, Dimensions } from "react-native";
-import { useTheme } from "react-native-paper";
 import CategorySmallCard from "./CategorySmallCard";
 import { getMarkets } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
@@ -8,6 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../../../App";
 import { SPACING } from "../../constants/styles";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -17,7 +17,7 @@ const numColumns = 2;
 const cardWidth = (width - cardMargin * (numColumns + 1)) / numColumns;
 
 const CategoriesGrid = () => {
-    const paperTheme = useTheme();
+    const paperTheme = useCustomTheme();
     const [markets, setMarkets] = useState<Market[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -54,13 +54,14 @@ const CategoriesGrid = () => {
                 numColumns={numColumns}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <CategorySmallCard
-                        name={item.name}
-                        image={item.profilePicture}
-                        subtitle={item.address}
-                        onPress={() => navigation.navigate("MarketDetails", { marketId: item.id })}
-                        style={styles.card}
-                    />
+                    <View style={styles.card}>
+                        <CategorySmallCard
+                            name={item.name}
+                            image={item.profilePicture || ""}
+                            subtitle={item.address}
+                            onPress={() => navigation.navigate("MarketDetails", { marketId: item.id })}
+                        />
+                    </View>
                 )}
                 contentContainerStyle={styles.list}
             />

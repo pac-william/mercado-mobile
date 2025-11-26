@@ -7,10 +7,11 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Receipt } from '../../types/suggestion';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 
 interface ReceiptModalProps {
   visible: boolean;
@@ -25,7 +26,7 @@ export default function ReceiptModal({
   receipt,
   mode,
 }: ReceiptModalProps) {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
 
   return (
     <Modal
@@ -176,8 +177,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: BORDER_RADIUS.xlBase,
-    borderTopRightRadius: BORDER_RADIUS.xlBase,
+    borderTopLeftRadius: BORDER_RADIUS.xl,
+    borderTopRightRadius: BORDER_RADIUS.xl,
     maxHeight: '85%',
     paddingBottom: SPACING.xlBase,
   },

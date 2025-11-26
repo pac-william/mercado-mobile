@@ -9,8 +9,8 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from 'react-native-paper';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -42,7 +42,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
   secondaryButton,
   showCloseButton = true,
 }) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   const getIconAndColor = () => {
     switch (type) {

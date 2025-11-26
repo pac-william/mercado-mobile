@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, FlatList, StyleSheet, ActivityIndicator } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../../../App";
@@ -9,6 +9,7 @@ import { getProducts, Product } from "../../services/productService";
 import { getMarketById } from "../../services/marketService";
 import { SuggestionItem } from "../../types/suggestion";
 import { SPACING, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 
 interface ProductSectionWithCardsProps {
   title: string;
@@ -29,7 +30,7 @@ export default function ProductSectionWithCards({
   items,
   navigation,
 }: ProductSectionWithCardsProps) {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
   const [products, setProducts] = useState<ProductWithMarket[]>([]);
   const [loading, setLoading] = useState(true);
 

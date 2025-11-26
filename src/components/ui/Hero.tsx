@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { View, Image, StyleSheet, Dimensions, Text } from "react-native";
-import { useTheme } from "react-native-paper";
 import Swiper from "react-native-swiper";
 import { getActiveCampaignsForCarousel, Campaign } from "../../services/campaignService";
 import { getMarketById } from "../../services/marketService";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { useCustomTheme } from "../../hooks/useCustomTheme";
 
 const { width } = Dimensions.get("window");
 
 const HeroBanner = () => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [marketNames, setMarketNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);

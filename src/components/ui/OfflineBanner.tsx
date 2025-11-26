@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
+import { useCustomTheme } from '../../hooks/useCustomTheme';
 
 interface OfflineBannerProps {
   message?: string;
@@ -11,7 +11,7 @@ interface OfflineBannerProps {
 export const OfflineBanner: React.FC<OfflineBannerProps> = ({ 
   message = "Sem conexão com a internet. Alguns recursos podem estar limitados." 
 }) => {
-  const paperTheme = useTheme();
+  const paperTheme = useCustomTheme();
 
   return (
     <View style={[styles.banner, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
