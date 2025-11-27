@@ -18,7 +18,7 @@ interface CartState {
 }
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'quantity'> }
+  | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'quantity'> & { initialQuantity?: number } }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'CLEAR_CART' };
@@ -32,19 +32,17 @@ export const initialState: CartState = {
 export const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      // Normaliza os IDs para string para garantir comparação correta
       const payloadId = String(action.payload.id);
       const existingItem = state.items.find(item => String(item.id) === payloadId);
+      const quantityToAdd = action.payload.initialQuantity || 1;
       
       if (existingItem) {
-        // Se o item já existe, apenas incrementa a quantidade
-        // Preserva o cartItemId existente se o novo não tiver
         const updatedItems = state.items.map(item =>
           String(item.id) === payloadId
             ? { 
                 ...item, 
-                quantity: item.quantity + 1,
-                cartItemId: action.payload.cartItemId || item.cartItemId // Preserva cartItemId existente
+                quantity: item.quantity + quantityToAdd,
+                cartItemId: action.payload.cartItemId || item.cartItemId
               }
             : item
         );
@@ -58,8 +56,8 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
           itemCount,
         };
       } else {
-        // Se o item não existe, adiciona com quantidade 1
-        const newItem = { ...action.payload, quantity: 1, id: payloadId };
+        const { initialQuantity, ...itemData } = action.payload;
+        const newItem = { ...itemData, quantity: quantityToAdd, id: payloadId };
         const updatedItems = [...state.items, newItem];
         const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -113,7 +111,7 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
 
 interface CartContextType {
   state: CartState;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'> & { initialQuantity?: number }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;

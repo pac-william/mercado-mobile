@@ -21,6 +21,7 @@ import CustomModal from '../../components/ui/CustomModal';
 import Button from '../../components/ui/Button';
 import LoadingScreen from '../../components/ui/LoadingScreen';
 import EmptyState from '../../components/ui/EmptyState';
+import QuantitySelector from '../../components/ui/QuantitySelector';
 import { CartItem, useCart } from '../../contexts/CartContext';
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
@@ -383,67 +384,36 @@ const CartScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.quantityContainer}>
-                <Text style={[styles.quantityLabel, { color: paperTheme.colors.onSurface }]}>
-                  Quantidade
-                </Text>
-
-                <View style={[styles.quantityControls, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                  <TouchableOpacity
-                    onPress={async () => {
-                      const newQuantity = Math.max(1, item.quantity - 1);
-                      updateQuantity(item.id, newQuantity);
-                      
-                      if (isAuthenticated && item.cartItemId) {
-                        try {
-                          await updateCartItem(item.cartItemId, newQuantity);
-                        } catch (apiError) {
-                          console.error("Erro ao atualizar quantidade na API:", apiError);
-                        }
-                      }
-                    }}
-                    style={[
-                      styles.quantityButton,
-                      {
-                        backgroundColor: item.quantity <= 1 ? paperTheme.colors.outline : paperTheme.colors.secondary,
-                        shadowColor: item.quantity <= 1 ? 'transparent' : paperTheme.colors.secondary,
-                        elevation: item.quantity <= 1 ? 0 : 3,
-                      }
-                    ]}
-                    disabled={item.quantity <= 1}
-                  >
-                    <Ionicons
-                      name="remove"
-                      size={ICON_SIZES.xlPlus}
-                      color={item.quantity <= 1 ? paperTheme.colors.textSecondary : paperTheme.colors.white}
-                    />
-                  </TouchableOpacity>
-
-                  <View style={styles.quantityValue}>
-                    <Text style={[styles.quantityText, { color: paperTheme.colors.onSurface }]}>
-                      {item.quantity}
-                    </Text>
-                  </View>
-
-                  <TouchableOpacity
-                    onPress={async () => {
-                      const newQuantity = item.quantity + 1;
-                      updateQuantity(item.id, newQuantity);
-                      
-                      if (isAuthenticated && item.cartItemId) {
-                        try {
-                          await updateCartItem(item.cartItemId, newQuantity);
-                        } catch (apiError) {
-                          console.error("Erro ao atualizar quantidade na API:", apiError);
-                        }
-                      }
-                    }}
-                    style={[styles.quantityButton, { backgroundColor: paperTheme.colors.secondary, shadowColor: paperTheme.colors.secondary }]}
-                  >
-                    <Ionicons name="add" size={ICON_SIZES.xlPlus} color={paperTheme.colors.white} />
-                  </TouchableOpacity>
-                </View>
-              </View>
+              <QuantitySelector
+                quantity={item.quantity}
+                onIncrease={async () => {
+                  const newQuantity = item.quantity + 1;
+                  updateQuantity(item.id, newQuantity);
+                  
+                  if (isAuthenticated && item.cartItemId) {
+                    try {
+                      await updateCartItem(item.cartItemId, newQuantity);
+                    } catch (apiError) {
+                      console.error("Erro ao atualizar quantidade na API:", apiError);
+                    }
+                  }
+                }}
+                onDecrease={async () => {
+                  const newQuantity = Math.max(1, item.quantity - 1);
+                  updateQuantity(item.id, newQuantity);
+                  
+                  if (isAuthenticated && item.cartItemId) {
+                    try {
+                      await updateCartItem(item.cartItemId, newQuantity);
+                    } catch (apiError) {
+                      console.error("Erro ao atualizar quantidade na API:", apiError);
+                    }
+                  }
+                }}
+                minQuantity={1}
+                showLabel={true}
+                showSubtotal={false}
+              />
 
               <View style={[styles.subtotalRow, { borderTopColor: paperTheme.colors.outline, backgroundColor: paperTheme.colors.surfaceVariant }]}>
                 <Text style={[styles.subtotalLabel, { color: paperTheme.colors.onSurface }]}>
@@ -647,44 +617,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: SPACING.xsPlus,
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.mdPlus,
-    paddingBottom: SPACING.smPlus,
-  },
-  quantityLabel: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '600',
-  },
-  quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: SPACING.xxxl - SPACING.smPlus,
-    paddingHorizontal: SPACING.micro + SPACING.xs,
-    paddingVertical: SPACING.micro + 1,
-  },
-  quantityButton: {
-    width: SPACING.xxxl - SPACING.xs,
-    height: SPACING.xxxl - SPACING.xs,
-    borderRadius: SPACING.lgPlus,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowOffset: { width: 0, height: SPACING.micro },
-    shadowOpacity: 0.2,
-    shadowRadius: SPACING.xs,
-    elevation: 3,
-  },
-  quantityValue: {
-    minWidth: SPACING.xxxl,
-    alignItems: 'center',
-    marginHorizontal: SPACING.smPlus,
-  },
-  quantityText: {
-    fontSize: FONT_SIZE.lgPlus,
-    fontWeight: 'bold',
   },
   subtotalRow: {
     flexDirection: 'row',

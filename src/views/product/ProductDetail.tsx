@@ -1,11 +1,12 @@
-import React from "react";
-import { View, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { View, Image, ScrollView, StyleSheet } from "react-native";
 import { Text, Button, Divider } from "react-native-paper";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
 import CustomModal from "../../components/ui/CustomModal";
+import QuantitySelector from "../../components/ui/QuantitySelector";
 import { useModal } from "../../hooks/useModal";
 import { useAddToCart } from "../../hooks/useAddToCart";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,18 +19,17 @@ interface Props {
   route: ProductDetailRouteProp;
 }
 
-const { width } = Dimensions.get('window');
-
 export default function ProductDetail({ route }: Props) {
   const { product } = route.params;
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
   const navigation = useNavigation();
   const paperTheme = useCustomTheme();
+  const [quantity, setQuantity] = useState(1);
   const { addToCart, isAdding } = useAddToCart({
     onSuccess: () => {
       showSuccess(
         'Produto Adicionado! 🎉',
-        `${product.name} foi adicionado ao seu carrinho com sucesso!`,
+        `${quantity} ${quantity === 1 ? 'unidade' : 'unidades'} de ${product.name} ${quantity === 1 ? 'foi' : 'foram'} adicionada${quantity === 1 ? '' : 's'} ao seu carrinho com sucesso!`,
         {
           text: 'Ver Carrinho',
           onPress: () => {
@@ -67,6 +67,16 @@ export default function ProductDetail({ route }: Props) {
     },
   });
 
+  const handleDecreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  const handleIncreaseQuantity = () => {
+    setQuantity(quantity + 1);
+  };
+
   const handleAddToCart = async () => {
     if (isAdding) return;
 
@@ -77,6 +87,7 @@ export default function ProductDetail({ route }: Props) {
       image: product.image,
       marketName: product.marketName,
       marketId: product.marketId,
+      quantity: quantity,
     });
   };
 
@@ -151,6 +162,17 @@ export default function ProductDetail({ route }: Props) {
               (4.8) • 127 avaliações
             </Text>
           </View>
+
+          <QuantitySelector
+            quantity={quantity}
+            onIncrease={handleIncreaseQuantity}
+            onDecrease={handleDecreaseQuantity}
+            minQuantity={1}
+            showLabel={true}
+            showSubtotal={true}
+            subtotal={product.price * quantity}
+            centered={true}
+          />
 
           <Button
             mode="contained"

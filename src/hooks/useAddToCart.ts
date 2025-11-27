@@ -10,6 +10,7 @@ interface AddToCartParams {
   image: string;
   marketName: string;
   marketId: string;
+  quantity?: number;
 }
 
 interface UseAddToCartOptions {
@@ -28,11 +29,13 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
     try {
       setIsAdding(true);
 
+      const quantity = params.quantity || 1;
+
       if (isAuthenticated) {
         try {
           const cartResponse = await addItemToCart({
             productId: params.productId,
-            quantity: 1,
+            quantity: quantity,
           });
 
           const addedItem = cartResponse.items.find(
@@ -47,6 +50,7 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
             marketName: params.marketName,
             marketId: params.marketId,
             cartItemId: addedItem?.id,
+            initialQuantity: quantity,
           });
         } catch (apiError: any) {
           console.error('Erro ao adicionar item ao carrinho na API:', apiError);
@@ -57,6 +61,7 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
             image: params.image,
             marketName: params.marketName,
             marketId: params.marketId,
+            initialQuantity: quantity,
           });
 
           if (options.onError) {
@@ -72,6 +77,7 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
           image: params.image,
           marketName: params.marketName,
           marketId: params.marketId,
+          initialQuantity: quantity,
         });
       }
 

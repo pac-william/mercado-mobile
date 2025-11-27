@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import { Text, ActivityIndicator, useTheme, Searchbar } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
@@ -13,6 +13,7 @@ import HeroBanner from "../../components/ui/Hero";
 import { Header } from "../../components/layout/header";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import Button from "../../components/ui/Button";
+import LoadingScreen from "../../components/ui/LoadingScreen";
 import { getProducts, Product } from "../../services/productService";
 import { getMarkets, getMarketById } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
@@ -37,7 +38,8 @@ export default function Home() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const paperTheme = useTheme();
   const [markets, setMarkets] = useState<MarketWithProducts[]>([]);
-  const [loading, setLoading] = useState(true); 
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMarkets, setLoadingMarkets] = useState(false);
   const [offline, setOffline] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -48,12 +50,20 @@ export default function Home() {
     categoryIds?: string[];
   }>({});
   const [sortByDistance, setSortByDistance] = useState(false);
+  const hasLoadedOnce = useRef(false);
   const { getUserLocation } = useUserLocation();
   const permissions = usePermissions();
 
   const fetchMarketsWithProducts = useCallback(async () => {
+    const isFirstLoad = !hasLoadedOnce.current;
+    
     try {
-      setLoading(true);
+      if (isFirstLoad) {
+        setInitialLoading(true);
+      } else {
+        setLoadingMarkets(true);
+      }
+
       let userLatitude: number | undefined;
       let userLongitude: number | undefined;
 
@@ -113,13 +123,18 @@ export default function Home() {
       
       setMarkets(marketsWithDetails);
       setOffline(false);
+      hasLoadedOnce.current = true;
     } catch (error: any) {
       console.error("Erro ao buscar mercados:", error);
       if (isNetworkError(error)) {
         setOffline(true);
       }
     } finally {
-      setLoading(false);
+      if (isFirstLoad) {
+        setInitialLoading(false);
+      } else {
+        setLoadingMarkets(false);
+      }
     }
   }, [filters, sortByDistance, permissions.location.granted, getUserLocation]);
 
@@ -331,15 +346,10 @@ export default function Home() {
       ));
   }, [markets, searchQuery, sortByDistance, navigation, paperTheme.colors, handleLoadMoreProducts]);
 
-    if (loading) {
-        return (
-            <View style={[styles.loadingContainer, { backgroundColor: paperTheme.colors.background }]}>
-                <ActivityIndicator size="large" color={paperTheme.colors.primary} />
-                <Text style={{ color: paperTheme.colors.onBackground, marginTop: 10 }}>Carregando...</Text>
-            </View>
-        );
-    }
-  
+  if (initialLoading) {
+    return <LoadingScreen message="Carregando mercados..." />;
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
@@ -402,7 +412,16 @@ export default function Home() {
           />
         </View>
 
-        {filteredMarkets}
+        {loadingMarkets ? (
+          <View style={[styles.marketsLoadingContainer, { backgroundColor: paperTheme.colors.background }]}>
+            <ActivityIndicator size="large" color={paperTheme.colors.primary} />
+            <Text style={[styles.marketsLoadingText, { color: paperTheme.colors.onSurface }]}>
+              Atualizando mercados...
+            </Text>
+          </View>
+        ) : (
+          filteredMarkets
+        )}
       </ScrollView>
 
       <FilterModal
@@ -482,11 +501,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingRight: SPACING.lg,
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
+    marketsLoadingContainer: {
+        paddingVertical: SPACING.xxxl * 2,
         alignItems: 'center',
-      },
+        justifyContent: 'center',
+    },
+    marketsLoadingText: {
+        marginTop: SPACING.lg,
+        fontSize: FONT_SIZE.md,
+        opacity: 0.7,
+    },
     searchbar: {
         borderRadius: BORDER_RADIUS.lg,
         ...SHADOWS.small,

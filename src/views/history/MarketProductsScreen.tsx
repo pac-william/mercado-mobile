@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
 import Button from "../../components/ui/Button";
+import QuantitySelector from "../../components/ui/QuantitySelector";
 import { getSuggestionById } from "../../services/suggestionService";
 import { getProducts, Product } from "../../services/productService";
 import { getMarketById } from "../../services/marketService";
@@ -530,27 +531,14 @@ export default function MarketProductsScreen() {
           </Text>
         </View>
       </View>
-      <View style={styles.quantityContainer}>
-        <Text style={[styles.quantityLabel, { color: paperTheme.colors.onSurface }]}>Quantidade</Text>
-        <View style={[styles.quantityControls, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-          <TouchableOpacity
-            onPress={() => handleRemoveProduct(product)}
-            disabled={product.quantity === 0}
-            style={[styles.quantityButton, { backgroundColor: product.quantity === 0 ? paperTheme.colors.surfaceVariant : paperTheme.colors.primary }]}
-          >
-            <Ionicons name="remove" size={ICON_SIZES.xlPlus} color={product.quantity === 0 ? paperTheme.colors.onSurfaceVariant : "white"} />
-          </TouchableOpacity>
-          <View style={styles.quantityValue}>
-            <Text style={[styles.quantityText, { color: paperTheme.colors.onSurface }]}>{product.quantity}</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => handleAddProduct(product)}
-            style={[styles.quantityButton, { backgroundColor: paperTheme.colors.primary }]}
-          >
-            <Ionicons name="add" size={ICON_SIZES.xlPlus} color={paperTheme.colors.onPrimary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <QuantitySelector
+        quantity={product.quantity}
+        onIncrease={() => handleAddProduct(product)}
+        onDecrease={() => handleRemoveProduct(product)}
+        minQuantity={0}
+        showLabel={true}
+        showSubtotal={false}
+      />
     </View>
   );
 
@@ -880,38 +868,6 @@ const styles = StyleSheet.create({
   },
   productPrice: {
     fontSize: FONT_SIZE.lgPlus,
-    fontWeight: "bold",
-  },
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  quantityLabel: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: "600",
-  },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: BORDER_RADIUS.xl,
-    paddingHorizontal: SPACING.xs,
-    paddingVertical: SPACING.xs,
-  },
-  quantityButton: {
-    width: SPACING.xxxl - SPACING.xs,
-    height: SPACING.xxxl - SPACING.xs,
-    borderRadius: SPACING.lgPlus,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  quantityValue: {
-    minWidth: SPACING.xxxl,
-    alignItems: "center",
-    marginHorizontal: SPACING.smPlus,
-  },
-  quantityText: {
-    fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
   },
   footer: {
