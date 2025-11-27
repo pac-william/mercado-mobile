@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -40,10 +40,23 @@ const CartScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const isLoadingRef = useRef(false);
+  const lastLoadTimeRef = useRef(0);
+  const cartStateRef = useRef(cartState);
+  
+  useEffect(() => {
+    cartStateRef.current = cartState;
+  }, [cartState]);
 
   const loadCart = useCallback(async (forceReload = false) => {
     if (!isAuthenticated) {
       setLoading(false);
+      isLoadingRef.current = false;
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastLoadTimeRef.current < 1000 && !forceReload) {
       return;
     }
 
@@ -51,24 +64,25 @@ const CartScreen: React.FC = () => {
       return;
     }
 
+    if (isLoadingRef.current) {
+      return;
+    }
+
     try {
+      isLoadingRef.current = true;
+      lastLoadTimeRef.current = now;
       setLoading(true);
       const carts = await getCart();
       
-      const addedIds = new Set<string>();
-      const itemsToAdd: Array<{
-        cartItem: CartItem;
-        quantity: number;
-      }> = [];
+      const serverItemsMap = new Map<string, { cartItem: CartItem; quantity: number }>();
       
       for (const cart of carts) {
         for (const item of cart.items ?? []) {
           const cartItem = mapCartItemResponseToCartItem(item, cart.marketName);
-          const itemId = String(cartItem.id);
+          const uniqueKey = `${String(cartItem.id)}_${cartItem.marketId}`;
           
-          if (!addedIds.has(itemId)) {
-            addedIds.add(itemId);
-            itemsToAdd.push({
+          if (!serverItemsMap.has(uniqueKey)) {
+            serverItemsMap.set(uniqueKey, {
               cartItem,
               quantity: item.quantity,
             });
@@ -76,31 +90,78 @@ const CartScreen: React.FC = () => {
         }
       }
       
-      clearCart();
+      const currentLocalItems = cartStateRef.current.items;
+      const localItemsMap = new Map<string, CartItem>();
       
-      for (const { cartItem, quantity } of itemsToAdd) {
-        addItem({
-          id: cartItem.id,
-          name: cartItem.name,
-          price: cartItem.price,
-          image: cartItem.image,
-          marketName: cartItem.marketName,
-          marketId: cartItem.marketId,
-          cartItemId: cartItem.cartItemId,
-        });
+      for (const item of currentLocalItems) {
+        const uniqueKey = `${String(item.id)}_${item.marketId}`;
+        localItemsMap.set(uniqueKey, item);
+      }
+      
+      const mergedItems: CartItem[] = [];
+      const processedKeys = new Set<string>();
+      
+      for (const [key, { cartItem, quantity }] of serverItemsMap) {
+        const localItem = localItemsMap.get(key);
         
-        if (quantity !== 1) {
-          updateQuantity(cartItem.id, quantity);
+        if (localItem) {
+          mergedItems.push({
+            ...localItem,
+            cartItemId: cartItem.cartItemId,
+            quantity: quantity,
+          });
+        } else {
+          mergedItems.push({
+            ...cartItem,
+            quantity: quantity,
+          });
+        }
+        
+        processedKeys.add(key);
+      }
+      
+      for (const [key, localItem] of localItemsMap) {
+        if (!processedKeys.has(key) && !localItem.cartItemId) {
+          mergedItems.push(localItem);
+        }
+      }
+      
+      const needsUpdate = mergedItems.length !== localItemsMap.size ||
+        mergedItems.some(item => {
+          const key = `${String(item.id)}_${item.marketId}`;
+          const current = localItemsMap.get(key);
+          return !current || 
+            current.quantity !== item.quantity || 
+            current.cartItemId !== item.cartItemId;
+        });
+      
+      if (needsUpdate) {
+        clearCart();
+        
+        for (const item of mergedItems) {
+          addItem({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            marketName: item.marketName,
+            marketId: item.marketId,
+            cartItemId: item.cartItemId,
+          });
+          
+          if (item.quantity !== 1) {
+            updateQuantity(item.id, item.quantity);
+          }
         }
       }
     } catch (error) {
       console.error('Erro ao carregar carrinho:', error);
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
       setHasLoadedOnce(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, clearCart, addItem, updateQuantity]);
 
   useEffect(() => {
     if (!sessionLoading && isAuthenticated && !hasLoadedOnce) {
@@ -108,15 +169,25 @@ const CartScreen: React.FC = () => {
     } else if (!sessionLoading && !isAuthenticated) {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionLoading, isAuthenticated]);
+  }, [sessionLoading, isAuthenticated, hasLoadedOnce, loadCart]);
+
+  const loadCartRef = useRef(loadCart);
+  
+  useEffect(() => {
+    loadCartRef.current = loadCart;
+  }, [loadCart]);
 
   useFocusEffect(
     useCallback(() => {
-      if (isAuthenticated && !sessionLoading) {
-        loadCart(true);
+      if (isAuthenticated && !sessionLoading && !isLoadingRef.current) {
+        const timer = setTimeout(() => {
+          if (!isLoadingRef.current) {
+            loadCartRef.current(true);
+          }
+        }, 200);
+        return () => clearTimeout(timer);
       }
-    }, [isAuthenticated, sessionLoading, loadCart])
+    }, [isAuthenticated, sessionLoading])
   );
 
 

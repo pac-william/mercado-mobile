@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -28,6 +29,8 @@ import { createOrder } from '../../services/orderService';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 import { formatCurrency, formatOrderDate } from '../../utils/format';
 import Card from '../../components/ui/Card';
+import PaymentCardModal from '../../components/ui/PaymentCardModal';
+import PaymentPixModal from '../../components/ui/PaymentPixModal';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 type CheckoutScreenRouteProp = RouteProp<HomeStackParamList, 'Checkout'>;
@@ -49,9 +52,13 @@ export default function CheckoutScreen() {
   const { user, isAuthenticated } = useSession();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedPaymentContext, setSelectedPaymentContext] = useState<'delivery' | 'app' | ''>('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [changeAmount, setChangeAmount] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
 
   const checkoutItems = useMemo(() => {
     const routeItems = route.params?.items;
@@ -134,53 +141,60 @@ export default function CheckoutScreen() {
     setSelectedAddress(address);
   };
 
-  const handleSelectPaymentMethod = (methodId: string) => {
-    setSelectedPaymentMethod(methodId);
+  const handleSelectPaymentContext = (context: 'delivery' | 'app') => {
+    setSelectedPaymentContext(context);
+    setSelectedPaymentMethod('');
+    setChangeAmount('');
   };
 
-  const handleFinalizeOrder = async () => {
-    if (!selectedAddress) {
-      showWarning(
-        'Endereço necessário',
-        'Por favor, selecione ou cadastre um endereço de entrega.',
-        {
-          text: 'OK',
-          onPress: hideModal,
-        }
-      );
-      return;
+  const handleSelectPaymentMethod = (methodId: string) => {
+    setSelectedPaymentMethod(methodId);
+    if (methodId !== 'cash') {
+      setChangeAmount('');
     }
+  };
 
-    if (!selectedPaymentMethod) {
-      showWarning(
-        'Forma de pagamento necessária',
-        'Por favor, selecione uma forma de pagamento.',
-        {
-          text: 'OK',
-          onPress: hideModal,
-        }
-      );
-      return;
-    }
+  const handleOpenCardModal = () => {
+    setShowCardModal(true);
+  };
 
+  const handleOpenPixModal = () => {
+    setShowPixModal(true);
+  };
+
+  const handleCardConfirm = async (cardData: {
+    cardNumber: string;
+    cardName: string;
+    expiryDate: string;
+    cvv: string;
+  }) => {
+    setShowCardModal(false);
+    await handleFinalizeOrderWithPayment('CREDIT_CARD');
+  };
+
+  const handlePixConfirm = async () => {
+    setShowPixModal(false);
+    await handleFinalizeOrderWithPayment('PIX');
+  };
+
+  const createOrderData = (paymentMethod: string): OrderCreateDTO => {
+    return {
+      userId: user?.id || '',
+      marketId: checkoutMarketId,
+      items: checkoutItems.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      addressId: selectedAddress?.id || '',
+      paymentMethod: paymentMethod,
+    };
+  };
+
+  const handleFinalizeOrderWithPayment = async (paymentMethod: string) => {
     try {
       setCreatingOrder(true);
-
-      const paymentMethodObj = PAYMENT_METHODS.find(m => m.id === selectedPaymentMethod);
-      const backendPaymentMethod = paymentMethodObj?.backendValue || selectedPaymentMethod.toUpperCase();
-
-      const orderData: OrderCreateDTO = {
-        userId: user?.id || '',
-        marketId: checkoutMarketId,
-        items: checkoutItems.map((item) => ({
-          productId: item.id,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        addressId: selectedAddress.id,
-        paymentMethod: backendPaymentMethod,
-      };
-
+      const orderData = createOrderData(paymentMethod);
       const newOrder = await createOrder(orderData);
 
       checkoutItems.forEach(item => {
@@ -207,36 +221,10 @@ export default function CheckoutScreen() {
         }
       );
     } catch (error: any) {
-      console.error('❌ Erro ao criar pedido:', error);
-      console.error('❌ Detalhes do erro:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      
-      let errorMessage = 'Não foi possível processar seu pedido. Tente novamente.';
-      
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        
-        if (errorData.issues && Array.isArray(errorData.issues)) {
-          const validationErrors = errorData.issues.map((issue: any) => {
-            const path = issue.path?.join('.') || 'campo';
-            return `${path}: ${issue.message}`;
-          }).join('\n');
-          errorMessage = `Erro de validação:\n${validationErrors}`;
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (errorData.error) {
-          errorMessage = errorData.error;
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
+      console.error('Erro ao criar pedido:', error);
       showWarning(
         'Erro ao finalizar',
-        errorMessage,
+        'Não foi possível processar seu pedido. Tente novamente.',
         {
           text: 'OK',
           onPress: hideModal,
@@ -245,6 +233,47 @@ export default function CheckoutScreen() {
     } finally {
       setCreatingOrder(false);
     }
+  };
+
+  const handleFinalizeOrder = async () => {
+    let backendPaymentMethod = 'CASH';
+    if (selectedPaymentMethod) {
+      const paymentMethodObj = PAYMENT_METHODS.find(m => m.id === selectedPaymentMethod);
+      backendPaymentMethod = paymentMethodObj?.backendValue || selectedPaymentMethod.toUpperCase();
+    }
+    await handleFinalizeOrderWithPayment(backendPaymentMethod);
+  };
+
+  const getAvailablePaymentMethods = () => {
+    if (selectedPaymentContext === 'delivery') {
+      return [
+        { id: 'cash', backendValue: 'CASH', name: 'Dinheiro', icon: 'cash' },
+        { id: 'credit_card', backendValue: 'CREDIT_CARD', name: 'Cartão de Crédito', icon: 'card' },
+        { id: 'debit_card', backendValue: 'DEBIT_CARD', name: 'Cartão de Débito', icon: 'card-outline' },
+      ];
+    } else if (selectedPaymentContext === 'app') {
+      return [
+        { id: 'credit_card', backendValue: 'CREDIT_CARD', name: 'Cartão de Crédito', icon: 'card' },
+        { id: 'pix', backendValue: 'PIX', name: 'PIX', icon: 'flash' },
+      ];
+    }
+    return [];
+  };
+
+  const shouldShowChangeField = () => {
+    return selectedPaymentContext === 'delivery' && selectedPaymentMethod === 'cash';
+  };
+
+  const canFinalizeOrder = () => {
+    if (selectedPaymentContext === 'app') {
+      if (selectedPaymentMethod === 'credit_card') {
+        return false;
+      }
+      if (selectedPaymentMethod === 'pix') {
+        return false;
+      }
+    }
+    return true;
   };
 
   if (loading) {
@@ -385,44 +414,150 @@ export default function CheckoutScreen() {
               Forma de Pagamento
             </Text>
 
-            <View>
-              {PAYMENT_METHODS.map((method) => (
-                <TouchableOpacity
-                  key={method.id}
-                  onPress={() => handleSelectPaymentMethod(method.id)}
-                  style={[
-                    styles.paymentMethodItem,
-                    {
-                      borderColor: selectedPaymentMethod === method.id
+            <View style={styles.paymentContextContainer}>
+              <TouchableOpacity
+                onPress={() => handleSelectPaymentContext('delivery')}
+                style={[
+                  styles.paymentContextButton,
+                  {
+                    borderColor: selectedPaymentContext === 'delivery'
+                      ? paperTheme.colors.primary
+                      : paperTheme.colors.outline,
+                    backgroundColor: selectedPaymentContext === 'delivery'
+                      ? paperTheme.colors.primaryContainer
+                      : paperTheme.colors.surfaceVariant,
+                  }
+                ]}
+              >
+                <Ionicons
+                  name="bicycle"
+                  size={ICON_SIZES.xl}
+                  color={selectedPaymentContext === 'delivery'
+                    ? paperTheme.colors.primary
+                    : paperTheme.colors.onSurfaceVariant}
+                  style={styles.paymentContextIcon}
+                />
+                <Text style={[
+                  styles.paymentContextText,
+                  { color: paperTheme.colors.onSurface },
+                  selectedPaymentContext === 'delivery' && styles.paymentContextTextSelected
+                ]}>
+                  Na Entrega
+                </Text>
+                {selectedPaymentContext === 'delivery' && (
+                  <Ionicons name="checkmark-circle" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => handleSelectPaymentContext('app')}
+                style={[
+                  styles.paymentContextButton,
+                  {
+                    borderColor: selectedPaymentContext === 'app'
+                      ? paperTheme.colors.primary
+                      : paperTheme.colors.outline,
+                    backgroundColor: selectedPaymentContext === 'app'
+                      ? paperTheme.colors.primaryContainer
+                      : paperTheme.colors.surfaceVariant,
+                  }
+                ]}
+              >
+                <Ionicons
+                  name="phone-portrait"
+                  size={ICON_SIZES.xl}
+                  color={selectedPaymentContext === 'app'
+                    ? paperTheme.colors.primary
+                    : paperTheme.colors.onSurfaceVariant}
+                  style={styles.paymentContextIcon}
+                />
+                <Text style={[
+                  styles.paymentContextText,
+                  { color: paperTheme.colors.onSurface },
+                  selectedPaymentContext === 'app' && styles.paymentContextTextSelected
+                ]}>
+                  Pelo App
+                </Text>
+                {selectedPaymentContext === 'app' && (
+                  <Ionicons name="checkmark-circle" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {selectedPaymentContext && (
+              <View style={styles.paymentMethodsContainer}>
+                {getAvailablePaymentMethods().map((method) => (
+                  <TouchableOpacity
+                    key={method.id}
+                    onPress={() => {
+                      if (selectedPaymentContext === 'app' && method.id === 'credit_card') {
+                        handleOpenCardModal();
+                      } else if (selectedPaymentContext === 'app' && method.id === 'pix') {
+                        handleOpenPixModal();
+                      } else {
+                        handleSelectPaymentMethod(method.id);
+                      }
+                    }}
+                    style={[
+                      styles.paymentMethodItem,
+                      {
+                        borderColor: selectedPaymentMethod === method.id
+                          ? paperTheme.colors.primary
+                          : paperTheme.colors.outline,
+                        backgroundColor: selectedPaymentMethod === method.id
+                          ? paperTheme.colors.primaryContainer
+                          : paperTheme.colors.surfaceVariant,
+                      }
+                    ]}
+                  >
+                    <Ionicons
+                      name={method.icon as any}
+                      size={ICON_SIZES.xl}
+                      color={selectedPaymentMethod === method.id
                         ? paperTheme.colors.primary
-                        : paperTheme.colors.outline,
-                      backgroundColor: selectedPaymentMethod === method.id
-                        ? paperTheme.colors.primaryContainer
-                        : paperTheme.colors.surfaceVariant,
+                        : paperTheme.colors.onSurfaceVariant}
+                      style={styles.paymentMethodIcon}
+                    />
+                    <Text style={[
+                      styles.paymentMethodText,
+                      { color: paperTheme.colors.onSurface },
+                      selectedPaymentMethod === method.id && styles.paymentMethodTextSelected
+                    ]}>
+                      {method.name}
+                    </Text>
+                    {selectedPaymentMethod === method.id && (
+                      <Ionicons name="checkmark-circle" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />
+                    )}
+                    {(selectedPaymentContext === 'app' && (method.id === 'credit_card' || method.id === 'pix')) && (
+                      <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {shouldShowChangeField() && (
+              <View style={[styles.changeFieldContainer, { borderTopColor: paperTheme.colors.outline }]}>
+                <Text style={[styles.changeLabel, { color: paperTheme.colors.onSurface }]}>
+                  Troco para quanto?
+                </Text>
+                <TextInput
+                  style={[
+                    styles.changeInput,
+                    {
+                      backgroundColor: paperTheme.colors.surfaceVariant,
+                      borderColor: paperTheme.colors.outline,
+                      color: paperTheme.colors.onSurface,
                     }
                   ]}
-                >
-                  <Ionicons
-                    name={method.icon as any}
-                    size={ICON_SIZES.xl}
-                    color={selectedPaymentMethod === method.id
-                      ? paperTheme.colors.primary
-                      : paperTheme.colors.onSurfaceVariant}
-                    style={styles.paymentMethodIcon}
-                  />
-                  <Text style={[
-                    styles.paymentMethodText,
-                    { color: paperTheme.colors.onSurface },
-                    selectedPaymentMethod === method.id && styles.paymentMethodTextSelected
-                  ]}>
-                    {method.name}
-                  </Text>
-                  {selectedPaymentMethod === method.id && (
-                    <Ionicons name="checkmark-circle" size={ICON_SIZES.xl} color={paperTheme.colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+                  placeholder="Ex: 50,00"
+                  placeholderTextColor={paperTheme.colors.onSurfaceVariant}
+                  value={changeAmount}
+                  onChangeText={setChangeAmount}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            )}
           </Card>
         </ScrollView>
 
@@ -454,7 +589,7 @@ export default function CheckoutScreen() {
               position: "left",
             }}
             loading={creatingOrder}
-            disabled={creatingOrder || !selectedAddress || !selectedPaymentMethod}
+            disabled={creatingOrder || !selectedAddress || !selectedPaymentContext || (canFinalizeOrder() && !selectedPaymentMethod)}
             fullWidth
           />
         </View>
@@ -468,6 +603,20 @@ export default function CheckoutScreen() {
         type={modalState.type}
         primaryButton={modalState.primaryButton}
         secondaryButton={modalState.secondaryButton}
+      />
+
+      <PaymentCardModal
+        visible={showCardModal}
+        onClose={() => setShowCardModal(false)}
+        onConfirm={handleCardConfirm}
+        total={checkoutTotal}
+      />
+
+      <PaymentPixModal
+        visible={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        onConfirm={handlePixConfirm}
+        total={checkoutTotal}
       />
     </View>
   );
@@ -621,5 +770,46 @@ const styles = StyleSheet.create({
   footerTotalValue: {
     fontSize: FONT_SIZE.xxxl,
     fontWeight: 'bold',
+  },
+  paymentContextContainer: {
+    marginBottom: SPACING.lg,
+  },
+  paymentContextButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  paymentContextIcon: {
+    marginRight: SPACING.md,
+  },
+  paymentContextText: {
+    flex: 1,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '400',
+  },
+  paymentContextTextSelected: {
+    fontWeight: '600',
+  },
+  paymentMethodsContainer: {
+    marginTop: SPACING.md,
+  },
+  changeFieldContainer: {
+    marginTop: SPACING.lg,
+    paddingTop: SPACING.lg,
+    borderTopWidth: 1,
+  },
+  changeLabel: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    marginBottom: SPACING.sm,
+  },
+  changeInput: {
+    borderWidth: 1,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    fontSize: FONT_SIZE.md,
   },
 });

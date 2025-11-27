@@ -13,3 +13,17 @@ export const formatOrderDate = (date: Date | string): string => {
   });
 };
 
+export const formatCardNumber = (text: string): string => {
+  const cleaned = text.replace(/\s/g, '');
+  const chunks = cleaned.match(/.{1,4}/g) || [];
+  return chunks.join(' ').substring(0, 19);
+};
+
+export const formatExpiryDate = (text: string): string => {
+  const cleaned = text.replace(/\D/g, '');
+  if (cleaned.length >= 2) {
+    return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}`;
+  }
+  return cleaned;
+};
+

@@ -54,6 +54,8 @@ export type SettingsStackParamList = {
   ProductDetail: { product: any };
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
+  PaymentCard: { marketId?: string; items?: CartItem[]; addressId?: string; total?: number };
+  PaymentPix: { marketId?: string; items?: CartItem[]; addressId?: string; total?: number };
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
