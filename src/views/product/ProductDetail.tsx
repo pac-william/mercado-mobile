@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { Text, Button, Divider } from "react-native-paper";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
-import { useCart } from "../../contexts/CartContext";
 import CustomModal from "../../components/ui/CustomModal";
 import { useModal } from "../../hooks/useModal";
-import { useSession } from "../../hooks/useSession";
-import { addItemToCart } from "../../services/cartService";
+import { useAddToCart } from "../../hooks/useAddToCart";
 import { Ionicons } from "@expo/vector-icons";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
@@ -24,71 +22,11 @@ const { width } = Dimensions.get('window');
 
 export default function ProductDetail({ route }: Props) {
   const { product } = route.params;
-  const { addItem } = useCart();
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
-  const { isAuthenticated } = useSession();
   const navigation = useNavigation();
   const paperTheme = useCustomTheme();
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleAddToCart = async () => {
-    if (isAdding) return; // Previne múltiplas chamadas
-    
-    try {
-      setIsAdding(true);
-
-      if (isAuthenticated) {
-        try {
-          const cartResponse = await addItemToCart({
-            productId: product.id,
-            quantity: 1,
-          });
-          
-          const addedItem = cartResponse.items.find(item => 
-            item.productId === product.id
-          );
-          
-          addItem({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            marketName: product.marketName,
-            marketId: product.marketId,
-            cartItemId: addedItem?.id,
-          });
-        } catch (apiError: any) {
-          console.error("Erro ao adicionar item ao carrinho na API:", apiError);
-          addItem({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            marketName: product.marketName,
-            marketId: product.marketId,
-          });
-          
-          showWarning(
-            'Aviso',
-            'O produto foi adicionado ao carrinho localmente, mas houve um problema ao sincronizar com o servidor.',
-            {
-              text: 'OK',
-              onPress: hideModal,
-            }
-          );
-          return;
-        }
-      } else {
-        addItem({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          marketName: product.marketName,
-          marketId: product.marketId,
-        });
-      }
-      
+  const { addToCart, isAdding } = useAddToCart({
+    onSuccess: () => {
       showSuccess(
         'Produto Adicionado! 🎉',
         `${product.name} foi adicionado ao seu carrinho com sucesso!`,
@@ -105,19 +43,41 @@ export default function ProductDetail({ route }: Props) {
           onPress: hideModal,
         }
       );
-    } catch (error) {
-      console.error("Erro ao adicionar item ao carrinho:", error);
-      showWarning(
-        'Erro',
-        'Não foi possível adicionar o produto ao carrinho. Tente novamente.',
-        {
-          text: 'OK',
-          onPress: hideModal,
-        }
-      );
-    } finally {
-      setIsAdding(false);
-    }
+    },
+    onError: (error: any) => {
+      if (error?.response?.status) {
+        showWarning(
+          'Aviso',
+          'O produto foi adicionado ao carrinho localmente, mas houve um problema ao sincronizar com o servidor.',
+          {
+            text: 'OK',
+            onPress: hideModal,
+          }
+        );
+      } else {
+        showWarning(
+          'Erro',
+          'Não foi possível adicionar o produto ao carrinho. Tente novamente.',
+          {
+            text: 'OK',
+            onPress: hideModal,
+          }
+        );
+      }
+    },
+  });
+
+  const handleAddToCart = async () => {
+    if (isAdding) return;
+
+    await addToCart({
+      productId: product.id,
+      productName: product.name,
+      price: product.price,
+      image: product.image,
+      marketName: product.marketName,
+      marketId: product.marketId,
+    });
   };
 
   return (

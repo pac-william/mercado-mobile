@@ -107,6 +107,8 @@ export default function MarketCategoryProductsScreen() {
         subtitle={item.unit || ""}
         price={item.price}
         imageUrl={item.image}
+        productId={item.id}
+        marketId={marketId}
         onPress={() =>
           navigation.navigate("ProductDetail", {
             product: { ...item, marketName }

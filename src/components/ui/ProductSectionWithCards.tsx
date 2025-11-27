@@ -141,6 +141,8 @@ export default function ProductSectionWithCards({
               subtitle={item.unit || item.name}
               price={item.price}
               imageUrl={item.image}
+              productId={item.id}
+              marketId={item.marketId}
               onPress={() =>
                 navigation.navigate("ProductDetail", {
                   product: { ...item },
