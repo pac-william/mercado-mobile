@@ -28,6 +28,7 @@ import { Address, getUserAddresses } from '../../services/addressService';
 import { createOrder } from '../../services/orderService';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 import { formatCurrency, formatOrderDate } from '../../utils/format';
+import { getScreenBottomPadding } from '../../utils/tabBarUtils';
 import Card from '../../components/ui/Card';
 import PaymentCardModal from '../../components/ui/PaymentCardModal';
 import PaymentPixModal from '../../components/ui/PaymentPixModal';
@@ -49,6 +50,8 @@ export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const { state: cartState, clearCart, removeItem } = useCart();
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
+  
+  const bottomPadding = getScreenBottomPadding(insets);
   const { user, isAuthenticated } = useSession();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
@@ -292,7 +295,7 @@ export default function CheckoutScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: Math.max(insets.bottom + SPACING.jumbo * 4 + SPACING.xlBase, SPACING.jumbo * 4 + SPACING.xlBase) }
+            { paddingBottom: bottomPadding }
           ]}
           showsVerticalScrollIndicator={true}
           indicatorStyle={paperTheme.dark ? 'white' : 'default'}

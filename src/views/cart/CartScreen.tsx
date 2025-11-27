@@ -28,6 +28,7 @@ import { useSession } from '../../hooks/useSession';
 import { getCart, mapCartItemResponseToCartItem, removeCartItem, clearCart as clearCartAPI, updateCartItem } from '../../services/cartService';
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { formatCurrency } from '../../utils/format';
+import { getScreenBottomPadding } from '../../utils/tabBarUtils';
 
 
 type CartScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
@@ -40,6 +41,8 @@ const CartScreen: React.FC = () => {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
+  
+  const bottomPadding = getScreenBottomPadding(insets);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef(0);
@@ -314,7 +317,7 @@ const CartScreen: React.FC = () => {
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: Math.max(insets.bottom + SPACING.jumbo * 4 + SPACING.xlBase, SPACING.jumbo * 4 + SPACING.xlBase) }
+              { paddingBottom: bottomPadding }
             ]}
             showsVerticalScrollIndicator={true}
             bounces={true}

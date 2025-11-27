@@ -1,18 +1,35 @@
 import React from "react";
 import "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { CartProvider } from './src/contexts/CartContext';
 import { OnboardingProvider } from './src/contexts/OnboardingContext';
-import { ThemeProvider } from './src/contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { UserProfileProvider } from './src/contexts/UserProfileContext';
 import { RootNavigator } from './src/navigation';
 import { InitialLoadingScreen } from './src/views/splash/SplashScreen';
 
-// Re-exporta os tipos de navegação para manter compatibilidade com imports existentes
 export type {
   AuthStackParamList, HomeStackParamList, RootStackParamList, SearchStackParamList,
   SettingsStackParamList, TabParamList
 } from './src/navigation';
+
+const AppContent: React.FC = () => {
+  const { isDark } = useTheme();
+
+  return (
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <OnboardingProvider>
+        <CartProvider>
+          <UserProfileProvider>
+            <RootNavigator />
+          </UserProfileProvider>
+        </CartProvider>
+      </OnboardingProvider>
+    </>
+  );
+};
 
 const App: React.FC = () => {
   const [showInitial, setShowInitial] = React.useState(true);
@@ -31,13 +48,7 @@ const App: React.FC = () => {
         {showInitial ? (
           <InitialLoadingScreen />
         ) : (
-          <OnboardingProvider>
-            <CartProvider>
-              <UserProfileProvider>
-                <RootNavigator />
-              </UserProfileProvider>
-            </CartProvider>
-          </OnboardingProvider>
+          <AppContent />
         )}
       </ThemeProvider>
     </SafeAreaProvider>

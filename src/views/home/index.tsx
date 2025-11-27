@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Platform } from "react-native";
 import { Text, ActivityIndicator, useTheme, Searchbar } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HomeStackParamList } from '../../../App';
 import ProductCard from "../../components/ui/ProductCard";
@@ -24,6 +25,7 @@ import { useUserLocation } from "../../hooks/useUserLocation";
 import { usePermissions } from "../../hooks/usePermissions";
 import { formatDistance } from "../../utils/distance";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { getScreenBottomPadding } from "../../utils/tabBarUtils";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -37,6 +39,7 @@ type MarketWithProducts = Market & {
 export default function Home() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const paperTheme = useTheme();
+  const insets = useSafeAreaInsets();
   const [markets, setMarkets] = useState<MarketWithProducts[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMarkets, setLoadingMarkets] = useState(false);
@@ -53,6 +56,8 @@ export default function Home() {
   const hasLoadedOnce = useRef(false);
   const { getUserLocation } = useUserLocation();
   const permissions = usePermissions();
+
+  const bottomPadding = getScreenBottomPadding(insets);
 
   const fetchMarketsWithProducts = useCallback(async () => {
     const isFirstLoad = !hasLoadedOnce.current;
@@ -358,7 +363,10 @@ export default function Home() {
       )}
       <ScrollView
         style={styles.scrollViewFlex}
-        contentContainerStyle={styles.scrollViewContent}
+        contentContainerStyle={[
+          styles.scrollViewContent,
+          { paddingBottom: bottomPadding }
+        ]}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
         refreshControl={
@@ -444,7 +452,6 @@ const styles = StyleSheet.create({
     },
     scrollViewContent: {
         padding: SPACING.lg,
-        paddingBottom: SPACING.xxxl * 5, 
     },
     marketInfoCard: {
         flexDirection: 'row',

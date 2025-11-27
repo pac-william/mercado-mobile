@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, Image, ScrollView, StyleSheet } from "react-native";
+import { View, Image, ScrollView, StyleSheet, Platform } from "react-native";
 import { Text, Button, Divider } from "react-native-paper";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { RouteProp, useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
 import CustomModal from "../../components/ui/CustomModal";
@@ -12,6 +13,7 @@ import { useAddToCart } from "../../hooks/useAddToCart";
 import { Ionicons } from "@expo/vector-icons";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { getScreenBottomPadding } from "../../utils/tabBarUtils";
 
 type ProductDetailRouteProp = RouteProp<HomeStackParamList, "ProductDetail">;
 
@@ -24,7 +26,10 @@ export default function ProductDetail({ route }: Props) {
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
   const navigation = useNavigation();
   const paperTheme = useCustomTheme();
+  const insets = useSafeAreaInsets();
   const [quantity, setQuantity] = useState(1);
+  
+  const bottomPadding = getScreenBottomPadding(insets);
   const { addToCart, isAdding } = useAddToCart({
     onSuccess: () => {
       showSuccess(
@@ -96,7 +101,10 @@ export default function ProductDetail({ route }: Props) {
       <Header />
       <ScrollView 
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: bottomPadding }
+        ]}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >

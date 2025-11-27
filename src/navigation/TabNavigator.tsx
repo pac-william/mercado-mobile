@@ -9,12 +9,16 @@ import { TabParamList } from './types';
 import { HomeStackNavigator } from './stacks/HomeStack';
 import { AIStackNavigator } from './stacks/AIStack';
 import { SettingsStackNavigator } from './stacks/SettingsStack';
+import { getTabBarHeight, getTabBarPaddingBottom } from '../utils/tabBarUtils';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export const TabNavigator: React.FC = () => {
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
+  
+  const tabBarHeight = getTabBarHeight(insets);
+  const tabBarPaddingBottom = getTabBarPaddingBottom(insets);
 
   return (
     <Tab.Navigator
@@ -28,8 +32,8 @@ export const TabNavigator: React.FC = () => {
           right: 15,
           elevation: 5,
           backgroundColor: paperTheme.colors.surface,
-          height: Platform.OS === 'ios' ? 70 + Math.max(insets.bottom - 25, 0) : 50 + Math.max(insets.bottom - 25, 0),
-          paddingBottom: Math.max(insets.bottom - 25, 2),
+          height: tabBarHeight,
+          paddingBottom: tabBarPaddingBottom,
           shadowColor: paperTheme.colors.modalShadow,
           shadowOpacity: 0.06,
           shadowOffset: { width: 0, height: 10 },

@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   FlatList,
+  Platform,
 } from "react-native";
 import { Text } from "react-native-paper";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
@@ -28,6 +29,7 @@ import { useSession } from "../../hooks/useSession";
 import { addItemToCart, addMultipleItemsToCart, updateCartItem, removeCartItem } from "../../services/cartService";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { getScreenBottomPadding } from "../../utils/tabBarUtils";
 
 type MarketProductsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -50,6 +52,8 @@ export default function MarketProductsScreen() {
   };
   const { addItem, updateQuantity, removeItem, state: cartState } = useCart();
   const { isAuthenticated } = useSession();
+  
+  const bottomPadding = getScreenBottomPadding(insets);
 
   const [market, setMarket] = useState<{ name: string; logo?: string } | null>(null);
   const [products, setProducts] = useState<ProductWithQuantity[]>([]);
@@ -605,7 +609,7 @@ export default function MarketProductsScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: Math.max(insets.bottom + 200, 220) },
+          { paddingBottom: bottomPadding },
         ]}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? "white" : "default"}
@@ -633,7 +637,7 @@ export default function MarketProductsScreen() {
             {
               backgroundColor: paperTheme.colors.surface,
               borderTopColor: paperTheme.colors.outline,
-              paddingBottom: Math.max(insets.bottom + 50, 70),
+              paddingBottom: insets.bottom + SPACING.md,
             },
           ]}
         >

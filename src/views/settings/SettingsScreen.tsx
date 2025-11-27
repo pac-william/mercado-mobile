@@ -7,8 +7,9 @@ import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, Platform } from "react-native";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SettingsStackParamList } from '../../../App';
 import { Header } from "../../components/layout/header";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
@@ -19,6 +20,7 @@ import { useSession } from "../../hooks/useSession";
 import api from "../../services/api";
 import { Session, SessionUser } from "../../types/session";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { getScreenBottomPadding } from "../../utils/tabBarUtils";
 
 type SettingsStackParamListProp = NativeStackNavigationProp<SettingsStackParamList>;
 
@@ -27,11 +29,14 @@ export default function SettingsScreen() {
     const navigation = useNavigation<SettingsStackParamListProp>();
     const { isDark, toggleTheme } = useTheme();
     const paperTheme = useCustomTheme();
+    const insets = useSafeAreaInsets();
     const { user, isAuthenticated, isLoading, refreshSession, clearSession } = useSession();
     const { profile, displayPhoto, loading: loadingProfile, refreshProfile } = useUserProfile();
     const permissions = usePermissions();
     const [refreshing, setRefreshing] = useState(false);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    
+    const bottomPadding = getScreenBottomPadding(insets);
 
     const [request, response, promptAsync] = AuthSession.useAuthRequest(
         {
@@ -357,7 +362,10 @@ export default function SettingsScreen() {
             <Header />
             <ScrollView
                 style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    { paddingBottom: bottomPadding }
+                ]}
                 showsVerticalScrollIndicator={true}
                 indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                 refreshControl={
@@ -549,7 +557,6 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingHorizontal: SPACING.lg,
-        paddingBottom: SPACING.xxxl * 2 + SPACING.xlBase,
     },
     profileSection: {
         alignItems: "center",

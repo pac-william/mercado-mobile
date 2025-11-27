@@ -1,6 +1,6 @@
-import { Dimensions, ImageBackground, StatusBar, StyleSheet, View } from "react-native";
+import { ImageBackground, StatusBar, StyleSheet, View } from "react-native";
 import { Button, IconButton, Text } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { SPACING, BORDER_RADIUS, FONT_SIZE } from "../../constants/styles";
 
@@ -13,72 +13,84 @@ interface OnboardingScreen2Props {
 
 export default function OnboardingScreen2({ onNext, onBack }: OnboardingScreen2Props) {
   const paperTheme = useCustomTheme();
+  const insets = useSafeAreaInsets();
 
   return (
-    <ImageBackground
-      source={TelaOnboarding2}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <View style={[styles.overlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
-        <SafeAreaView style={styles.container} edges={['top']}>
-          <View style={styles.content}>
-            <View style={styles.spacer} />
+    <View style={styles.wrapper}>
+      <ImageBackground
+        source={TelaOnboarding2}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <View style={[styles.overlay, { backgroundColor: paperTheme.colors.modalOverlay, bottom: insets.bottom }]}>
+          <View style={[styles.container, { paddingTop: insets.top }]}>
+            <View style={styles.content}>
+              <View style={styles.spacer} />
 
-            <View style={styles.textContainer}>
-              <Text variant="headlineMedium" style={[styles.title, { color: paperTheme.colors.white, textShadowColor: paperTheme.colors.textShadow }]}>
-                A união da tecnologia e do praticidade
-              </Text>
-              <Text variant="bodyLarge" style={[styles.description, { color: paperTheme.colors.onPrimary, textShadowColor: paperTheme.colors.textShadow }]}>
-                Unindo tecnologia para te auxiliar e praticidade para você comprar.
-              </Text>
-            </View>
-
-            <View style={styles.footer}>
-              <View style={styles.indicators}>
-                <View style={[styles.indicator, { backgroundColor: paperTheme.colors.outline }]} />
-                <View style={[styles.indicator, { backgroundColor: paperTheme.colors.primary }]} />
+              <View style={styles.textContainer}>
+                <Text variant="headlineMedium" style={[styles.title, { color: paperTheme.colors.white, textShadowColor: paperTheme.colors.textShadow }]}>
+                  A união da tecnologia e do praticidade
+                </Text>
+                <Text variant="bodyLarge" style={[styles.description, { color: paperTheme.colors.onPrimary, textShadowColor: paperTheme.colors.textShadow }]}>
+                  Unindo tecnologia para te auxiliar e praticidade para você comprar.
+                </Text>
               </View>
-              
-              <View style={styles.buttonContainer}>
-                <IconButton
-                  icon="arrow-left"
-                  mode="contained"
-                  onPress={onBack}
-                  style={[styles.backButton, { backgroundColor: paperTheme.colors.primary }]}
-                  iconColor={paperTheme.colors.onPrimary}
-                />
+
+              <View style={styles.footer}>
+                <View style={styles.indicators}>
+                  <View style={[styles.indicator, { backgroundColor: paperTheme.colors.outline }]} />
+                  <View style={[styles.indicator, { backgroundColor: paperTheme.colors.primary }]} />
+                </View>
                 
-                <Button
-                  mode="contained"
-                  onPress={onNext}
-                  style={[styles.nextButton, { backgroundColor: paperTheme.colors.primary }]}
-                  contentStyle={styles.buttonContent}
-                  labelStyle={[styles.buttonLabel, { color: paperTheme.colors.onPrimary }]}
-                >
-                  Próximo →
-                </Button>
+                <View style={styles.buttonContainer}>
+                  <IconButton
+                    icon="arrow-left"
+                    mode="contained"
+                    onPress={onBack}
+                    style={{ backgroundColor: paperTheme.colors.primary }}
+                    iconColor={paperTheme.colors.onPrimary}
+                  />
+                  
+                  <Button
+                    mode="contained"
+                    onPress={onNext}
+                    style={[styles.nextButton, { backgroundColor: paperTheme.colors.primary }]}
+                    contentStyle={styles.buttonContent}
+                    labelStyle={[styles.buttonLabel, { color: paperTheme.colors.onPrimary }]}
+                  >
+                    Próximo →
+                  </Button>
+                </View>
               </View>
             </View>
           </View>
-        </SafeAreaView>
-      </View>
-    </ImageBackground>
+        </View>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   backgroundImage: {
-    flex: 1,
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   content: {
     flex: 1,
@@ -125,8 +137,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     paddingHorizontal: SPACING.xlBase,
-  },
-  backButton: {
   },
   nextButton: {
     borderRadius: BORDER_RADIUS.xxl + SPACING.micro,

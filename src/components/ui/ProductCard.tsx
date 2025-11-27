@@ -146,13 +146,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </View>
 
         <View style={styles.footer}>
-          <Text 
-            style={[styles.productTitle, { color: paperTheme.colors.onSurface }]} 
-            numberOfLines={2} 
-            ellipsizeMode="tail"
-          >
-            {title}
-          </Text>
+          <View style={styles.titleContainer}>
+            <Text 
+              style={[styles.productTitle, { color: paperTheme.colors.onSurface }]} 
+              numberOfLines={2} 
+              ellipsizeMode="tail"
+            >
+              {title}
+            </Text>
+          </View>
           {subtitle && (
             <Text 
               style={[styles.productSubtitle, { color: paperTheme.colors.onSurfaceVariant }]} 
@@ -237,10 +239,15 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: SPACING.xs,
   },
+  titleContainer: {
+    minHeight: FONT_SIZE.md * 2.4,
+    justifyContent: 'flex-start',
+    marginBottom: SPACING.micro,
+  },
   productTitle: {
     fontSize: FONT_SIZE.md,
     fontWeight: "500",
-    marginBottom: SPACING.micro,
+    lineHeight: FONT_SIZE.md * 1.2,
   },
   productSubtitle: {
     fontSize: FONT_SIZE.sm,
