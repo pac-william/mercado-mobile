@@ -20,6 +20,8 @@ import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
 import Button from "../../components/ui/Button";
 import QuantitySelector from "../../components/ui/QuantitySelector";
+import CustomModal from "../../components/ui/CustomModal";
+import { useModal } from "../../hooks/useModal";
 import { getSuggestionById } from "../../services/suggestionService";
 import { getProducts, Product } from "../../services/productService";
 import { getMarketById } from "../../services/marketService";
@@ -28,8 +30,8 @@ import { useCart } from "../../contexts/CartContext";
 import { useSession } from "../../hooks/useSession";
 import { addItemToCart, addMultipleItemsToCart, updateCartItem, removeCartItem } from "../../services/cartService";
 import { formatCurrency } from "../../utils/format";
-import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
-import { getScreenBottomPadding } from "../../utils/tabBarUtils";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { getScreenBottomPadding, getTabBarHeight, getTabBarPaddingBottom } from "../../utils/tabBarUtils";
 
 type MarketProductsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -52,8 +54,11 @@ export default function MarketProductsScreen() {
   };
   const { addItem, updateQuantity, removeItem, state: cartState } = useCart();
   const { isAuthenticated } = useSession();
+  const { modalState, hideModal, showWarning } = useModal();
   
   const bottomPadding = getScreenBottomPadding(insets);
+  const tabBarHeight = getTabBarHeight(insets);
+  const tabBarPaddingBottom = getTabBarPaddingBottom(insets);
 
   const [market, setMarket] = useState<{ name: string; logo?: string } | null>(null);
   const [products, setProducts] = useState<ProductWithQuantity[]>([]);
@@ -228,15 +233,22 @@ export default function MarketProductsScreen() {
     }
   };
 
-  const updateProductQuantity = async (product: ProductWithQuantity, newQuantity: number) => {
+  const updateProductQuantity = (product: ProductWithQuantity, newQuantity: number) => {
     const cartItem = cartState.items.find((i) => i.id === product.id && i.marketId === marketId);
     const isInCart = cartItem !== undefined || product.cartItemId !== undefined;
+    const previousQuantity = product.quantity;
 
     if (newQuantity === 0) {
       setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: 0 } : p)));
       if (isInCart) {
         removeItem(product.id);
-        await syncCartItem(product.id, 0, product.cartItemId);
+        syncCartItem(product.id, 0, product.cartItemId).catch(() => {
+          setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: previousQuantity } : p)));
+          addItem({ id: product.id, name: product.name, price: product.price, image: product.image || "", marketName: market?.name || "Mercado", marketId: product.marketId });
+          if (previousQuantity > 1) {
+            updateQuantity(product.id, previousQuantity);
+          }
+        });
         setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, cartItemId: undefined } : p)));
       }
     } else {
@@ -251,17 +263,62 @@ export default function MarketProductsScreen() {
         } else {
           updateQuantity(product.id, newQuantity);
         }
-        await syncCartItem(product.id, newQuantity, product.cartItemId);
+        syncCartItem(product.id, newQuantity, product.cartItemId).catch(() => {
+          setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, quantity: previousQuantity } : p)));
+          if (cartItem) {
+            updateQuantity(product.id, previousQuantity);
+          } else {
+            removeItem(product.id);
+          }
+        });
       }
     }
   };
 
-  const handleAddProduct = async (product: ProductWithQuantity) => {
-    await updateProductQuantity(product, product.quantity + 1);
+  const handleAddProduct = (product: ProductWithQuantity) => {
+    updateProductQuantity(product, product.quantity + 1);
   };
 
-  const handleRemoveProduct = async (product: ProductWithQuantity) => {
-    await updateProductQuantity(product, Math.max(0, product.quantity - 1));
+  const handleRemoveProduct = (product: ProductWithQuantity) => {
+    updateProductQuantity(product, Math.max(0, product.quantity - 1));
+  };
+
+  const handleDeleteProduct = async (product: ProductWithQuantity) => {
+    showWarning(
+      'Remover Item',
+      `Deseja remover "${product.name}" da lista?`,
+      {
+        text: 'Remover',
+        onPress: async () => {
+          try {
+            const cartItem = cartState.items.find((i) => i.id === product.id && i.marketId === marketId);
+            
+            if (isAuthenticated && cartItem?.cartItemId) {
+              try {
+                await removeCartItem(cartItem.cartItemId);
+              } catch (apiError) {
+                console.error("Erro ao remover item da API:", apiError);
+              }
+            }
+            
+            if (cartItem) {
+              removeItem(product.id);
+            }
+            
+            setProducts((prev) => prev.filter((p) => p.id !== product.id));
+            hideModal();
+          } catch (error) {
+            console.error("Erro ao remover item:", error);
+            hideModal();
+          }
+        },
+        style: 'danger',
+      },
+      {
+        text: 'Cancelar',
+        onPress: hideModal,
+      }
+    );
   };
 
   const handleAddToCart = async () => {
@@ -515,34 +572,45 @@ export default function MarketProductsScreen() {
       ]}
     >
       <View style={styles.productContent}>
-        {renderImage(product.image, SPACING.xxxl * 2, ICON_SIZES.xl)}
+        {renderImage(product.image, SPACING.xxxl + SPACING.xlBase, ICON_SIZES.lg)}
         <View style={styles.productInfo}>
           <View style={styles.productHeader}>
             <Text style={[styles.productName, { color: paperTheme.colors.onSurface }]} numberOfLines={2}>
               {product.name}
             </Text>
-            <TouchableOpacity onPress={() => handleShowAlternatives(product)} style={styles.replaceButton}>
-              <Ionicons name="swap-horizontal" size={ICON_SIZES.xlPlus} color={paperTheme.colors.primary} />
-            </TouchableOpacity>
+            <View style={styles.productHeaderActions}>
+              <TouchableOpacity onPress={() => handleShowAlternatives(product)} style={styles.replaceButton}>
+                <Ionicons name="swap-horizontal" size={ICON_SIZES.xlPlus} color={paperTheme.colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => handleDeleteProduct(product)} 
+                style={[styles.deleteButton, { backgroundColor: paperTheme.colors.errorBackground }]}
+              >
+                <Ionicons name="trash-outline" size={ICON_SIZES.md} color={paperTheme.colors.errorText} />
+              </TouchableOpacity>
+            </View>
           </View>
           {product.unit && (
             <Text style={[styles.productUnit, { color: paperTheme.colors.onSurfaceVariant }]}>
               {product.unit}
             </Text>
           )}
-          <Text style={[styles.productPrice, { color: paperTheme.colors.primary }]}>
-            {formatCurrency(product.price)}
-          </Text>
+          <View style={styles.productFooter}>
+            <Text style={[styles.productPrice, { color: paperTheme.colors.primary }]}>
+              {formatCurrency(product.price)}
+            </Text>
+            <QuantitySelector
+              quantity={product.quantity}
+              onIncrease={() => handleAddProduct(product)}
+              onDecrease={() => handleRemoveProduct(product)}
+              minQuantity={0}
+              showLabel={false}
+              showSubtotal={false}
+              compact={true}
+            />
+          </View>
         </View>
       </View>
-      <QuantitySelector
-        quantity={product.quantity}
-        onIncrease={() => handleAddProduct(product)}
-        onDecrease={() => handleRemoveProduct(product)}
-        minQuantity={0}
-        showLabel={true}
-        showSubtotal={false}
-      />
     </View>
   );
 
@@ -609,10 +677,11 @@ export default function MarketProductsScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: bottomPadding },
+          { paddingBottom: hasSelectedProducts ? tabBarHeight + 140 : bottomPadding },
         ]}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? "white" : "default"}
+        keyboardShouldPersistTaps="handled"
       >
         {products.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -637,7 +706,9 @@ export default function MarketProductsScreen() {
             {
               backgroundColor: paperTheme.colors.surface,
               borderTopColor: paperTheme.colors.outline,
-              paddingBottom: insets.bottom + SPACING.md,
+              paddingBottom: Math.max(insets.bottom, SPACING.md),
+              bottom: tabBarHeight - tabBarPaddingBottom,
+              shadowColor: paperTheme.colors.modalShadow,
             },
           ]}
         >
@@ -647,6 +718,18 @@ export default function MarketProductsScreen() {
             </Text>
             <Text style={[styles.totalValue, { color: paperTheme.colors.primary }]}>{formatCurrency(total)}</Text>
           </View>
+          <Button
+            title="Adicionar mais produtos"
+            onPress={() => navigation.navigate('MarketDetails', { marketId: marketId })}
+            variant="ghost"
+            size="medium"
+            icon={{
+              name: "add-circle-outline",
+              position: "left",
+            }}
+            style={{ marginBottom: SPACING.md }}
+            fullWidth
+          />
           {!hasProductsInCart ? (
             <Button
               title="Adicionar ao Carrinho"
@@ -752,6 +835,16 @@ export default function MarketProductsScreen() {
           </View>
         </View>
       </Modal>
+
+      <CustomModal
+        visible={modalState.visible}
+        onClose={hideModal}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        primaryButton={modalState.primaryButton}
+        secondaryButton={modalState.secondaryButton}
+      />
     </View>
   );
 }
@@ -833,11 +926,10 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     marginBottom: SPACING.md,
-    padding: SPACING.lg,
+    padding: SPACING.md,
   },
   productContent: {
     flexDirection: "row",
-    marginBottom: SPACING.lg,
   },
   imageBase: {
     borderRadius: BORDER_RADIUS.lg,
@@ -863,21 +955,45 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: SPACING.xs,
   },
+  productHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+  },
   replaceButton: {
     padding: SPACING.xs,
+  },
+  deleteButton: {
+    width: SPACING.xxl,
+    height: SPACING.xxl,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: "center",
+    alignItems: "center",
   },
   productUnit: {
     fontSize: FONT_SIZE.sm,
     marginBottom: SPACING.xs,
   },
+  productFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: SPACING.xs,
+  },
   productPrice: {
     fontSize: FONT_SIZE.lgPlus,
     fontWeight: "bold",
+    flex: 1,
   },
   footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     borderTopWidth: 1,
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.lg,
+    ...SHADOWS.large,
+    zIndex: 10,
   },
   totalContainer: {
     flexDirection: "row",

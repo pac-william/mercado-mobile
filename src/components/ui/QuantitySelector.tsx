@@ -16,6 +16,7 @@ interface QuantitySelectorProps {
   subtotal?: number;
   centered?: boolean;
   fullWidth?: boolean;
+  compact?: boolean;
 }
 
 export default function QuantitySelector({
@@ -28,9 +29,46 @@ export default function QuantitySelector({
   subtotal,
   centered = false,
   fullWidth = false,
+  compact = false,
 }: QuantitySelectorProps) {
   const paperTheme = useCustomTheme();
   const isMinQuantity = quantity <= minQuantity;
+
+  if (compact) {
+    return (
+      <View style={styles.compactContainer}>
+        <TouchableOpacity
+          onPress={onDecrease}
+          disabled={isMinQuantity}
+          style={[
+            styles.compactButton,
+            { backgroundColor: isMinQuantity ? paperTheme.colors.surfaceVariant : paperTheme.colors.primary }
+          ]}
+        >
+          <Ionicons
+            name="remove"
+            size={ICON_SIZES.md}
+            color={isMinQuantity ? paperTheme.colors.onSurfaceVariant : "white"}
+          />
+        </TouchableOpacity>
+        <View style={styles.compactValue}>
+          <Text style={[styles.compactValueText, { color: paperTheme.colors.onSurface }]}>
+            {quantity}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={onIncrease}
+          style={[styles.compactButton, { backgroundColor: paperTheme.colors.primary }]}
+        >
+          <Ionicons
+            name="add"
+            size={ICON_SIZES.md}
+            color="white"
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, (centered || !fullWidth) && styles.centered]}>
@@ -124,6 +162,27 @@ const styles = StyleSheet.create({
   subtotal: {
     fontSize: FONT_SIZE.md,
     fontWeight: '500',
+  },
+  compactContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  compactButton: {
+    width: SPACING.xxl,
+    height: SPACING.xxl,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  compactValue: {
+    minWidth: SPACING.xxl,
+    alignItems: 'center',
+    marginHorizontal: SPACING.xs,
+  },
+  compactValueText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
   },
 });
 

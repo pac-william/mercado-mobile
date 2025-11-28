@@ -19,7 +19,10 @@ export const Header: React.FC = () => {
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: paperTheme.colors.surface }]}>
       <View style={styles.container}>
         <Image source={Logo} style={styles.logo} resizeMode="contain" />
-        <Text style={[styles.title, { color: paperTheme.colors.onSurface }]}>Smart Marketing</Text>
+        <View style={styles.titleContainer}>
+          <Text style={[styles.titleLine, { color: paperTheme.colors.onSurface }]}>Smart</Text>
+          <Text style={[styles.titleLine, { color: paperTheme.colors.onSurface }]}>Market</Text>
+        </View>
         <View style={{ flex: 1 }} />
 
         <View style={styles.buttonsContainer}>
@@ -76,11 +79,14 @@ const styles = StyleSheet.create({
     height: SPACING.xxxl + SPACING.xlBase, 
     borderRadius: BORDER_RADIUS.full 
   },
-  title: {
+  titleContainer: {
+    marginLeft: SPACING.sm,
+    justifyContent: 'center',
+  },
+  titleLine: {
     fontSize: FONT_SIZE.lg,
     fontWeight: "bold",
-    marginLeft: SPACING.sm,
-    flexShrink: 1
+    lineHeight: FONT_SIZE.lg * 1.2,
   },
   buttonsContainer: { flexDirection: "row" },
   button: {

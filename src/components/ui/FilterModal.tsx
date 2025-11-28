@@ -15,6 +15,7 @@ import PriceFilter from './PriceFilter';
 import CategoryFilter from './CategoryFilter';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FilterModalProps {
   visible: boolean;
@@ -36,6 +37,7 @@ export default function FilterModal({
   currentFilters,
 }: FilterModalProps) {
   const paperTheme = useCustomTheme();
+  const insets = useSafeAreaInsets();
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
   const [categoryIds, setCategoryIds] = useState<string[]>(currentFilters.categoryIds || []);
@@ -119,7 +121,7 @@ export default function FilterModal({
                   />
                 </ScrollView>
 
-                <View style={[styles.modalFooter, { borderTopColor: paperTheme.colors.outline }]}>
+                <View style={[styles.modalFooter, { borderTopColor: paperTheme.colors.outline, paddingBottom: Math.max(insets.bottom, SPACING.md) }]}>
                   {hasActiveFilters && (
                     <TouchableOpacity
                       style={[
@@ -173,7 +175,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: BORDER_RADIUS.xl,
     borderTopRightRadius: BORDER_RADIUS.xl,
     maxHeight: '80%',
-    paddingBottom: SPACING.xlBase,
   },
   modalHeader: {
     flexDirection: 'row',

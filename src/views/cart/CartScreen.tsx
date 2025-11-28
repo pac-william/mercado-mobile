@@ -353,78 +353,76 @@ const CartScreen: React.FC = () => {
               </View>
 
               {group.items.map((item) => (
-            <View key={item.id} style={[styles.itemCard, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+            <View key={item.id} style={[styles.itemCard, { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline }]}>
               <View style={styles.itemContent}>
-                <View style={styles.itemInfo}>
-                  <Image
-                    source={{ uri: item.image }}
-                    style={[styles.itemImage, { backgroundColor: paperTheme.colors.surfaceVariant }]}
-                    resizeMode="contain"
-                  />
+                <Image
+                  source={{ uri: item.image }}
+                  style={[styles.itemImage, { backgroundColor: paperTheme.colors.surfaceVariant }]}
+                  resizeMode="contain"
+                />
 
-                  <View style={styles.itemDetails}>
-                    <View>
-                      <Text style={[styles.itemName, { color: paperTheme.colors.onSurface }]}>
+                <View style={styles.itemDetails}>
+                  <View style={styles.itemHeader}>
+                    <View style={styles.itemTextContainer}>
+                      <Text style={[styles.itemName, { color: paperTheme.colors.onSurface }]} numberOfLines={2}>
                         {item.name}
                       </Text>
-
-                      <Text style={[styles.itemMarket, { color: paperTheme.colors.onSurface }]}>
+                      <Text style={[styles.itemMarket, { color: paperTheme.colors.onSurfaceVariant }]}>
                         {item.marketName}
                       </Text>
                     </View>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveItem(item.id, item.name)}
+                      style={[styles.removeButton, { backgroundColor: paperTheme.colors.errorBackground }]}
+                    >
+                      <Ionicons name="trash-outline" size={ICON_SIZES.md} color={paperTheme.colors.errorText} />
+                    </TouchableOpacity>
+                  </View>
 
-                    <Text style={[styles.itemPrice, { color: paperTheme.colors.primary }]}>
-                      {formatCurrency(item.price)}
-                    </Text>
+                  <View style={styles.itemFooter}>
+                    <View>
+                      <Text style={[styles.itemPrice, { color: paperTheme.colors.primary }]}>
+                        {formatCurrency(item.price)}
+                      </Text>
+                      <Text style={[styles.subtotalLabel, { color: paperTheme.colors.onSurfaceVariant }]}>
+                        Subtotal: <Text style={{ color: paperTheme.colors.primary, fontWeight: 'bold' }}>
+                          {formatCurrency(item.price * item.quantity)}
+                        </Text>
+                      </Text>
+                    </View>
+                    <QuantitySelector
+                      quantity={item.quantity}
+                      onIncrease={() => {
+                        const newQuantity = item.quantity + 1;
+                        const previousQuantity = item.quantity;
+                        updateQuantity(item.id, newQuantity);
+                        
+                        if (isAuthenticated && item.cartItemId) {
+                          updateCartItem(item.cartItemId, newQuantity).catch((apiError) => {
+                            console.error("Erro ao atualizar quantidade na API:", apiError);
+                            updateQuantity(item.id, previousQuantity);
+                          });
+                        }
+                      }}
+                      onDecrease={() => {
+                        const newQuantity = Math.max(1, item.quantity - 1);
+                        const previousQuantity = item.quantity;
+                        updateQuantity(item.id, newQuantity);
+                        
+                        if (isAuthenticated && item.cartItemId) {
+                          updateCartItem(item.cartItemId, newQuantity).catch((apiError) => {
+                            console.error("Erro ao atualizar quantidade na API:", apiError);
+                            updateQuantity(item.id, previousQuantity);
+                          });
+                        }
+                      }}
+                      minQuantity={1}
+                      showLabel={false}
+                      showSubtotal={false}
+                      compact={true}
+                    />
                   </View>
                 </View>
-
-                <TouchableOpacity
-                  onPress={() => handleRemoveItem(item.id, item.name)}
-                  style={[styles.removeButton, { backgroundColor: paperTheme.colors.errorBackground }]}
-                >
-                  <Ionicons name="close" size={ICON_SIZES.sm + SPACING.micro} color={paperTheme.colors.errorText} />
-                </TouchableOpacity>
-              </View>
-
-              <QuantitySelector
-                quantity={item.quantity}
-                onIncrease={async () => {
-                  const newQuantity = item.quantity + 1;
-                  updateQuantity(item.id, newQuantity);
-                  
-                  if (isAuthenticated && item.cartItemId) {
-                    try {
-                      await updateCartItem(item.cartItemId, newQuantity);
-                    } catch (apiError) {
-                      console.error("Erro ao atualizar quantidade na API:", apiError);
-                    }
-                  }
-                }}
-                onDecrease={async () => {
-                  const newQuantity = Math.max(1, item.quantity - 1);
-                  updateQuantity(item.id, newQuantity);
-                  
-                  if (isAuthenticated && item.cartItemId) {
-                    try {
-                      await updateCartItem(item.cartItemId, newQuantity);
-                    } catch (apiError) {
-                      console.error("Erro ao atualizar quantidade na API:", apiError);
-                    }
-                  }
-                }}
-                minQuantity={1}
-                showLabel={true}
-                showSubtotal={false}
-              />
-
-              <View style={[styles.subtotalRow, { borderTopColor: paperTheme.colors.outline, backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                <Text style={[styles.subtotalLabel, { color: paperTheme.colors.onSurface }]}>
-                  Subtotal
-                </Text>
-                <Text style={[styles.subtotalValue, { color: paperTheme.colors.primary }]}>
-                  {formatCurrency(item.price * item.quantity)}
-                </Text>
               </View>
             </View>
               ))}
@@ -570,73 +568,63 @@ const styles = StyleSheet.create({
   itemCard: {
     marginHorizontal: SPACING.lg,
     marginTop: SPACING.sm,
-    borderRadius: BORDER_RADIUS.full,
-    shadowOffset: { width: 0, height: SPACING.xs },
-    shadowOpacity: 0.1,
-    shadowRadius: SPACING.md,
-    elevation: 6,
-    overflow: 'hidden',
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    padding: SPACING.md,
+    ...SHADOWS.medium,
   },
   itemContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    padding: SPACING.mdPlus,
-    paddingBottom: SPACING.smPlus,
-  },
-  itemInfo: {
-    flex: 1,
-    flexDirection: 'row',
   },
   itemImage: {
-    width: SPACING.xxxl + SPACING.xlBase + SPACING.micro,
-    height: SPACING.xxxl + SPACING.xlBase + SPACING.micro,
-    borderRadius: SPACING.smPlus,
+    width: SPACING.xxxl + SPACING.xlBase,
+    height: SPACING.xxxl + SPACING.xlBase,
+    borderRadius: BORDER_RADIUS.lg,
+    marginRight: SPACING.md,
   },
   itemDetails: {
     flex: 1,
-    marginLeft: SPACING.smPlus,
     justifyContent: 'space-between',
   },
+  itemHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xs,
+  },
+  itemTextContainer: {
+    flex: 1,
+    marginRight: SPACING.xs,
+  },
   itemName: {
-    fontSize: FONT_SIZE.md + SPACING.micro,
-    fontWeight: 'bold',
-    marginBottom: SPACING.micro + 1,
-    lineHeight: SPACING.xlBase,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '600',
+    marginBottom: SPACING.micro,
+    lineHeight: FONT_SIZE.lg * 1.2,
   },
   itemMarket: {
-    fontSize: FONT_SIZE.sm + 1,
-    opacity: 0.7,
-    marginBottom: SPACING.xs,
+    fontSize: FONT_SIZE.sm,
+  },
+  itemFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACING.xs,
   },
   itemPrice: {
     fontSize: FONT_SIZE.lgPlus,
     fontWeight: 'bold',
   },
   removeButton: {
-    width: SPACING.xxxl - SPACING.smPlus,
-    height: SPACING.xxxl - SPACING.smPlus,
-    borderRadius: SPACING.md + SPACING.micro,
+    width: SPACING.xxl,
+    height: SPACING.xxl,
+    borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: SPACING.xsPlus,
-  },
-  subtotalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.mdPlus,
-    paddingBottom: SPACING.mdPlus,
-    paddingTop: SPACING.smPlus,
-    borderTopWidth: 1,
   },
   subtotalLabel: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '600',
-  },
-  subtotalValue: {
-    fontSize: FONT_SIZE.lgPlus,
-    fontWeight: 'bold',
+    fontSize: FONT_SIZE.sm,
+    marginTop: SPACING.micro,
   },
   groupTotalCard: {
     marginHorizontal: SPACING.lg,
