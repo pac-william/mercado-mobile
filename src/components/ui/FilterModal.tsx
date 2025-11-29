@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,12 +42,39 @@ export default function FilterModal({
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
   const [categoryIds, setCategoryIds] = useState<string[]>(currentFilters.categoryIds || []);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
     setMinPrice(currentFilters.minPrice);
     setMaxPrice(currentFilters.maxPrice);
     setCategoryIds(currentFilters.categoryIds || []);
   }, [currentFilters]);
+
+  useEffect(() => {
+    if (!visible) {
+      setKeyboardHeight(0);
+      return;
+    }
+
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, [visible]);
 
   const handleApply = () => {
     onApply({ minPrice, maxPrice, categoryIds: categoryIds.length ? categoryIds : undefined });
@@ -75,8 +103,8 @@ export default function FilterModal({
         <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              keyboardVerticalOffset={0}
               style={{ flex: 1, justifyContent: 'flex-end' }}
             >
               <View
@@ -105,9 +133,15 @@ export default function FilterModal({
 
                 <ScrollView
                   style={styles.modalBody}
+                  contentContainerStyle={
+                    Platform.OS === 'android' && keyboardHeight > 0
+                      ? { paddingBottom: keyboardHeight + SPACING.xl }
+                      : undefined
+                  }
                   showsVerticalScrollIndicator={true}
                   indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                   keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={true}
                 >
                   <CategoryFilter
                     selectedCategoryIds={categoryIds}

@@ -88,13 +88,17 @@ export const usePermissions = (): UsePermissionsReturn => {
   }, []);
 
   const requestLocation = useCallback(async (): Promise<boolean> => {
-    const previousStatus = locationStatus;
     setLocationLoading(true);
     try {
+      const currentCheck = await checkLocationPermission();
+      const wasGrantedBefore = currentCheck.granted;
+      const previousStatus = currentCheck.status;
+      
       const result = await requestLocationPermission();
+      const statusChanged = previousStatus !== result.status;
       setLocationStatus(result.status);
       
-      if (result.granted && previousStatus !== 'granted') {
+      if (result.granted && statusChanged && !wasGrantedBefore) {
         showSuccessToast('Permissão de localização concedida');
       } else if (result.status === 'denied' || result.status === 'blocked') {
         showPermissionAlert(
@@ -111,7 +115,7 @@ export const usePermissions = (): UsePermissionsReturn => {
     } finally {
       setLocationLoading(false);
     }
-  }, [locationStatus]);
+  }, []);
 
   const checkCamera = useCallback(async () => {
     const mediaResult = await checkMediaPermissions();

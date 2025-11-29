@@ -4,8 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserUpdateDTO } from 'dtos/userDTO';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActionSheetIOS, ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActionSheetIOS, ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard } from 'react-native';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SettingsStackParamList } from '../../../App';
@@ -42,6 +42,10 @@ const EditProfileScreen: React.FC = () => {
     message: '',
     primaryButton: { text: 'OK', onPress: () => setModalVisible(false) } as { text: string; onPress: () => void },
   });
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const isEditingRef = useRef(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const hasInitializedRef = useRef(false);
 
   const formatDateForInput = (date: string | Date): string => {
     if (!date) return '';
@@ -115,30 +119,45 @@ const EditProfileScreen: React.FC = () => {
     setModalVisible(true);
   };
 
-
   const initializeFormData = useCallback((userData: User) => {
+    if (isEditingRef.current || hasInitializedRef.current) {
+      return;
+    }
     setFormData({
       name: userData.name || '',
       email: userData.email || '',
       phone: userData.phone || '',
       birthDate: userData.birthDate ? formatDateForInput(userData.birthDate) : '',
     });
+    hasInitializedRef.current = true;
   }, []);
 
   useEffect(() => {
-    if (contextProfile) {
-      setUser(contextProfile);
-      initializeFormData(contextProfile);
-      setIsLoadingUser(false);
-    } else {
-      setIsLoadingUser(true);
-    }
-  }, [contextProfile, initializeFormData]);
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
 
   const loadUser = useCallback(async () => {
     try {
       const currentUser = await getUserMe();
       setUser(currentUser);
+      hasInitializedRef.current = false;
       initializeFormData(currentUser);
       await applyProfileUpdate(currentUser);
     } catch (error) {
@@ -159,6 +178,8 @@ const EditProfileScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
+      isEditingRef.current = false;
+      hasInitializedRef.current = false;
       loadUser();
     }, [loadUser])
   );
@@ -203,6 +224,7 @@ const EditProfileScreen: React.FC = () => {
   const handleSave = async () => {
     if (!validateForm()) return;
 
+    isEditingRef.current = false;
     setIsLoading(true);
     const previousLocalPhoto = localPhoto;
     let pendingLocalPhoto: string | null = null;
@@ -268,6 +290,9 @@ const EditProfileScreen: React.FC = () => {
       setUser(updatedUser);
       await applyProfileUpdate(updatedUser);
       setSelectedImage(null);
+      isEditingRef.current = false;
+      hasInitializedRef.current = false;
+      initializeFormData(updatedUser);
       showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', {
         text: 'OK',
         onPress: () => {
@@ -291,9 +316,9 @@ const EditProfileScreen: React.FC = () => {
   };
 
   const handleCancel = () => {
+    isEditingRef.current = false;
     navigation.goBack();
   };
-
 
   const handleTakePhoto = async () => {
     if (permissions.camera.loading) {
@@ -455,10 +480,6 @@ const EditProfileScreen: React.FC = () => {
       paddingVertical: SPACING.md,
       fontSize: FONT_SIZE.lg,
     },
-    inputError: {
-    },
-    inputNormal: {
-    },
     errorText: {
       fontSize: FONT_SIZE.md,
       marginTop: SPACING.xs,
@@ -488,8 +509,6 @@ const EditProfileScreen: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    saveButtonDisabled: {
-    },
     saveButtonText: {
       fontSize: FONT_SIZE.lg,
       fontWeight: '600',
@@ -511,15 +530,20 @@ const EditProfileScreen: React.FC = () => {
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        keyboardVerticalOffset={0}
         enabled={Platform.OS === 'ios'}
       >
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            Platform.OS === 'android' && keyboardHeight > 0 && { paddingBottom: keyboardHeight + SPACING.xl },
+          ]}
           showsVerticalScrollIndicator={true}
           indicatorStyle={paperTheme.dark ? 'white' : 'default'}
           keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled={true}
         >
         <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>Editar Perfil</Text>
 
@@ -564,7 +588,13 @@ const EditProfileScreen: React.FC = () => {
               }
             ]}
             value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
+            onFocus={() => {
+              isEditingRef.current = true;
+            }}
+            onChangeText={(text) => {
+              isEditingRef.current = true;
+              setFormData((prev) => ({ ...prev, name: text }));
+            }}
             placeholder="Digite seu nome"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}
           />
@@ -583,7 +613,13 @@ const EditProfileScreen: React.FC = () => {
               }
             ]}
             value={formData.email}
-            onChangeText={(text) => setFormData({ ...formData, email: text })}
+            onFocus={() => {
+              isEditingRef.current = true;
+            }}
+            onChangeText={(text) => {
+              isEditingRef.current = true;
+              setFormData((prev) => ({ ...prev, email: text }));
+            }}
             placeholder="Digite seu email"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}
             keyboardType="email-address"
@@ -604,7 +640,13 @@ const EditProfileScreen: React.FC = () => {
               }
             ]}
             value={formData.phone}
-            onChangeText={(text) => setFormData({ ...formData, phone: text })}
+            onFocus={() => {
+              isEditingRef.current = true;
+            }}
+            onChangeText={(text) => {
+              isEditingRef.current = true;
+              setFormData((prev) => ({ ...prev, phone: text }));
+            }}
             placeholder="Digite seu telefone"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}
             keyboardType="phone-pad"
@@ -623,9 +665,13 @@ const EditProfileScreen: React.FC = () => {
               }
             ]}
             value={formData.birthDate}
+            onFocus={() => {
+              isEditingRef.current = true;
+            }}
             onChangeText={(text) => {
+              isEditingRef.current = true;
               const formatted = formatBirthDateInput(text);
-              setFormData({ ...formData, birthDate: formatted });
+              setFormData((prev) => ({ ...prev, birthDate: formatted }));
             }}
             placeholder="DD/MM/AAAA"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}
