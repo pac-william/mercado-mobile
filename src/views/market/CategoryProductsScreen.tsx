@@ -10,6 +10,7 @@ import { HomeStackParamList } from "../../../App";
 import { getProducts, Product } from "../../services/productService";
 import ProductCard from "../../components/ui/ProductCard";
 import { Header } from "../../components/layout/header";
+import { ScreenHeader } from "../../components/layout/ScreenHeader";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import { isNetworkError } from "../../utils/networkUtils";
 
@@ -131,17 +132,10 @@ export default function MarketCategoryProductsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      <ScreenHeader title={categoryName} icon="grid" />
       {offline && (
         <OfflineBanner message="Sem conexão com a internet. Alguns recursos podem estar limitados." />
       )}
-      <View style={styles.header}>
-        <Text style={[styles.categoryTitle, { color: paperTheme.colors.onBackground }]}>
-          {categoryName}
-        </Text>
-        <Text style={[styles.marketSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
-          {marketName}
-        </Text>
-      </View>
       <View style={styles.searchContainer}>
         <Searchbar
           placeholder="Buscar produtos..."

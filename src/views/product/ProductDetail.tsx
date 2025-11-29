@@ -6,6 +6,7 @@ import { RouteProp, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HomeStackParamList } from "../../../App";
 import { Header } from "../../components/layout/header";
+import { ScreenHeader } from "../../components/layout/ScreenHeader";
 import CustomModal from "../../components/ui/CustomModal";
 import QuantitySelector from "../../components/ui/QuantitySelector";
 import { useModal } from "../../hooks/useModal";
@@ -99,6 +100,7 @@ export default function ProductDetail({ route }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      <ScreenHeader title="Detalhes do Produto" icon="cube" />
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={[

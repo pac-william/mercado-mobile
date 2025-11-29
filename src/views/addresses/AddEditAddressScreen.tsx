@@ -18,6 +18,7 @@ import {
 import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import { formatCEP, searchAddressByCEP, validateCEP } from '../../services/cepService';
 import { Address, createAddress, getAddressById, updateAddress } from '../../services/addressService';
 import { reverseGeocode } from '../../services/geocodingService';
@@ -303,6 +304,10 @@ export default function AddEditAddressScreen() {
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      <ScreenHeader 
+        title={isEditing ? 'Editar Endereço' : 'Novo Endereço'} 
+        icon="location" 
+      />
 
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
@@ -316,14 +321,6 @@ export default function AddEditAddressScreen() {
           indicatorStyle={paperTheme.dark ? 'white' : 'default'}
           keyboardShouldPersistTaps="handled"
         >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>
-            {isEditing ? 'Editar Endereço' : 'Novo Endereço'}
-          </Text>
-          <Text style={[styles.subtitle, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
-            {isEditing ? 'Atualize as informações do endereço' : 'Adicione um novo endereço de entrega'}
-          </Text>
-        </View>
 
         <View style={styles.form}>
           <TouchableOpacity

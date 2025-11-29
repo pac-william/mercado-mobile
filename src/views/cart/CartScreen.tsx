@@ -17,6 +17,7 @@ import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import CustomModal from '../../components/ui/CustomModal';
 import Button from '../../components/ui/Button';
 import LoadingScreen from '../../components/ui/LoadingScreen';
@@ -306,6 +307,22 @@ const CartScreen: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      <ScreenHeader
+        title="Carrinho"
+        icon="cart"
+        rightComponent={
+          <TouchableOpacity
+            onPress={handleClearCart}
+            style={[styles.clearButtonHeader, { backgroundColor: paperTheme.colors.errorBackground }]}
+            hitSlop={{ top: SPACING.xs, bottom: SPACING.xs, left: SPACING.xs, right: SPACING.xs }}
+          >
+            <Ionicons name="trash-outline" size={ICON_SIZES.sm} color={paperTheme.colors.errorText} />
+            <Text style={[styles.clearButtonText, { color: paperTheme.colors.errorText }]}>
+              Limpar
+            </Text>
+          </TouchableOpacity>
+        }
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -325,17 +342,8 @@ const CartScreen: React.FC = () => {
           >
           <View style={[styles.headerCard, { backgroundColor: paperTheme.colors.surface }]}>
             <Text style={[styles.headerTitle, { color: paperTheme.colors.onSurface }]}>
-              Meu Carrinho ({cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'})
+              {cartState.itemCount} {cartState.itemCount === 1 ? 'item' : 'itens'} no carrinho
             </Text>
-            <TouchableOpacity
-              onPress={handleClearCart}
-              style={[styles.clearButton, { backgroundColor: paperTheme.colors.errorBackground }]}
-            >
-              <Ionicons name="trash-outline" size={ICON_SIZES.sm} color={paperTheme.colors.errorText} />
-              <Text style={[styles.clearButtonText, { color: paperTheme.colors.errorText }]}>
-                Limpar
-              </Text>
-            </TouchableOpacity>
           </View>
 
           {groupedByMarket.map((group, groupIndex) => (
@@ -531,6 +539,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.smPlus,
+    paddingVertical: SPACING.micro + SPACING.xs,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  clearButtonHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: SPACING.smPlus,

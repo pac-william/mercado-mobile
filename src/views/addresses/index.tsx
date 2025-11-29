@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity,
 import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useSession } from '../../hooks/useSession';
 import { formatCEP } from '../../services/cepService';
@@ -181,10 +182,10 @@ export default function AddressesScreen() {
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      <ScreenHeader title="Meus Endereços" icon="location" />
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: paperTheme.colors.onBackground }]}>Meus Endereços</Text>
           <Text style={[styles.subtitle, { color: paperTheme.colors.onSurface, opacity: 0.7 }]}>
             {user ? `Olá, ${user.name.split(' ')[0]}! ` : ''}Gerencie seus endereços de entrega
           </Text>

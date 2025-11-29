@@ -6,6 +6,7 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, Touchabl
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "../../components/layout/header";
+import { ScreenHeader } from "../../components/layout/ScreenHeader";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import { getOrderStatusColor, getOrderStatusText } from "../../utils/orderStatus";
@@ -183,7 +184,8 @@ export default function OrdersScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
-      <Header/>
+      <Header />
+      <ScreenHeader title="Meus Pedidos" icon="receipt" />
 
       {offline && (
         <View style={[styles.offlineBanner, { backgroundColor: paperTheme.colors.errorContainer }]}>

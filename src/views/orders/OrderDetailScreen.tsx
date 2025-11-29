@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "../../components/layout/header";
+import { ScreenHeader } from "../../components/layout/ScreenHeader";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import { getOrderStatusColor, getOrderStatusText } from "../../utils/orderStatus";
 import { formatCurrency, formatOrderDate } from "../../utils/format";
@@ -109,6 +110,7 @@ export default function OrderDetailScreen() {
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      <ScreenHeader title="Detalhes do Pedido" icon="receipt" />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
