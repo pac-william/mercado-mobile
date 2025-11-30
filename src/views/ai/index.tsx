@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicato
 import { Text, useTheme, Searchbar } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Header } from "../../components/layout/header";
 import { SuggestionResponse, getSuggestionById, getSuggestions } from "../../services/suggestionService";
 import { useMarketLoader } from "../../hooks/useMarketLoader";
@@ -15,11 +16,22 @@ import ReceiptModal from "../../components/ui/ReceiptModal";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, SHADOWS, ICON_SIZES } from "../../constants/styles";
+import { useSession } from "../../hooks/useSession";
+import CustomModal from "../../components/ui/CustomModal";
+import * as AuthSession from 'expo-auth-session';
+import * as SecureStore from 'expo-secure-store';
+import axios from "axios";
+import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
+import { Session, SessionUser } from "../../types/session";
+import api from "../../services/api";
 
 type AISearchNavigationProp = NativeStackNavigationProp<AIStackParamList>;
+type TabNavigationProp = BottomTabNavigationProp<any>;
 
 export default function AISearch() {
   const navigation = useNavigation<AISearchNavigationProp>();
+  const tabNavigation = useNavigation<TabNavigationProp>();
+  const { isAuthenticated, refreshSession } = useSession();
   const [results, setResults] = useState<SuggestionResponse | null>(null);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +41,128 @@ export default function AISearch() {
   const { getUserLocation, locationLoading } = useUserLocation();
   const [receiptModalVisible, setReceiptModalVisible] = useState(false);
   const [receiptModalMode, setReceiptModalMode] = useState<'recipe' | 'instructions'>('recipe');
+  const [loginModalVisible, setLoginModalVisible] = useState(false);
+
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: clientId,
+      scopes: ['openid', 'profile', 'email', 'offline_access'],
+      responseType: AuthSession.ResponseType.Code,
+      redirectUri: redirectUri,
+      usePKCE: true,
+      extraParams: {
+        prompt: 'login',
+      },
+    },
+    discovery
+  );
+
+  const processedCodesRef = useRef<Set<string>>(new Set());
+
+  const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
+    try {
+      const auth0Id = auth0User.sub;
+      try {
+        await api.get(`/users/auth0/${auth0Id}`);
+      } catch (error: any) {
+        if (error.response?.status === 500 || error.response?.status === 404) {
+          const createData = {
+            name: auth0User.name || auth0User.email || '',
+            email: auth0User.email,
+            auth0Id: auth0Id,
+            profilePicture: auth0User.picture || undefined,
+          };
+          await api.post('/users', createData);
+        }
+      }
+    } catch (error) {
+    }
+  }, []);
+
+  const fetchUserInfo = useCallback(async (accessToken: string, sessionData?: Partial<Session>) => {
+    try {
+      const response = await axios.get(`https://${auth0Domain}/userinfo`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const userData = response.data as SessionUser;
+
+      if (userData.sub) {
+        await fetchOrCreateUser(userData);
+      }
+
+      if (sessionData) {
+        const updatedSession: Session = {
+          ...sessionData,
+          user: userData,
+        } as Session;
+        await SecureStore.setItemAsync('session', JSON.stringify(updatedSession));
+      }
+    } catch (error) {
+    }
+  }, [fetchOrCreateUser]);
+
+  useEffect(() => {
+    if (response?.type === 'success' && 'params' in response && response.params && 'code' in response.params) {
+      const code = (response.params as any).code;
+      
+      if (processedCodesRef.current.has(code)) {
+        return;
+      }
+
+      processedCodesRef.current.add(code);
+
+      const fetchToken = async () => {
+        try {
+          const tokenResponse = await axios.post(
+            `https://${auth0Domain}/oauth/token`,
+            new URLSearchParams({
+              grant_type: 'authorization_code',
+              client_id: clientId,
+              code: code,
+              redirect_uri: redirectUri,
+              code_verifier: request?.codeVerifier || '',
+            }).toString(),
+            {
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            }
+          );
+
+          const data = tokenResponse.data;
+
+          if (data.id_token && data.access_token) {
+            const now = Math.floor(Date.now() / 1000);
+            const expiresAt = data.expires_in ? now + data.expires_in : now + 3600;
+            const sid = data.id_token ? data.id_token.substring(0, 32) : `sid_${now}`;
+
+            const session: Partial<Session> = {
+              tokenSet: {
+                accessToken: data.access_token,
+                idToken: data.id_token,
+                scope: data.scope || 'openid profile email offline_access',
+                requestedScope: data.scope || 'openid profile email offline_access',
+                refreshToken: data.refresh_token || '',
+                expiresAt: expiresAt,
+              },
+              internal: {
+                sid: sid,
+                createdAt: now,
+              },
+              exp: expiresAt,
+            };
+
+            await fetchUserInfo(data.access_token, session);
+            await refreshSession();
+          }
+        } catch (error) {
+        }
+      };
+
+      fetchToken();
+    }
+  }, [response, request?.codeVerifier, fetchUserInfo, refreshSession]);
 
   const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
     container: {
@@ -305,6 +439,11 @@ export default function AISearch() {
       return;
     }
 
+    if (!isAuthenticated) {
+      setLoginModalVisible(true);
+      return;
+    }
+
     loadingRef.current = true;
     setLoading(true);
     try {
@@ -312,13 +451,17 @@ export default function AISearch() {
       setResults(suggestionResponse);
       setSuggestion(null);
     } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        setLoginModalVisible(true);
+      }
       setResults(null);
       setSuggestion(null);
     } finally {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, isAuthenticated]);
 
   return (
     <View style={styles.container}>
@@ -605,6 +748,26 @@ export default function AISearch() {
           mode={receiptModalMode}
         />
       )}
+
+      <CustomModal
+        visible={loginModalVisible}
+        onClose={() => setLoginModalVisible(false)}
+        type="info"
+        title="Login Necessário"
+        message="Para usar a pesquisa por receitas, é necessário fazer login na sua conta."
+        primaryButton={{
+          text: "Fazer Login",
+          onPress: () => {
+            setLoginModalVisible(false);
+            promptAsync();
+          },
+          style: "primary",
+        }}
+        secondaryButton={{
+          text: "Cancelar",
+          onPress: () => setLoginModalVisible(false),
+        }}
+      />
     </View>
   );
 }

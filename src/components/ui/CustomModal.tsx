@@ -116,7 +116,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
                   style={[styles.secondaryButton, { backgroundColor: colors.surfaceLight, borderColor: colors.outlineLight }]}
                   onPress={secondaryButton.onPress}
                 >
-                  <Text style={{ color: colors.onSurface }}>
+                  <Text style={[styles.secondaryButtonText, { color: colors.onSurface }]}>
                     {secondaryButton.text}
                   </Text>
                 </TouchableOpacity>
@@ -195,28 +195,35 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  secondaryButtonText: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    gap: SPACING.md,
   },
   secondaryButton: {
     flex: 1,
-    paddingVertical: SPACING.md + SPACING.micro,
-    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    marginRight: SPACING.xsPlus,
   },
   button: {
     flex: 1,
-    paddingVertical: SPACING.md + SPACING.micro,
-    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: SPACING.xsPlus,
     ...SHADOWS.medium,
   },
   closeButton: {
