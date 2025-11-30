@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Receipt } from '../../types/suggestion';
@@ -27,6 +28,7 @@ export default function ReceiptModal({
   mode,
 }: ReceiptModalProps) {
   const paperTheme = useCustomTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Modal
@@ -64,10 +66,14 @@ export default function ReceiptModal({
 
               <ScrollView
                 style={styles.modalBody}
+                contentContainerStyle={[
+                  styles.contentContainer,
+                  { paddingBottom: Math.max(insets.bottom, SPACING.xl) }
+                ]}
                 showsVerticalScrollIndicator={true}
                 indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+                keyboardShouldPersistTaps="handled"
               >
-                <View style={styles.contentContainer}>
                   {mode === 'recipe' ? (
                     <>
                       <View style={styles.headerSection}>
@@ -161,7 +167,6 @@ export default function ReceiptModal({
                       )}
                     </>
                   )}
-                </View>
               </ScrollView>
             </View>
           </TouchableWithoutFeedback>
@@ -179,8 +184,8 @@ const styles = StyleSheet.create({
   modalContent: {
     borderTopLeftRadius: BORDER_RADIUS.xl,
     borderTopRightRadius: BORDER_RADIUS.xl,
-    maxHeight: '85%',
-    paddingBottom: SPACING.xlBase,
+    maxHeight: '90%',
+    flex: 1,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -195,11 +200,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalBody: {
-    paddingHorizontal: SPACING.xlBase,
-    paddingTop: SPACING.xlBase,
+    flex: 1,
   },
   contentContainer: {
-    paddingBottom: SPACING.xlBase,
+    paddingHorizontal: SPACING.xlBase,
+    paddingTop: SPACING.xlBase,
   },
   headerSection: {
     marginBottom: SPACING.xl,

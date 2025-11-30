@@ -46,6 +46,7 @@ const EditProfileScreen: React.FC = () => {
   const isEditingRef = useRef(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const hasInitializedRef = useRef(false);
+  const hasLoadedOnceRef = useRef(false);
 
   const formatDateForInput = (date: string | Date): string => {
     if (!date) return '';
@@ -119,8 +120,8 @@ const EditProfileScreen: React.FC = () => {
     setModalVisible(true);
   };
 
-  const initializeFormData = useCallback((userData: User) => {
-    if (isEditingRef.current || hasInitializedRef.current) {
+  const initializeFormData = useCallback((userData: User, force = false) => {
+    if (!force && (isEditingRef.current || hasInitializedRef.current)) {
       return;
     }
     setFormData({
@@ -153,13 +154,19 @@ const EditProfileScreen: React.FC = () => {
     };
   }, []);
 
-  const loadUser = useCallback(async () => {
+  const loadUser = useCallback(async (force = false) => {
+    if (!force && hasLoadedOnceRef.current && isEditingRef.current) {
+      return;
+    }
     try {
       const currentUser = await getUserMe();
       setUser(currentUser);
-      hasInitializedRef.current = false;
-      initializeFormData(currentUser);
+      if (!isEditingRef.current) {
+        hasInitializedRef.current = false;
+        initializeFormData(currentUser, force);
+      }
       await applyProfileUpdate(currentUser);
+      hasLoadedOnceRef.current = true;
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
       if (!contextProfile) {
@@ -178,9 +185,11 @@ const EditProfileScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      isEditingRef.current = false;
-      hasInitializedRef.current = false;
-      loadUser();
+      if (!hasLoadedOnceRef.current) {
+        isEditingRef.current = false;
+        hasInitializedRef.current = false;
+        loadUser(true);
+      }
     }, [loadUser])
   );
 
@@ -292,7 +301,8 @@ const EditProfileScreen: React.FC = () => {
       setSelectedImage(null);
       isEditingRef.current = false;
       hasInitializedRef.current = false;
-      initializeFormData(updatedUser);
+      hasLoadedOnceRef.current = false;
+      initializeFormData(updatedUser, true);
       showModal('success', 'Sucesso', 'Perfil atualizado com sucesso!', {
         text: 'OK',
         onPress: () => {
@@ -317,6 +327,7 @@ const EditProfileScreen: React.FC = () => {
 
   const handleCancel = () => {
     isEditingRef.current = false;
+    hasLoadedOnceRef.current = false;
     navigation.goBack();
   };
 

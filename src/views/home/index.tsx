@@ -26,6 +26,10 @@ import { usePermissions } from "../../hooks/usePermissions";
 import { formatDistance } from "../../utils/distance";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { getScreenBottomPadding } from "../../utils/tabBarUtils";
+import { Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
+const CARD_WIDTH = width * 0.45;
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -318,10 +322,10 @@ export default function Home() {
             showsHorizontalScrollIndicator={false}
             style={styles.productList}
             onEndReached={() => handleLoadMoreProducts(market.id)}
-            onEndReachedThreshold={0.5}
+            onEndReachedThreshold={0.3}
             ListFooterComponent={
-              market.loadingMoreProducts ? (
-                <View style={styles.listFooter}>
+              market.hasMoreProducts ? (
+                <View style={[styles.listFooter, { width: CARD_WIDTH }]}>
                   <ActivityIndicator size="small" color={paperTheme.colors.primary} />
                 </View>
               ) : null
@@ -507,6 +511,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingRight: SPACING.lg,
+        height: SPACING.xxxl * 6 + SPACING.xlBase,
     },
     marketsLoadingContainer: {
         paddingVertical: SPACING.xxxl * 2,

@@ -9,6 +9,7 @@ import { getProducts } from '../../services/productService';
 import { getCategories } from '../../services/categoryService';
 import ProductCard from '../../components/ui/ProductCard';
 import { Header } from '../../components/layout/header';
+import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import { OfflineBanner } from '../../components/ui/OfflineBanner';
 import { Market } from '../../domain/marketDomain';
 import { Product } from '../../domain/productDomain';
@@ -155,6 +156,13 @@ export default function MarketDetailsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
       <Header />
+      {market && (
+        <ScreenHeader 
+          title={market.name}
+          icon="storefront"
+          iconColor={paperTheme.colors.primary}
+        />
+      )}
       {offline && (
         <OfflineBanner message="Sem conexão com a internet. Alguns recursos podem estar limitados." />
       )}

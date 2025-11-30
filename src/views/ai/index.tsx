@@ -35,7 +35,11 @@ export default function AISearch() {
       flex: 1,
       backgroundColor: theme.colors.background,
     },
+    scrollView: {
+      flex: 1,
+    },
     scrollContent: {
+      flexGrow: 1,
       paddingBottom: SPACING.xxxl * 2,
     },
     searchSection: {
@@ -321,9 +325,11 @@ export default function AISearch() {
       <Header />
       
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.searchSection}>
           <View style={styles.titleContainer}>
