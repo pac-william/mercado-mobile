@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { MD3LightTheme, MD3DarkTheme, PaperProvider, useTheme as usePaperTheme } from 'react-native-paper';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import { MD3LightTheme, MD3DarkTheme, PaperProvider } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { CustomMD3Theme } from '../types/theme';
 
@@ -125,9 +125,9 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   useEffect(() => {
     loadTheme();
-  }, []);
+  }, [loadTheme]);
 
-  const loadTheme = async () => {
+  const loadTheme = useCallback(async () => {
     try {
       const savedTheme = await AsyncStorage.getItem(THEME_KEY);
       if (savedTheme === 'dark' || savedTheme === 'light') {
@@ -136,31 +136,43 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (error) {
       console.error('Erro ao carregar tema:', error);
     }
-  };
+  }, []);
 
-  const saveTheme = async (mode: ThemeMode) => {
+  const saveTheme = useCallback(async (mode: ThemeMode) => {
     try {
       await AsyncStorage.setItem(THEME_KEY, mode);
     } catch (error) {
       console.error('Erro ao salvar tema:', error);
     }
-  };
+  }, []);
 
-  const setTheme = async (mode: ThemeMode) => {
+  const setTheme = useCallback(async (mode: ThemeMode) => {
     setThemeMode(mode);
-    await saveTheme(mode);
-  };
+    saveTheme(mode);
+  }, [saveTheme]);
 
-  const toggleTheme = async () => {
+  const toggleTheme = useCallback(async () => {
     const newMode = themeMode === 'light' ? 'dark' : 'light';
-    await setTheme(newMode);
-  };
+    setThemeMode(newMode);
+    saveTheme(newMode);
+  }, [themeMode, saveTheme]);
 
-  const theme = themeMode === 'dark' ? darkTheme : lightTheme;
-  const isDark = themeMode === 'dark';
+  const theme = useMemo(() => 
+    themeMode === 'dark' ? darkTheme : lightTheme,
+    [themeMode]
+  );
+
+  const isDark = useMemo(() => themeMode === 'dark', [themeMode]);
+
+  const contextValue = useMemo(() => ({
+    theme,
+    isDark,
+    toggleTheme,
+    setTheme,
+  }), [theme, isDark, toggleTheme, setTheme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, isDark, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       <PaperProvider theme={theme}>
         {children}
       </PaperProvider>

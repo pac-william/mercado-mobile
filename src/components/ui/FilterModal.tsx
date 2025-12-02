@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -45,6 +45,7 @@ export default function FilterModal({
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
   const [categoryIds, setCategoryIds] = useState<string[]>(currentFilters.categoryIds || []);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     setMinPrice(currentFilters.minPrice);
@@ -98,6 +99,14 @@ export default function FilterModal({
     ? screenHeight - keyboardHeight - insets.bottom
     : screenHeight * 0.85;
 
+  const handleInputFocus = () => {
+    if (scrollViewRef.current && Platform.OS === 'android' && keyboardHeight > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 300);
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -141,8 +150,14 @@ export default function FilterModal({
                 </View>
 
                 <ScrollView
+                  ref={scrollViewRef}
                   style={styles.modalBody}
-                  contentContainerStyle={styles.scrollContent}
+                  contentContainerStyle={[
+                    styles.scrollContent,
+                    keyboardHeight > 0 && Platform.OS === 'android' && {
+                      paddingBottom: keyboardHeight + SPACING.xl,
+                    },
+                  ]}
                   showsVerticalScrollIndicator={true}
                   indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                   keyboardShouldPersistTaps="handled"
@@ -157,6 +172,7 @@ export default function FilterModal({
                     maxPrice={maxPrice}
                     onMinPriceChange={setMinPrice}
                     onMaxPriceChange={setMaxPrice}
+                    onInputFocus={handleInputFocus}
                   />
                 </ScrollView>
 

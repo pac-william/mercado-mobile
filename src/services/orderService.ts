@@ -32,17 +32,26 @@ export const getOrders = async (
       params: { page, size, ...filters },
     });
 
-    // Salva todos os pedidos recebidos localmente
-    const orders = response.data.orders;
-    for (const order of orders) {
-      await saveOrder(order);
+    if (response.data && Array.isArray(response.data.orders)) {
+      for (const order of response.data.orders) {
+        await saveOrder(order);
+      }
+
+      if (response.data.orders.length > 0 || localOrders.length === 0) {
+        return response.data;
+      }
+
+      return {
+        orders: localOrders,
+        meta: response.data.meta || {
+          page: 1,
+          size: localOrders.length,
+          total: localOrders.length,
+          totalPages: 1,
+        },
+      };
     }
 
-    return response.data;
-  } catch (error) {
-    console.warn("⚠️ Falha ao buscar pedidos da API, usando dados locais:", error);
-
-    // Se tiver dados locais, retorna eles
     if (localOrders.length > 0) {
       return {
         orders: localOrders,
@@ -55,7 +64,28 @@ export const getOrders = async (
       };
     }
 
-    // Se não tiver userId, não pode buscar local
+    return {
+      orders: [],
+      meta: {
+        page: 1,
+        size: 0,
+        total: 0,
+        totalPages: 0,
+      },
+    };
+  } catch (error) {
+    if (localOrders.length > 0) {
+      return {
+        orders: localOrders,
+        meta: {
+          page: 1,
+          size: localOrders.length,
+          total: localOrders.length,
+          totalPages: 1,
+        },
+      };
+    }
+
     if (!filters?.userId) {
       throw new Error("É necessário fornecer userId para buscar pedidos offline");
     }

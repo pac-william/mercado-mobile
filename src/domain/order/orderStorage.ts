@@ -39,13 +39,13 @@ export const initDB = async () => {
 };
 
 export const saveOrder = async (order: Order) => {
-  if (!db) db = await SQLite.openDatabaseAsync('app.db');
+  await initDB();
 
   try {
     const rawData = JSON.stringify(order);
     const syncedAt = new Date().toISOString();
 
-    await db.runAsync(
+    await db!.runAsync(
       `INSERT OR REPLACE INTO orders (
         id, userId, marketId, delivererId, totalPrice, status, 
         createdAt, updatedAt, rawData, syncedAt
@@ -70,10 +70,10 @@ export const saveOrder = async (order: Order) => {
 };
 
 export const getOrders = async (userId: string): Promise<Order[]> => {
-  if (!db) db = await SQLite.openDatabaseAsync('app.db');
+  await initDB();
 
   try {
-    const result = await db.getAllAsync<OrderRow>(
+    const result = await db!.getAllAsync<OrderRow>(
       `SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC`,
       [userId]
     );
@@ -105,10 +105,10 @@ export const getOrders = async (userId: string): Promise<Order[]> => {
 };
 
 export const getOrderById = async (id: string): Promise<Order | null> => {
-  if (!db) db = await SQLite.openDatabaseAsync('app.db');
+  await initDB();
 
   try {
-    const result = await db.getFirstAsync<{
+    const result = await db!.getFirstAsync<{
       id: string;
       userId: string;
       marketId: string;
@@ -150,11 +150,11 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
 };
 
 export const clearOrders = async () => {
-  if (!db) db = await SQLite.openDatabaseAsync('app.db');
-  await db.execAsync('DELETE FROM orders');
+  await initDB();
+  await db!.execAsync('DELETE FROM orders');
 };
 
 export const deleteOrder = async (id: string): Promise<void> => {
-  if (!db) db = await SQLite.openDatabaseAsync('app.db');
-  await db.runAsync('DELETE FROM orders WHERE id = ?', [id]);
+  await initDB();
+  await db!.runAsync('DELETE FROM orders WHERE id = ?', [id]);
 };

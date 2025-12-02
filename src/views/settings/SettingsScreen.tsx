@@ -35,6 +35,7 @@ export default function SettingsScreen() {
     const permissions = usePermissions();
     const [refreshing, setRefreshing] = useState(false);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [authAction, setAuthAction] = useState<'login' | 'logout' | null>(null);
     
     const bottomPadding = getScreenBottomPadding(insets);
 
@@ -112,6 +113,7 @@ export default function SettingsScreen() {
             processedCodesRef.current.add(code);
 
             const fetchToken = async () => {
+                setAuthAction('login');
                 try {
                     const tokenResponse = await axios.post(
                         `https://${auth0Domain}/oauth/token`,
@@ -154,6 +156,8 @@ export default function SettingsScreen() {
                         await refreshSession();
                     }
                 } catch (error) {
+                } finally {
+                    setAuthAction(null);
                 }
             };
 
@@ -197,6 +201,7 @@ export default function SettingsScreen() {
         if (isAuthenticated) {
             checkNotificationStatus();
             refreshProfile(false);
+            setAuthAction(null);
         }
     }, [isAuthenticated, checkNotificationStatus, refreshProfile]);
 
@@ -257,6 +262,7 @@ export default function SettingsScreen() {
             return;
         }
 
+        setAuthAction('login');
         try {
             const result = await promptAsync();
 
@@ -311,9 +317,14 @@ export default function SettingsScreen() {
                         await refreshSession();
                     }
                 } catch (error) {
+                } finally {
+                    setAuthAction(null);
                 }
+            } else {
+                setAuthAction(null);
             }
         } catch (error) {
+            setAuthAction(null);
         }
     };
 
@@ -330,6 +341,7 @@ export default function SettingsScreen() {
                     text: "Sair",
                     style: "destructive",
                     onPress: async () => {
+                        setAuthAction('logout');
                         try {
                             await AsyncStorage.removeItem(NOTIFICATION_PREFERENCE_KEY);
                             await clearSession();
@@ -350,6 +362,8 @@ export default function SettingsScreen() {
                             await refreshSession();
                         } catch (error) {
                             Alert.alert("Erro", "Não foi possível sair da conta.");
+                        } finally {
+                            setAuthAction(null);
                         }
                     }
                 }
@@ -377,11 +391,11 @@ export default function SettingsScreen() {
                     />
                 }
             >
-                {isLoading ? (
+                {isLoading || authAction ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={paperTheme.colors.primary} />
                         <Text style={[styles.loadingText, { color: paperTheme.colors.onSurface }]}>
-                            Verificando autenticação...
+                            {authAction === 'login' ? 'Fazendo login...' : authAction === 'logout' ? 'Saindo...' : 'Verificando autenticação...'}
                         </Text>
                     </View>
                 ) : isAuthenticated && user ? (

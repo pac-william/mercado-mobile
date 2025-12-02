@@ -29,7 +29,8 @@ export default function CategoryFilter({
     execute(async () => {
       try {
         const response: CategoryPaginatedResponse = await getCategories(1, 100);
-        setCategories(response.category || []);
+        const categoriesData = response.category || response.categories || [];
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       } catch (error) {
         setCategories([]);
       }
@@ -57,17 +58,8 @@ export default function CategoryFilter({
     );
   }
 
-  if (categories.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>
-          Categoria
-        </Text>
-        <Text style={[styles.emptyText, { color: paperTheme.colors.onSurfaceVariant }]}>
-          Nenhuma categoria disponível
-        </Text>
-      </View>
-    );
+  if (categories.length === 0 && !loading) {
+    return null;
   }
 
   return (

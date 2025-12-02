@@ -31,7 +31,7 @@ export default function OrdersScreen() {
   const insets = useSafeAreaInsets();
   const { user: sessionUser } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
-  const { loading, execute, stopLoading } = useLoading();
+  const { loading, execute, stopLoading } = useLoading({ initialValue: true });
   const { loading: refreshing, execute: executeRefresh } = useLoading();
   const [offline, setOffline] = useState(false);
   const isFetchingRef = useRef(false);
@@ -41,23 +41,20 @@ export default function OrdersScreen() {
   const loadLocalOrders = useCallback(async (userId: string) => {
     try {
       const localOrders = await getOrdersLocal(userId);
-      if (localOrders.length > 0) {
-        setOrders(localOrders);
-        stopLoading();
-      }
       return localOrders;
     } catch (error) {
       return [];
     }
-  }, [stopLoading]);
+  }, []);
 
   const fetchOrders = useCallback(async (userId: string, forceRefresh: boolean = false) => {
     if (!userId) {
       stopLoading();
+      setOrders([]);
       return;
     }
 
-    if (isFetchingRef.current) {
+    if (isFetchingRef.current && !forceRefresh) {
       return;
     }
 
@@ -72,16 +69,48 @@ export default function OrdersScreen() {
 
     executeFn(async () => {
       try {
-        const response = await getOrders(1, 50, { userId });
-        setOrders(response.orders);
-        setOffline(false);
-        lastFetchRef.current = now;
-      } catch (error: any) {
-        console.warn("⚠️ Erro ao buscar pedidos:", error);
         const localOrders = await loadLocalOrders(userId);
-        if (localOrders.length === 0) {
+        
+        if (localOrders.length > 0 && !forceRefresh) {
+          setOrders(localOrders);
+        }
+
+        const response = await getOrders(1, 50, { userId });
+        
+        if (Array.isArray(response.orders)) {
+          if (response.orders.length > 0) {
+            setOrders(response.orders);
+            setOffline(false);
+          } else if (localOrders.length > 0) {
+            setOrders(localOrders);
+            setOffline(false);
+          } else {
+            setOrders([]);
+            setOffline(false);
+          }
+        } else if (localOrders.length > 0) {
+          setOrders(localOrders);
+          setOffline(false);
+        } else {
+          setOrders([]);
+          setOffline(false);
+        }
+
+        lastFetchRef.current = now;
+        if (forceRefresh) {
+          stopLoading();
+        }
+      } catch (error: any) {
+        const localOrders = await loadLocalOrders(userId);
+        if (localOrders.length > 0) {
+          setOrders(localOrders);
+          setOffline(true);
+        } else {
           setOrders([]);
           setOffline(true);
+        }
+        if (forceRefresh) {
+          stopLoading();
         }
       } finally {
         isFetchingRef.current = false;
@@ -96,14 +125,43 @@ export default function OrdersScreen() {
       if (userId !== lastProcessedUserIdRef.current) {
         lastFetchRef.current = 0;
         lastProcessedUserIdRef.current = userId;
+        setOrders([]);
       }
       
       execute(async () => {
-        const localOrders = await loadLocalOrders(userId);
-        if (localOrders.length > 0) {
-          fetchOrders(userId, false);
-        } else {
-          fetchOrders(userId, true);
+        try {
+          const localOrders = await loadLocalOrders(userId);
+          if (localOrders.length > 0) {
+            setOrders(localOrders);
+            stopLoading();
+            fetchOrders(userId, false);
+          } else {
+            const response = await getOrders(1, 50, { userId });
+            if (Array.isArray(response.orders)) {
+              if (response.orders.length > 0) {
+                setOrders(response.orders);
+                setOffline(false);
+              } else {
+                setOrders([]);
+                setOffline(false);
+              }
+            } else {
+              setOrders([]);
+              setOffline(false);
+            }
+            lastFetchRef.current = Date.now();
+            stopLoading();
+          }
+        } catch (error) {
+          const localOrders = await loadLocalOrders(userId);
+          if (localOrders.length > 0) {
+            setOrders(localOrders);
+            setOffline(true);
+          } else {
+            setOrders([]);
+            setOffline(true);
+          }
+          stopLoading();
         }
       });
     } else {

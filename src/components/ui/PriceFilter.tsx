@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Text } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TextInput, StyleSheet, Text, Platform } from 'react-native';
 import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
 
@@ -8,6 +8,7 @@ interface PriceFilterProps {
   maxPrice?: number;
   onMinPriceChange: (value: number | undefined) => void;
   onMaxPriceChange: (value: number | undefined) => void;
+  onInputFocus?: () => void;
 }
 
 export default function PriceFilter({
@@ -15,11 +16,14 @@ export default function PriceFilter({
   maxPrice,
   onMinPriceChange,
   onMaxPriceChange,
+  onInputFocus,
 }: PriceFilterProps) {
   const paperTheme = useCustomTheme();
   const [minPriceText, setMinPriceText] = useState(minPrice?.toString() || '');
   const [maxPriceText, setMaxPriceText] = useState(maxPrice?.toString() || '');
   const [error, setError] = useState<string | null>(null);
+  const minInputRef = useRef<TextInput>(null);
+  const maxInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     setMinPriceText(minPrice?.toString() || '');
@@ -76,6 +80,12 @@ export default function PriceFilter({
     onMaxPriceChange(numericValue);
   };
 
+  const handleInputFocus = () => {
+    if (onInputFocus && Platform.OS === 'android') {
+      onInputFocus();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={[styles.label, { color: paperTheme.colors.onSurface }]}>
@@ -88,6 +98,7 @@ export default function PriceFilter({
             Mínimo
           </Text>
           <TextInput
+            ref={minInputRef}
             style={[
               styles.input,
               {
@@ -98,6 +109,7 @@ export default function PriceFilter({
             ]}
             value={minPriceText}
             onChangeText={handleMinPriceChange}
+            onFocus={handleInputFocus}
             placeholder="R$ 0,00"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}
             keyboardType="decimal-pad"
@@ -109,6 +121,7 @@ export default function PriceFilter({
             Máximo
           </Text>
           <TextInput
+            ref={maxInputRef}
             style={[
               styles.input,
               {
@@ -119,6 +132,7 @@ export default function PriceFilter({
             ]}
             value={maxPriceText}
             onChangeText={handleMaxPriceChange}
+            onFocus={handleInputFocus}
             placeholder="R$ 0,00"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}
             keyboardType="decimal-pad"
