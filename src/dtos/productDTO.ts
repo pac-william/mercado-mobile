@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const ProductDTO = z.object({
-    name: z.string().min(1, { error: "Nome do produto é obrigatório" }),
-    price: z.number({ error: "Preço do produto é obrigatório" }),
-    marketId: z.string({ error: "ID do mercado é obrigatório" }),
+    name: z.string().min(1, { message: "Nome do produto é obrigatório" }),
+    price: z.number().positive({ message: "Preço deve ser maior que zero" }),
+    marketId: z.string().min(1, { message: "ID do mercado é obrigatório" }),
     image: z.string().optional(),
 });
 

@@ -15,6 +15,7 @@ import { User } from '../../types/user';
 import { usePermissions } from '../../hooks/usePermissions';
 import { getUserMe, updateUserMe } from '../../services/userService';
 import { SPACING, BORDER_RADIUS, FONT_SIZE } from '../../constants/styles';
+import { formatPhone } from '../../utils/format';
 
 type EditProfileScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'EditProfile'>;
 
@@ -127,7 +128,7 @@ const EditProfileScreen: React.FC = () => {
     setFormData({
       name: userData.name || '',
       email: userData.email || '',
-      phone: userData.phone || '',
+      phone: userData.phone ? formatPhone(userData.phone) : '',
       birthDate: userData.birthDate ? formatDateForInput(userData.birthDate) : '',
     });
     hasInitializedRef.current = true;
@@ -656,7 +657,8 @@ const EditProfileScreen: React.FC = () => {
             }}
             onChangeText={(text) => {
               isEditingRef.current = true;
-              setFormData((prev) => ({ ...prev, phone: text }));
+              const formatted = formatPhone(text);
+              setFormData((prev) => ({ ...prev, phone: formatted }));
             }}
             placeholder="Digite seu telefone"
             placeholderTextColor={paperTheme.colors.onSurfaceVariant}

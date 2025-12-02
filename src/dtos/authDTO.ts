@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/**
+ * DTOs de autenticação planejados para uso inicial do projeto.
+ * Por mudança de planejamento, a autenticação foi migrada para Auth0,
+ * Mantidos para referência futura caso necessário.
+ */
+
 export const LoginDTO = z.object({
     email: z.string().email({ message: "Email deve ter um formato válido" }),
     password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
