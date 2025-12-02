@@ -1,36 +1,51 @@
 {
   "expo": {
-    "name": "mercado-mobile",
-    "slug": "mercado-mobile",
+    "name": "com.smart.marketin",
+    "slug": "smartmarketin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "sdkVersion": "54.0.0",
-    "scheme": "smart.marketin",
+    "scheme": "com.smart.marketin",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
-      "bundleIdentifier": "com.mercado.mobile",
+      "bundleIdentifier": "com.smart.marketin",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para encontrar mercados próximos.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Precisamos da sua localização para encontrar mercados próximos.",
         "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para escolher imagem de perfil.",
-        "NSCameraUsageDescription": "Precisamos da câmera para tirar foto de perfil."
+        "NSCameraUsageDescription": "Precisamos da câmera para tirar foto de perfil.",
+        "UIBackgroundModes": [
+          "remote-notification",
+          "remote-notification"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ],
       "edgeToEdgeEnabled": true,
-      "package": "smart.marketin",
+      "package": "com.smart.marketin",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -54,12 +69,13 @@
     },
     "extra": {
       "eas": {
-        "projectId": "167a1015-6ef3-40b6-8c0b-7f98e1bd46c8"
+        "projectId": "3fa25c2e-e256-4a6f-85ab-97158994109d"
       }
     },
     "plugins": [
       "expo-web-browser",
       "expo-font",
+      "@react-native-firebase/app",
       [
         "expo-location",
         {
@@ -81,7 +97,6 @@
           "sounds": []
         }
       ]
-    ],
-    "owner": "rissong"
+    ]
   }
 }
