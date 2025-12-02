@@ -9,6 +9,7 @@ import {
   Platform,
   Keyboard,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
@@ -93,6 +94,10 @@ export default function FilterModal({
   const hasActiveFilters =
     minPrice !== undefined || maxPrice !== undefined || (categoryIds && categoryIds.length > 0);
 
+  const availableHeight = keyboardHeight > 0 && Platform.OS === 'android'
+    ? screenHeight - keyboardHeight - insets.bottom
+    : screenHeight * 0.85;
+
   return (
     <Modal
       visible={visible}
@@ -100,117 +105,120 @@ export default function FilterModal({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View
-              style={[
-                styles.modalContent,
-                { 
-                  backgroundColor: paperTheme.colors.surface,
-                  maxHeight: keyboardHeight > 0 && Platform.OS === 'android'
-                    ? screenHeight - keyboardHeight - insets.bottom
-                    : screenHeight * 0.8,
-                },
-              ]}
-            >
-              <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
-                <Text
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View
+                style={[
+                  styles.modalContent,
+                  { 
+                    backgroundColor: paperTheme.colors.surface,
+                    maxHeight: availableHeight,
+                  },
+                ]}
+              >
+                <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { color: paperTheme.colors.onSurface },
+                    ]}
+                  >
+                    Filtros
+                  </Text>
+                  <TouchableOpacity onPress={onClose}>
+                    <Ionicons
+                      name="close"
+                      size={ICON_SIZES.xl}
+                      color={paperTheme.colors.onSurface}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                  style={styles.modalBody}
+                  contentContainerStyle={styles.scrollContent}
+                  showsVerticalScrollIndicator={true}
+                  indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={true}
+                >
+                  <CategoryFilter
+                    selectedCategoryIds={categoryIds}
+                    onCategoryChange={setCategoryIds}
+                  />
+                  <PriceFilter
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                    onMinPriceChange={setMinPrice}
+                    onMaxPriceChange={setMaxPrice}
+                  />
+                </ScrollView>
+
+                <View 
                   style={[
-                    styles.modalTitle,
-                    { color: paperTheme.colors.onSurface },
+                    styles.modalFooter, 
+                    { 
+                      borderTopColor: paperTheme.colors.outline,
+                      paddingBottom: Math.max(insets.bottom, SPACING.lg),
+                      paddingTop: SPACING.lg,
+                    }
                   ]}
                 >
-                  Filtros
-                </Text>
-                <TouchableOpacity onPress={onClose}>
-                  <Ionicons
-                    name="close"
-                    size={ICON_SIZES.xl}
-                    color={paperTheme.colors.onSurface}
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView
-                style={styles.modalBody}
-                contentContainerStyle={[
-                  styles.scrollContent,
-                  Platform.OS === 'android' && keyboardHeight > 0 && {
-                    paddingBottom: SPACING.xl,
-                  }
-                ]}
-                showsVerticalScrollIndicator={true}
-                indicatorStyle={paperTheme.dark ? 'white' : 'default'}
-                keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled={true}
-              >
-                <CategoryFilter
-                  selectedCategoryIds={categoryIds}
-                  onCategoryChange={setCategoryIds}
-                />
-                <PriceFilter
-                  minPrice={minPrice}
-                  maxPrice={maxPrice}
-                  onMinPriceChange={setMinPrice}
-                  onMaxPriceChange={setMaxPrice}
-                />
-              </ScrollView>
-
-              <View 
-                style={[
-                  styles.modalFooter, 
-                  { 
-                    borderTopColor: paperTheme.colors.outline,
-                    paddingBottom: Math.max(insets.bottom, SPACING.lg),
-                    paddingTop: SPACING.lg,
-                  }
-                ]}
-              >
-                {hasActiveFilters && (
+                  {hasActiveFilters && (
+                    <TouchableOpacity
+                      style={[
+                        styles.clearButton,
+                        { backgroundColor: paperTheme.colors.surfaceVariant },
+                      ]}
+                      onPress={handleClear}
+                    >
+                      <Text
+                        style={[
+                          styles.clearButtonText,
+                          { color: paperTheme.colors.onSurfaceVariant },
+                        ]}
+                      >
+                        Limpar
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity
                     style={[
-                      styles.clearButton,
-                      { backgroundColor: paperTheme.colors.surfaceVariant },
+                      styles.applyButton,
+                      { backgroundColor: paperTheme.colors.primary },
                     ]}
-                    onPress={handleClear}
+                    onPress={handleApply}
                   >
                     <Text
                       style={[
-                        styles.clearButtonText,
-                        { color: paperTheme.colors.onSurfaceVariant },
+                        styles.applyButtonText,
+                        { color: paperTheme.colors.onPrimary },
                       ]}
                     >
-                      Limpar
+                      Aplicar
                     </Text>
                   </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  style={[
-                    styles.applyButton,
-                    { backgroundColor: paperTheme.colors.primary },
-                  ]}
-                  onPress={handleApply}
-                >
-                  <Text
-                    style={[
-                      styles.applyButtonText,
-                      { color: paperTheme.colors.onPrimary },
-                    ]}
-                  >
-                    Aplicar
-                  </Text>
-                </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -241,7 +249,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.xlBase,
     paddingTop: SPACING.xlBase,
-    paddingBottom: SPACING.xl,
+    paddingBottom: SPACING.xxxl,
   },
   modalFooter: {
     flexDirection: 'row',

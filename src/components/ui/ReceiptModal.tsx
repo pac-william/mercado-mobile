@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableWithoutFeedback,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
@@ -29,6 +30,8 @@ export default function ReceiptModal({
 }: ReceiptModalProps) {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
+  const screenHeight = Dimensions.get('window').height;
+  const maxModalHeight = screenHeight * 0.9;
 
   return (
     <Modal
@@ -43,7 +46,10 @@ export default function ReceiptModal({
             <View
               style={[
                 styles.modalContent,
-                { backgroundColor: paperTheme.colors.surface },
+                { 
+                  backgroundColor: paperTheme.colors.surface,
+                  maxHeight: maxModalHeight,
+                },
               ]}
             >
               <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
@@ -73,6 +79,7 @@ export default function ReceiptModal({
                 showsVerticalScrollIndicator={true}
                 indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                 keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled={true}
               >
                   {mode === 'recipe' ? (
                     <>
@@ -184,8 +191,8 @@ const styles = StyleSheet.create({
   modalContent: {
     borderTopLeftRadius: BORDER_RADIUS.xl,
     borderTopRightRadius: BORDER_RADIUS.xl,
-    maxHeight: '90%',
-    flex: 1,
+    flexDirection: 'column',
+    flexShrink: 0,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -194,17 +201,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xlBase,
     paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
+    flexShrink: 0,
   },
   modalTitle: {
     fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
   },
   modalBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
   },
   contentContainer: {
     paddingHorizontal: SPACING.xlBase,
     paddingTop: SPACING.xlBase,
+    flexGrow: 1,
   },
   headerSection: {
     marginBottom: SPACING.xl,
