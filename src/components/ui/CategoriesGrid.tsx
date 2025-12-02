@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, StyleSheet, ActivityIndicator, Dimensions } from "react-native";
+import { View, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import CategorySmallCard from "./CategorySmallCard";
 import { getMarkets } from "../../services/marketService";
 import { Market } from "../../domain/marketDomain";
@@ -8,19 +8,20 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../../../App";
 import { SPACING } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { useResponsive } from "../../hooks/useResponsive";
 import { useLoading } from "../../hooks/useLoading";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
-const { width } = Dimensions.get('window');
 const cardMargin = SPACING.lg;
 const numColumns = 2;
-const cardWidth = (width - cardMargin * (numColumns + 1)) / numColumns;
 
 const CategoriesGrid = () => {
     const paperTheme = useCustomTheme();
+    const { width } = useResponsive();
     const [markets, setMarkets] = useState<Market[]>([]);
     const { loading, execute } = useLoading({ initialValue: true });
+    const cardWidth = (width - cardMargin * (numColumns + 1)) / numColumns;
 
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
@@ -54,7 +55,7 @@ const CategoriesGrid = () => {
                 numColumns={numColumns}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={styles.card}>
+                    <View style={[styles.card, { width: cardWidth }]}>
                         <CategorySmallCard
                             name={item.name}
                             image={item.profilePicture || ""}
@@ -85,7 +86,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     card: {
-        width: cardWidth,
         margin: cardMargin / 2,
     }
 });

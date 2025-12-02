@@ -2,15 +2,16 @@ import * as React from "react";
 import { View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { getProducts } from "../../services/productService";
+import { getProducts, Product } from "../../services/productService";
 import { getMarkets } from "../../services/marketService";
+import { Market } from "../../domain/marketDomain";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { useLoading } from "../../hooks/useLoading";
 import { SPACING, BORDER_RADIUS, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 export interface SearchResults {
-  products: any[];
-  markets: any[];
+  products: Product[];
+  markets: Market[];
 }
 
 interface SearchItensProps {
@@ -69,7 +70,7 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
           products: productsResponse?.products || [],
           markets: marketsResponse?.markets || [],
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         onResult({ products: [], markets: [] });
       }
     });

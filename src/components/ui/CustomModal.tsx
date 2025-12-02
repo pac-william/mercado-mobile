@@ -4,15 +4,13 @@ import {
   Text,
   TouchableOpacity,
   Modal,
-  Dimensions,
   StyleSheet,
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '../../hooks/useResponsive';
 
 interface CustomModalProps {
   visible: boolean;
@@ -43,6 +41,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
   showCloseButton = true,
 }) => {
   const { colors } = useCustomTheme();
+  const { getWidth } = useResponsive();
+  const modalWidth = getWidth(90);
 
   const getIconAndColor = () => {
     switch (type) {
@@ -98,7 +98,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={[styles.overlay, { backgroundColor: colors.modalOverlay }]}>
-        <View style={[styles.modalContainer, { backgroundColor: colors.modalSurface, shadowColor: colors.modalShadow }]}>
+        <View style={[styles.modalContainer, { width: modalWidth, backgroundColor: colors.modalSurface, shadowColor: colors.modalShadow }]}>
           {/* Header com ícone */}
           <View style={[styles.iconContainer, { backgroundColor }]}>
             <Ionicons name={icon} size={ICON_SIZES.xxxl + ICON_SIZES.sm} color={color} />
@@ -156,7 +156,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     borderRadius: BORDER_RADIUS.xxl,
-    width: width * 0.9,
     maxWidth: SPACING.xxxl * 10,
     shadowOffset: { width: 0, height: SPACING.smPlus },
     shadowOpacity: 0.25,

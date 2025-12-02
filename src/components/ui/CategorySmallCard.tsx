@@ -1,10 +1,8 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, Image, Dimensions, View } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, Image, View } from "react-native";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
-
-const { width } = Dimensions.get("window");
-const cardWidth = (width / 2) - 32;
+import { useResponsive } from "../../hooks/useResponsive";
 
 interface Props {
   name: string;
@@ -15,12 +13,15 @@ interface Props {
 
 const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) => {
   const paperTheme = useCustomTheme();
+  const { getWidth } = useResponsive();
+  const cardWidth = (getWidth(50) - SPACING.xxl);
 
   return (
     <TouchableOpacity 
       style={[
         styles.card,
         {
+          width: cardWidth,
           backgroundColor: paperTheme.colors.surface,
           borderWidth: 1,
           borderColor: paperTheme.colors.outline,
@@ -47,7 +48,6 @@ const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) 
 
 const styles = StyleSheet.create({
   card: {
-    width: cardWidth,
     minHeight: SPACING.xxxl * 2 + SPACING.xlBase,
     margin: SPACING.sm,
     borderRadius: BORDER_RADIUS.lg,

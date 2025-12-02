@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableWithoutFeedback,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Receipt } from '../../types/suggestion';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
+import { useResponsive } from '../../hooks/useResponsive';
 
 interface ReceiptModalProps {
   visible: boolean;
@@ -30,8 +30,8 @@ export default function ReceiptModal({
 }: ReceiptModalProps) {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
-  const screenHeight = Dimensions.get('window').height;
-  const maxModalHeight = screenHeight * 0.9;
+  const { getHeight } = useResponsive();
+  const maxModalHeight = getHeight(90);
 
   return (
     <Modal

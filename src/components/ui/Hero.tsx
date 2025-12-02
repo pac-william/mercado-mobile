@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { View, Image, StyleSheet, Dimensions, Text } from "react-native";
+import { View, Image, StyleSheet, Text } from "react-native";
 import Swiper from "react-native-swiper";
 import { getActiveCampaignsForCarousel, Campaign } from "../../services/campaignService";
 import { getMarketById } from "../../services/marketService";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { useResponsive } from "../../hooks/useResponsive";
 import { useLoading } from "../../hooks/useLoading";
-
-const { width } = Dimensions.get("window");
 
 const HeroBanner = () => {
   const { colors } = useCustomTheme();
+  const { width } = useResponsive();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [marketNames, setMarketNames] = useState<Record<string, string>>({});
   const { loading, execute } = useLoading({ initialValue: true });
@@ -54,12 +54,15 @@ const HeroBanner = () => {
     return null;
   }
 
+  const imageWidth = width - SPACING.xxl;
+  const imageHeight = SPACING.xxxl * 4 + SPACING.xlBase;
+
   if (campaigns.length === 1) {
     return (
       <View style={styles.container}>
         <Image
           source={{ uri: campaigns[0].imageUrl }}
-          style={styles.image}
+          style={[styles.image, { width: imageWidth, height: imageHeight }]}
           onError={(e) => {
             console.warn('Erro ao carregar banner:', campaigns[0].imageUrl);
           }}
@@ -83,12 +86,12 @@ const HeroBanner = () => {
         activeDotStyle={[styles.activeDot, { backgroundColor: colors.accent }]}
       >
         {campaigns.map((campaign) => (
-          <View key={campaign.id} style={styles.slideContainer}>
+          <View key={campaign.id} style={[styles.slideContainer, { width: imageWidth, height: imageHeight }]}>
             {campaign.imageUrl && !campaign.imageUrl.startsWith('blob:') ? (
               <>
                 <Image
                   source={{ uri: campaign.imageUrl }}
-                  style={styles.image}
+                  style={[styles.image, { width: imageWidth, height: imageHeight }]}
                   onError={(e) => {
                     console.warn('Erro ao carregar banner:', campaign.imageUrl);
                   }}
@@ -114,13 +117,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   slideContainer: {
-    width: width - SPACING.xxl,
-    height: SPACING.xxxl * 4 + SPACING.xlBase,
     position: "relative",
   },
   image: {
-    width: width - SPACING.xxl,
-    height: SPACING.xxxl * 4 + SPACING.xlBase,
     borderRadius: BORDER_RADIUS.lg,
     resizeMode: "cover",
   },

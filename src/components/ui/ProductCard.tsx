@@ -1,18 +1,18 @@
 import React from "react";
-import { View, Image, TouchableOpacity, StyleSheet, Dimensions, ViewStyle, ActivityIndicator } from "react-native";
+import { View, Image, TouchableOpacity, StyleSheet, ViewStyle, ActivityIndicator, NativeSyntheticEvent, NativeTouchEvent } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { HomeStackParamList } from "../../../App";
 import { isValidImageUri } from "../../utils/imageUtils";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { useResponsive } from "../../hooks/useResponsive";
 import { useAddToCart } from "../../hooks/useAddToCart";
 import { useModal } from "../../hooks/useModal";
 import CustomModal from "./CustomModal";
-
-const { width } = Dimensions.get("window");
-const CARD_WIDTH = width * 0.45;
 
 interface ProductCardProps {
   marketLogo: string;
@@ -28,6 +28,8 @@ interface ProductCardProps {
   showAddToCartButton?: boolean;
 }
 
+type ProductCardNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
+
 const ProductCard: React.FC<ProductCardProps> = ({
   marketLogo,
   marketName,
@@ -42,8 +44,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   showAddToCartButton = true,
 }) => {
   const paperTheme = useCustomTheme();
-  const navigation = useNavigation();
+  const { getWidth } = useResponsive();
+  const navigation = useNavigation<ProductCardNavigationProp>();
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
+  const CARD_WIDTH = getWidth(45);
   const { addToCart, isAdding } = useAddToCart({
     onSuccess: () => {
       showSuccess(
@@ -53,7 +57,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           text: 'Ver Carrinho',
           onPress: () => {
             hideModal();
-            navigation.navigate('Cart' as never);
+            navigation.navigate('Cart');
           },
           style: 'success',
         },
@@ -63,8 +67,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         }
       );
     },
-    onError: (error: any) => {
-      if (error?.response?.status) {
+    onError: (error: unknown) => {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status) {
         showWarning(
           'Aviso',
           'O produto foi adicionado ao carrinho localmente, mas houve um problema ao sincronizar com o servidor.',
@@ -86,7 +91,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     },
   });
 
-  const handleAddToCart = (e: any) => {
+  const handleAddToCart = (e: NativeSyntheticEvent<NativeTouchEvent>) => {
     e.stopPropagation();
     if (!productId || !marketId || isAdding) return;
 

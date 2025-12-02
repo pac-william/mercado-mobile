@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
   Platform,
   Keyboard,
-  Dimensions,
   KeyboardAvoidingView,
 } from 'react-native';
 import { Text } from 'react-native-paper';
@@ -17,6 +16,7 @@ import PriceFilter from './PriceFilter';
 import CategoryFilter from './CategoryFilter';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
+import { useResponsive } from '../../hooks/useResponsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FilterModalProps {
@@ -40,11 +40,11 @@ export default function FilterModal({
 }: FilterModalProps) {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
+  const { height: screenHeight } = useResponsive();
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
   const [categoryIds, setCategoryIds] = useState<string[]>(currentFilters.categoryIds || []);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const screenHeight = Dimensions.get('window').height;
 
   useEffect(() => {
     setMinPrice(currentFilters.minPrice);

@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 
 import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { getCategories } from '../../services/categoryService';
-import { Category } from '../../domain/categoryDomain';
+import { Category, CategoryPaginatedResponse } from '../../domain/categoryDomain';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
 import { useLoading } from '../../hooks/useLoading';
@@ -28,9 +28,8 @@ export default function CategoryFilter({
   const loadCategories = async () => {
     execute(async () => {
       try {
-        const response = await getCategories(1, 100);
-        const categoriesData = (response as any).categories || response.category || [];
-        setCategories(categoriesData);
+        const response: CategoryPaginatedResponse = await getCategories(1, 100);
+        setCategories(response.category || []);
       } catch (error) {
         setCategories([]);
       }
