@@ -11,6 +11,7 @@ import { AIStackParamList } from "../../navigation/types";
 import { Ionicons } from "@expo/vector-icons";
 import { formatDistance } from "../../utils/distance";
 import { useUserLocation } from "../../hooks/useUserLocation";
+import { useLoading } from "../../hooks/useLoading";
 import { Suggestion } from "../../types/suggestion";
 import ReceiptModal from "../../components/ui/ReceiptModal";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
@@ -35,8 +36,7 @@ export default function AISearch() {
   const [results, setResults] = useState<SuggestionResponse | null>(null);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const loadingRef = useRef(false);
+  const { loading, execute } = useLoading();
   const { markets, productsCache, loading: loadingMarkets, loadMarkets } = useMarketLoader();
   const { getUserLocation, locationLoading } = useUserLocation();
   const [receiptModalVisible, setReceiptModalVisible] = useState(false);
@@ -435,33 +435,27 @@ export default function AISearch() {
       return;
     }
 
-    if (loadingRef.current) {
-      return;
-    }
-
     if (!isAuthenticated) {
       setLoginModalVisible(true);
       return;
     }
 
-    loadingRef.current = true;
-    setLoading(true);
-    try {
-      const suggestionResponse = await getSuggestions(searchTerm.trim());
-      setResults(suggestionResponse);
-      setSuggestion(null);
-    } catch (error: any) {
-      const status = error?.response?.status;
-      if (status === 401 || status === 403) {
-        setLoginModalVisible(true);
+    execute(async () => {
+      try {
+        const suggestionResponse = await getSuggestions(searchTerm.trim());
+        setResults(suggestionResponse);
+        setSuggestion(null);
+      } catch (error: any) {
+        const status = error?.response?.status;
+        if (status === 401 || status === 403) {
+          setLoginModalVisible(true);
+        }
+        setResults(null);
+        setSuggestion(null);
+        throw error;
       }
-      setResults(null);
-      setSuggestion(null);
-    } finally {
-      loadingRef.current = false;
-      setLoading(false);
-    }
-  }, [searchQuery, isAuthenticated]);
+    });
+  }, [searchQuery, isAuthenticated, execute]);
 
   return (
     <View style={styles.container}>

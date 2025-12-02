@@ -13,6 +13,7 @@ import { Header } from "../../components/layout/header";
 import { ScreenHeader } from "../../components/layout/ScreenHeader";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import { isNetworkError } from "../../utils/networkUtils";
+import { useLoading } from "../../hooks/useLoading";
 
 type CategoryProductsRouteProp = RouteProp<HomeStackParamList, "MarketCategoryProducts">;
 
@@ -24,23 +25,20 @@ export default function MarketCategoryProductsScreen() {
   const insets = useSafeAreaInsets();
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const { loading, execute } = useLoading({ initialValue: true });
+  const { loading: loadingMore, execute: executeLoadMore } = useLoading();
+  const { loading: refreshing, execute: executeRefresh } = useLoading();
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [offline, setOffline] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchProducts = useCallback(
-    async (pageToLoad: number = 1, replace: boolean = false) => {
-      if (pageToLoad === 1 && !replace) {
-        setLoading(true);
-      }
+  const loadProducts = useCallback(async () => {
+    await execute(async () => {
       try {
         const response = await getProducts(
-          pageToLoad,
+          1,
           20,
           marketId,
           searchQuery.trim() ? searchQuery.trim() : undefined,
@@ -49,35 +47,92 @@ export default function MarketCategoryProductsScreen() {
           categoryId ? [categoryId] : undefined
         );
         const fetchedProducts = response.products ?? [];
-        setProducts((prev) => {
-          if (pageToLoad === 1) {
-            return fetchedProducts;
-          }
-          const existingIds = new Set(prev.map((item) => item.id));
-          const merged = fetchedProducts.filter((item) => !existingIds.has(item.id));
-          return [...prev, ...merged];
-        });
+        setProducts(fetchedProducts);
         setHasMore(fetchedProducts.length === 20);
-        setPage(pageToLoad);
+        setPage(1);
         setOffline(false);
       } catch (error: any) {
         if (isNetworkError(error)) {
           setOffline(true);
         }
-      } finally {
-        if (pageToLoad === 1) {
-          setLoading(false);
-        }
-        setLoadingMore(false);
-        setRefreshing(false);
+        console.error('Erro ao buscar produtos:', error);
+        throw error;
+      }
+    });
+  }, [categoryId, marketId, searchQuery, execute]);
+
+  const fetchProducts = useCallback(
+    async (pageToLoad: number = 1, replace: boolean = false) => {
+      if (pageToLoad === 1 && replace) {
+        await executeRefresh(async () => {
+          try {
+            const response = await getProducts(
+              pageToLoad,
+              20,
+              marketId,
+              searchQuery.trim() ? searchQuery.trim() : undefined,
+              undefined,
+              undefined,
+              categoryId ? [categoryId] : undefined
+            );
+            const fetchedProducts = response.products ?? [];
+            setProducts(fetchedProducts);
+            setHasMore(fetchedProducts.length === 20);
+            setPage(pageToLoad);
+            setOffline(false);
+          } catch (error: any) {
+            if (isNetworkError(error)) {
+              setOffline(true);
+            }
+            console.error('Erro ao buscar produtos:', error);
+            throw error;
+          }
+        });
+      } else if (pageToLoad === 1) {
+        await loadProducts();
+      } else {
+        await executeLoadMore(async () => {
+          try {
+            const response = await getProducts(
+              pageToLoad,
+              20,
+              marketId,
+              searchQuery.trim() ? searchQuery.trim() : undefined,
+              undefined,
+              undefined,
+              categoryId ? [categoryId] : undefined
+            );
+            const fetchedProducts = response.products ?? [];
+            setProducts((prev) => {
+              const existingIds = new Set(prev.map((item) => item.id));
+              const merged = fetchedProducts.filter((item) => !existingIds.has(item.id));
+              return [...prev, ...merged];
+            });
+            setHasMore(fetchedProducts.length === 20);
+            setPage(pageToLoad);
+            setOffline(false);
+          } catch (error: any) {
+            if (isNetworkError(error)) {
+              setOffline(true);
+            }
+            console.error('Erro ao buscar produtos:', error);
+            throw error;
+          }
+        });
       }
     },
-    [categoryId, marketId, searchQuery]
+    [categoryId, marketId, searchQuery, executeLoadMore, executeRefresh, loadProducts]
   );
 
   useEffect(() => {
-    fetchProducts(1, true);
-  }, [fetchProducts]);
+    loadProducts();
+  }, [categoryId, marketId]);
+  
+  useEffect(() => {
+    if (searchQuery !== '') {
+      loadProducts();
+    }
+  }, [searchQuery]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -90,12 +145,10 @@ export default function MarketCategoryProductsScreen() {
     if (loading || loadingMore || !hasMore) {
       return;
     }
-    setLoadingMore(true);
     fetchProducts(page + 1);
   };
 
   const handleRefresh = () => {
-    setRefreshing(true);
     fetchProducts(1, true);
   };
 
@@ -206,18 +259,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center"
-  },
-  header: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.lg
-  },
-  categoryTitle: {
-    fontSize: FONT_SIZE.xxl,
-    fontWeight: "bold"
-  },
-  marketSubtitle: {
-    fontSize: FONT_SIZE.md,
-    marginTop: SPACING.xs
   },
   searchContainer: {
     paddingHorizontal: SPACING.lg,

@@ -26,6 +26,7 @@ import QuantitySelector from '../../components/ui/QuantitySelector';
 import { CartItem, useCart } from '../../contexts/CartContext';
 import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
+import { useLoading } from '../../hooks/useLoading';
 import { getCart, mapCartItemResponseToCartItem, removeCartItem, clearCart as clearCartAPI, updateCartItem } from '../../services/cartService';
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { formatCurrency } from '../../utils/format';
@@ -41,7 +42,7 @@ const CartScreen: React.FC = () => {
   const { isAuthenticated, isLoading: sessionLoading } = useSession();
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
-  const [loading, setLoading] = useState(true);
+  const { loading, execute, stopLoading } = useLoading({ initialValue: true });
   
   const bottomPadding = getScreenBottomPadding(insets);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -55,7 +56,7 @@ const CartScreen: React.FC = () => {
 
   const loadCart = useCallback(async (forceReload = false) => {
     if (!isAuthenticated) {
-      setLoading(false);
+      stopLoading();
       isLoadingRef.current = false;
       return;
     }
@@ -73,108 +74,109 @@ const CartScreen: React.FC = () => {
       return;
     }
 
-    try {
-      isLoadingRef.current = true;
-      lastLoadTimeRef.current = now;
-      setLoading(true);
-      const carts = await getCart();
-      
-      const serverItemsMap = new Map<string, { cartItem: CartItem; quantity: number }>();
-      
-      for (const cart of carts) {
-        for (const item of cart.items ?? []) {
-          const cartItem = mapCartItemResponseToCartItem(item, cart.marketName);
-          const uniqueKey = `${String(cartItem.id)}_${cartItem.marketId}`;
+    isLoadingRef.current = true;
+    lastLoadTimeRef.current = now;
+
+    execute(async () => {
+      try {
+        const carts = await getCart();
+        
+        const serverItemsMap = new Map<string, { cartItem: CartItem; quantity: number }>();
+        
+        for (const cart of carts) {
+          for (const item of cart.items ?? []) {
+            const cartItem = mapCartItemResponseToCartItem(item, cart.marketName);
+            const uniqueKey = `${String(cartItem.id)}_${cartItem.marketId}`;
+            
+            if (!serverItemsMap.has(uniqueKey)) {
+              serverItemsMap.set(uniqueKey, {
+                cartItem,
+                quantity: item.quantity,
+              });
+            }
+          }
+        }
+        
+        const currentLocalItems = cartStateRef.current.items;
+        const localItemsMap = new Map<string, CartItem>();
+        
+        for (const item of currentLocalItems) {
+          const uniqueKey = `${String(item.id)}_${item.marketId}`;
+          localItemsMap.set(uniqueKey, item);
+        }
+        
+        const mergedItems: CartItem[] = [];
+        const processedKeys = new Set<string>();
+        
+        for (const [key, { cartItem, quantity }] of serverItemsMap) {
+          const localItem = localItemsMap.get(key);
           
-          if (!serverItemsMap.has(uniqueKey)) {
-            serverItemsMap.set(uniqueKey, {
-              cartItem,
-              quantity: item.quantity,
+          if (localItem) {
+            mergedItems.push({
+              ...localItem,
+              cartItemId: cartItem.cartItemId,
+              quantity: quantity,
+            });
+          } else {
+            mergedItems.push({
+              ...cartItem,
+              quantity: quantity,
             });
           }
-        }
-      }
-      
-      const currentLocalItems = cartStateRef.current.items;
-      const localItemsMap = new Map<string, CartItem>();
-      
-      for (const item of currentLocalItems) {
-        const uniqueKey = `${String(item.id)}_${item.marketId}`;
-        localItemsMap.set(uniqueKey, item);
-      }
-      
-      const mergedItems: CartItem[] = [];
-      const processedKeys = new Set<string>();
-      
-      for (const [key, { cartItem, quantity }] of serverItemsMap) {
-        const localItem = localItemsMap.get(key);
-        
-        if (localItem) {
-          mergedItems.push({
-            ...localItem,
-            cartItemId: cartItem.cartItemId,
-            quantity: quantity,
-          });
-        } else {
-          mergedItems.push({
-            ...cartItem,
-            quantity: quantity,
-          });
-        }
-        
-        processedKeys.add(key);
-      }
-      
-      for (const [key, localItem] of localItemsMap) {
-        if (!processedKeys.has(key) && !localItem.cartItemId) {
-          mergedItems.push(localItem);
-        }
-      }
-      
-      const needsUpdate = mergedItems.length !== localItemsMap.size ||
-        mergedItems.some(item => {
-          const key = `${String(item.id)}_${item.marketId}`;
-          const current = localItemsMap.get(key);
-          return !current || 
-            current.quantity !== item.quantity || 
-            current.cartItemId !== item.cartItemId;
-        });
-      
-      if (needsUpdate) {
-        clearCart();
-        
-        for (const item of mergedItems) {
-          addItem({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            image: item.image,
-            marketName: item.marketName,
-            marketId: item.marketId,
-            cartItemId: item.cartItemId,
-          });
           
-          if (item.quantity !== 1) {
-            updateQuantity(item.id, item.quantity);
+          processedKeys.add(key);
+        }
+        
+        for (const [key, localItem] of localItemsMap) {
+          if (!processedKeys.has(key) && !localItem.cartItemId) {
+            mergedItems.push(localItem);
           }
         }
+        
+        const needsUpdate = mergedItems.length !== localItemsMap.size ||
+          mergedItems.some(item => {
+            const key = `${String(item.id)}_${item.marketId}`;
+            const current = localItemsMap.get(key);
+            return !current || 
+              current.quantity !== item.quantity || 
+              current.cartItemId !== item.cartItemId;
+          });
+        
+        if (needsUpdate) {
+          clearCart();
+          
+          for (const item of mergedItems) {
+            addItem({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              image: item.image,
+              marketName: item.marketName,
+              marketId: item.marketId,
+              cartItemId: item.cartItemId,
+            });
+            
+            if (item.quantity !== 1) {
+              updateQuantity(item.id, item.quantity);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar carrinho:', error);
+      } finally {
+        isLoadingRef.current = false;
+        setHasLoadedOnce(true);
       }
-    } catch (error) {
-      console.error('Erro ao carregar carrinho:', error);
-    } finally {
-      setLoading(false);
-      isLoadingRef.current = false;
-      setHasLoadedOnce(true);
-    }
-  }, [isAuthenticated, clearCart, addItem, updateQuantity]);
+    });
+  }, [isAuthenticated, clearCart, addItem, updateQuantity, execute, stopLoading]);
 
   useEffect(() => {
     if (!sessionLoading && isAuthenticated && !hasLoadedOnce) {
       loadCart();
     } else if (!sessionLoading && !isAuthenticated) {
-      setLoading(false);
+      stopLoading();
     }
-  }, [sessionLoading, isAuthenticated, hasLoadedOnce, loadCart]);
+  }, [sessionLoading, isAuthenticated, hasLoadedOnce, loadCart, stopLoading]);
 
   const loadCartRef = useRef(loadCart);
   

@@ -18,6 +18,7 @@ import { getUserSuggestions, getSuggestionById } from "../../services/suggestion
 import { Suggestion, SuggestionListItem } from "../../types/suggestion";
 import { formatDate, getRelativeTime } from "../../utils/dateUtils";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { useLoading } from "../../hooks/useLoading";
 
 type HistoryScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -25,42 +26,43 @@ export default function HistoryScreen() {
   const navigation = useNavigation<HistoryScreenNavigationProp>();
   const paperTheme = useCustomTheme();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { loading, execute } = useLoading({ initialValue: true });
+  const { loading: refreshing, execute: executeRefresh } = useLoading();
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadSuggestions = useCallback(async (pageNum: number = 1, reset: boolean = false) => {
-    try {
-      setError(null);
-      const response = await getUserSuggestions(pageNum, 10);
+    const executeFn = reset && pageNum === 1 ? execute : executeRefresh;
+    
+    executeFn(async () => {
+      try {
+        setError(null);
+        const response = await getUserSuggestions(pageNum, 10);
 
-      const suggestionPromises = response.suggestions.map((item: SuggestionListItem) =>
-        getSuggestionById(item.id).catch(() => null)
-      );
+        const suggestionPromises = response.suggestions.map((item: SuggestionListItem) =>
+          getSuggestionById(item.id).catch(() => null)
+        );
 
-      const fetchedSuggestions = await Promise.all(suggestionPromises);
-      const validSuggestions = fetchedSuggestions.filter(
-        (s): s is Suggestion => s !== null
-      );
+        const fetchedSuggestions = await Promise.all(suggestionPromises);
+        const validSuggestions = fetchedSuggestions.filter(
+          (s): s is Suggestion => s !== null
+        );
 
-      if (reset) {
-        setSuggestions(validSuggestions);
-      } else {
-        setSuggestions((prev) => [...prev, ...validSuggestions]);
+        if (reset) {
+          setSuggestions(validSuggestions);
+        } else {
+          setSuggestions((prev) => [...prev, ...validSuggestions]);
+        }
+
+        setHasMore(pageNum < response.meta.totalPages);
+        setPage(pageNum);
+      } catch (err: any) {
+        setError(err.message || "Erro ao carregar histórico");
+        console.error("Erro ao carregar histórico:", err);
       }
-
-      setHasMore(pageNum < response.meta.totalPages);
-      setPage(pageNum);
-    } catch (err: any) {
-      setError(err.message || "Erro ao carregar histórico");
-      console.error("Erro ao carregar histórico:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+    });
+  }, [execute, executeRefresh]);
 
   useFocusEffect(
     useCallback(() => {
@@ -69,7 +71,6 @@ export default function HistoryScreen() {
   );
 
   const handleRefresh = () => {
-    setRefreshing(true);
     loadSuggestions(1, true);
   };
 

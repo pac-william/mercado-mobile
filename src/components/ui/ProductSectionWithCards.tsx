@@ -10,6 +10,7 @@ import { getMarketById } from "../../services/marketService";
 import { SuggestionItem } from "../../types/suggestion";
 import { SPACING, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { useLoading } from "../../hooks/useLoading";
 
 interface ProductSectionWithCardsProps {
   title: string;
@@ -32,7 +33,7 @@ export default function ProductSectionWithCards({
 }: ProductSectionWithCardsProps) {
   const paperTheme = useCustomTheme();
   const [products, setProducts] = useState<ProductWithMarket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading, setLoading, execute } = useLoading({ initialValue: true });
 
   useEffect(() => {
     loadProducts();
@@ -44,12 +45,11 @@ export default function ProductSectionWithCards({
       return;
     }
 
-    try {
-      setLoading(true);
+    execute(async () => {
+      try {
+        const allProducts: Product[] = [];
 
-      const allProducts: Product[] = [];
-
-      for (const item of items) {
+        for (const item of items) {
         try {
           const response = await getProducts(1, 10, undefined, item.name, undefined, undefined, item.categoryId);
           if (response.products?.length > 0) {
@@ -58,48 +58,47 @@ export default function ProductSectionWithCards({
         } catch {
           continue;
         }
+        }
+
+        const uniqueProducts = allProducts.filter(
+          (product, index, self) =>
+            index === self.findIndex((p) => p.id === product.id)
+        );
+
+        const marketIds = [...new Set(uniqueProducts.map((p) => p.marketId))];
+        const marketsMap = new Map<string, { name: string; address: string; logo?: string }>();
+        const defaultMarket = { name: "Mercado", address: "", logo: "" };
+
+        await Promise.all(
+          marketIds.map(async (marketId) => {
+            try {
+              const market = await getMarketById(marketId);
+              marketsMap.set(marketId, {
+                name: market.name,
+                address: market.address || "",
+                logo: market.profilePicture || "",
+              });
+            } catch {
+              marketsMap.set(marketId, defaultMarket);
+            }
+          })
+        );
+
+        const productsWithMarket: ProductWithMarket[] = uniqueProducts.map((product) => {
+          const market = marketsMap.get(product.marketId) || defaultMarket;
+          return {
+            ...product,
+            marketName: market.name,
+            marketAddress: market.address,
+            marketLogo: market.logo,
+          };
+        });
+
+        setProducts(productsWithMarket);
+      } catch {
+        setProducts([]);
       }
-
-      const uniqueProducts = allProducts.filter(
-        (product, index, self) =>
-          index === self.findIndex((p) => p.id === product.id)
-      );
-
-      const marketIds = [...new Set(uniqueProducts.map((p) => p.marketId))];
-      const marketsMap = new Map<string, { name: string; address: string; logo?: string }>();
-      const defaultMarket = { name: "Mercado", address: "", logo: "" };
-
-      await Promise.all(
-        marketIds.map(async (marketId) => {
-          try {
-            const market = await getMarketById(marketId);
-            marketsMap.set(marketId, {
-              name: market.name,
-              address: market.address || "",
-              logo: market.profilePicture || "",
-            });
-          } catch {
-            marketsMap.set(marketId, defaultMarket);
-          }
-        })
-      );
-
-      const productsWithMarket: ProductWithMarket[] = uniqueProducts.map((product) => {
-        const market = marketsMap.get(product.marketId) || defaultMarket;
-        return {
-          ...product,
-          marketName: market.name,
-          marketAddress: market.address,
-          marketLogo: market.logo,
-        };
-      });
-
-      setProducts(productsWithMarket);
-    } catch {
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   if (items.length === 0) return null;

@@ -21,6 +21,7 @@ import { formatDistance } from "../../utils/distance";
 import { formatCurrency } from "../../utils/format";
 import { useUserLocation } from "../../hooks/useUserLocation";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { useLoading } from "../../hooks/useLoading";
 
 type SuggestionDetailScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -30,26 +31,25 @@ export default function SuggestionDetailScreen() {
   const paperTheme = useCustomTheme();
   const { suggestionId } = route.params as { suggestionId: string };
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { loading, execute } = useLoading({ initialValue: true });
   const [error, setError] = useState<string | null>(null);
   const { markets, productsCache, loadMarkets } = useMarketLoader();
   const { getUserLocation } = useUserLocation();
 
   const loadData = useCallback(async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      const locationPromise = getUserLocation();
-      const data = await getSuggestionById(suggestionId);
-      setSuggestion(data);
-      const coords = await locationPromise;
-      await loadMarkets(data, coords);
-    } catch (err: any) {
-      setError(err.message || "Erro ao carregar sugestão");
-    } finally {
-      setLoading(false);
-    }
-  }, [suggestionId, getUserLocation, loadMarkets]);
+    execute(async () => {
+      try {
+        setError(null);
+        const locationPromise = getUserLocation();
+        const data = await getSuggestionById(suggestionId);
+        setSuggestion(data);
+        const coords = await locationPromise;
+        await loadMarkets(data, coords);
+      } catch (err: any) {
+        setError(err.message || "Erro ao carregar sugestão");
+      }
+    });
+  }, [suggestionId, getUserLocation, loadMarkets, execute]);
 
   useEffect(() => {
     loadData();

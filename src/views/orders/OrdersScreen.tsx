@@ -18,6 +18,7 @@ import { useSession } from "../../hooks/useSession";
 import { SettingsStackParamList } from "../../navigation/types";
 import { getOrders } from "../../services/orderService";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { useLoading } from "../../hooks/useLoading";
 
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'Orders'>;
@@ -30,8 +31,8 @@ export default function OrdersScreen() {
   const insets = useSafeAreaInsets();
   const { user: sessionUser } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const { loading, execute, stopLoading } = useLoading();
+  const { loading: refreshing, execute: executeRefresh } = useLoading();
   const [offline, setOffline] = useState(false);
   const isFetchingRef = useRef(false);
   const lastFetchRef = useRef<number>(0);
@@ -42,17 +43,17 @@ export default function OrdersScreen() {
       const localOrders = await getOrdersLocal(userId);
       if (localOrders.length > 0) {
         setOrders(localOrders);
-        setLoading(false);
+        stopLoading();
       }
       return localOrders;
     } catch (error) {
       return [];
     }
-  }, []);
+  }, [stopLoading]);
 
   const fetchOrders = useCallback(async (userId: string, forceRefresh: boolean = false) => {
     if (!userId) {
-      setLoading(false);
+      stopLoading();
       return;
     }
 
@@ -67,24 +68,26 @@ export default function OrdersScreen() {
 
     isFetchingRef.current = true;
 
-    try {
-      const response = await getOrders(1, 50, { userId });
-      setOrders(response.orders);
-      setOffline(false);
-      lastFetchRef.current = now;
-    } catch (error: any) {
-      console.warn("⚠️ Erro ao buscar pedidos:", error);
-      const localOrders = await loadLocalOrders(userId);
-      if (localOrders.length === 0) {
-        setOrders([]);
-        setOffline(true);
+    const executeFn = forceRefresh ? executeRefresh : execute;
+
+    executeFn(async () => {
+      try {
+        const response = await getOrders(1, 50, { userId });
+        setOrders(response.orders);
+        setOffline(false);
+        lastFetchRef.current = now;
+      } catch (error: any) {
+        console.warn("⚠️ Erro ao buscar pedidos:", error);
+        const localOrders = await loadLocalOrders(userId);
+        if (localOrders.length === 0) {
+          setOrders([]);
+          setOffline(true);
+        }
+      } finally {
+        isFetchingRef.current = false;
       }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-      isFetchingRef.current = false;
-    }
-  }, [loadLocalOrders]);
+    });
+  }, [loadLocalOrders, execute, executeRefresh, stopLoading]);
 
   useEffect(() => {
     const userId = sessionUser?.id || null;
@@ -95,8 +98,8 @@ export default function OrdersScreen() {
         lastProcessedUserIdRef.current = userId;
       }
       
-      setLoading(true);
-      loadLocalOrders(userId).then((localOrders) => {
+      execute(async () => {
+        const localOrders = await loadLocalOrders(userId);
         if (localOrders.length > 0) {
           fetchOrders(userId, false);
         } else {
@@ -104,12 +107,12 @@ export default function OrdersScreen() {
         }
       });
     } else {
-      setLoading(false);
+      stopLoading();
       setOrders([]);
       lastFetchRef.current = 0;
       lastProcessedUserIdRef.current = null;
     }
-  }, [sessionUser?.id, loadLocalOrders, fetchOrders]);
+  }, [sessionUser?.id, loadLocalOrders, fetchOrders, execute, stopLoading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -125,10 +128,8 @@ export default function OrdersScreen() {
 
   const handleRefresh = useCallback(async () => {
     if (!sessionUser?.id) {
-      setRefreshing(false);
       return;
     }
-    setRefreshing(true);
     lastFetchRef.current = 0;
     await fetchOrders(sessionUser.id, true);
   }, [sessionUser?.id, fetchOrders]);

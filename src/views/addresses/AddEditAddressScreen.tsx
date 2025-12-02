@@ -16,6 +16,7 @@ import {
   View
 } from 'react-native';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
+import { useLoading } from '../../hooks/useLoading';
 import { HomeStackParamList } from '../../../App';
 import { Header } from '../../components/layout/header';
 import { ScreenHeader } from '../../components/layout/ScreenHeader';
@@ -59,9 +60,9 @@ export default function AddEditAddressScreen() {
     zipCode: initialData?.zipCode || '',
     isFavorite: false,
   });
-  const [loading, setLoading] = useState(false);
-  const [loadingCEP, setLoadingCEP] = useState(false);
-  const [loadingLocation, setLoadingLocation] = useState(false);
+  const { loading, execute } = useLoading();
+  const { loading: loadingCEP, execute: executeLoadCEP } = useLoading();
+  const { loading: loadingLocation, execute: executeLoadLocation } = useLoading();
   const [cepError, setCepError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const cepTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -106,38 +107,38 @@ export default function AddEditAddressScreen() {
   const handleSave = async () => {
     if (!validateForm()) return;
 
-    setLoading(true);
-    try {
-      const addressData = prepareAddressData();
+    execute(async () => {
+      try {
+        const addressData = prepareAddressData();
 
-      if (isEditing && addressId) {
-        const updatedAddress = await updateAddress(addressId, addressData);
-        Alert.alert('Sucesso', 'Endereço atualizado com sucesso!');
-        navigation.goBack();
-      } else {
-        const newAddress = await createAddress(addressData);
-        Alert.alert('Sucesso', 'Endereço adicionado com sucesso!');
-        
-        if (onAddressAdded) {
-          onAddressAdded(newAddress);
+        if (isEditing && addressId) {
+          const updatedAddress = await updateAddress(addressId, addressData);
+          Alert.alert('Sucesso', 'Endereço atualizado com sucesso!');
+          navigation.goBack();
+        } else {
+          const newAddress = await createAddress(addressData);
+          Alert.alert('Sucesso', 'Endereço adicionado com sucesso!');
+          
+          if (onAddressAdded) {
+            onAddressAdded(newAddress);
+          }
+          navigation.goBack();
         }
-        navigation.goBack();
-      }
-    } catch (error: any) {
-      let errorMessage = 'Não foi possível salvar o endereço.';
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      }
+      } catch (error: any) {
+        let errorMessage = 'Não foi possível salvar o endereço.';
+        
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        } else if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        }
 
-      Alert.alert('Erro', errorMessage);
-    } finally {
-      setLoading(false);
-    }
+        Alert.alert('Erro', errorMessage);
+        throw error;
+      }
+    });
   };
 
   const validateForm = () => {
@@ -189,25 +190,25 @@ export default function AddEditAddressScreen() {
     
     if (cleanZipCode.length === 8) {
       cepTimeoutRef.current = setTimeout(async () => {
-        setLoadingCEP(true);
-        setCepError(null);
-        
-        try {
-          const cepData = await searchAddressByCEP(formatted);
+        executeLoadCEP(async () => {
+          setCepError(null);
           
-          setFormData(prev => ({
-            ...prev,
-            street: prev.street.trim() ? prev.street : (cepData.street || ''),
-            neighborhood: prev.neighborhood.trim() ? prev.neighborhood : (cepData.neighborhood || ''),
-            city: prev.city.trim() ? prev.city : (cepData.city || ''),
-            state: prev.state.trim() ? prev.state : (cepData.state || ''),
-            complement: (prev.complement && prev.complement.trim()) ? prev.complement : (cepData.complement || ''),
-          }));
-        } catch (error: any) {
-          setCepError(error.message || 'CEP não encontrado');
-        } finally {
-          setLoadingCEP(false);
-        }
+          try {
+            const cepData = await searchAddressByCEP(formatted);
+            
+            setFormData(prev => ({
+              ...prev,
+              street: prev.street.trim() ? prev.street : (cepData.street || ''),
+              neighborhood: prev.neighborhood.trim() ? prev.neighborhood : (cepData.neighborhood || ''),
+              city: prev.city.trim() ? prev.city : (cepData.city || ''),
+              state: prev.state.trim() ? prev.state : (cepData.state || ''),
+              complement: (prev.complement && prev.complement.trim()) ? prev.complement : (cepData.complement || ''),
+            }));
+          } catch (error: any) {
+            setCepError(error.message || 'CEP não encontrado');
+            throw error;
+          }
+        });
       }, 500);
     }
   };
@@ -250,55 +251,54 @@ export default function AddEditAddressScreen() {
   };
 
   const handleGetLocation = async () => {
-    setLoadingLocation(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permissão negada',
-          'Para usar sua localização, é necessário permitir o acesso à localização nas configurações do dispositivo.'
-        );
-        setLoadingLocation(false);
-        return;
+    executeLoadLocation(async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        
+        if (status !== 'granted') {
+          Alert.alert(
+            'Permissão negada',
+            'Para usar sua localização, é necessário permitir o acesso à localização nas configurações do dispositivo.'
+          );
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        const { latitude, longitude } = location.coords;
+
+        const addressData = await reverseGeocode(latitude, longitude);
+        console.log('addressData', addressData);
+        setFormData(prev => ({
+          ...prev,
+          street: prev.street.trim() || addressData.street || '',
+          number: prev.number.trim() || addressData.number || '',
+          neighborhood: prev.neighborhood.trim() || addressData.neighborhood || '',
+          city: prev.city.trim() || addressData.city || '',
+          state: prev.state.trim() || addressData.state || '',
+          zipCode: prev.zipCode.trim() || (addressData.zipCode ? formatCEP(addressData.zipCode) : ''),
+          complement: prev.complement.trim() || '',
+        }));
+      } catch (error: any) {
+        console.error('Erro ao buscar localização:', error);
+        let errorMessage = 'Não foi possível obter sua localização.';
+        
+        if (error.message?.includes('permission')) {
+          errorMessage = 'Permissão de localização negada. Por favor, permita o acesso à localização nas configurações.';
+        } else if (error.message?.includes('timeout')) {
+          errorMessage = 'Tempo esgotado ao buscar localização. Tente novamente.';
+        } else if (error.response?.status === 404) {
+          errorMessage = 'Endereço não encontrado para as coordenadas fornecidas.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        Alert.alert('Erro', errorMessage);
+        throw error;
       }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      const { latitude, longitude } = location.coords;
-
-      const addressData = await reverseGeocode(latitude, longitude);
-      console.log('addressData', addressData);
-      setFormData(prev => ({
-        ...prev,
-        street: prev.street.trim() || addressData.street || '',
-        number: prev.number.trim() || addressData.number || '',
-        neighborhood: prev.neighborhood.trim() || addressData.neighborhood || '',
-        city: prev.city.trim() || addressData.city || '',
-        state: prev.state.trim() || addressData.state || '',
-        zipCode: prev.zipCode.trim() || (addressData.zipCode ? formatCEP(addressData.zipCode) : ''),
-        complement: prev.complement.trim() || '',
-      }));
-    } catch (error: any) {
-      console.error('Erro ao buscar localização:', error);
-      let errorMessage = 'Não foi possível obter sua localização.';
-      
-      if (error.message?.includes('permission')) {
-        errorMessage = 'Permissão de localização negada. Por favor, permita o acesso à localização nas configurações.';
-      } else if (error.message?.includes('timeout')) {
-        errorMessage = 'Tempo esgotado ao buscar localização. Tente novamente.';
-      } else if (error.response?.status === 404) {
-        errorMessage = 'Endereço não encontrado para as coordenadas fornecidas.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      Alert.alert('Erro', errorMessage);
-    } finally {
-      setLoadingLocation(false);
-    }
+    });
   };
 
   return (

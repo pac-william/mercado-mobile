@@ -23,6 +23,7 @@ import { isValidImageUri } from "../../utils/imageUtils";
 import { normalizeString } from "../../utils/stringUtils";
 import { useUserLocation } from "../../hooks/useUserLocation";
 import { usePermissions } from "../../hooks/usePermissions";
+import { useLoading } from "../../hooks/useLoading";
 import { formatDistance } from "../../utils/distance";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { getScreenBottomPadding } from "../../utils/tabBarUtils";
@@ -45,10 +46,10 @@ export default function Home() {
   const paperTheme = useTheme();
   const insets = useSafeAreaInsets();
   const [markets, setMarkets] = useState<MarketWithProducts[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [loadingMarkets, setLoadingMarkets] = useState(false);
+  const { loading: initialLoading, execute: executeInitial } = useLoading({ initialValue: true });
+  const { loading: loadingMarkets, execute: executeLoadMarkets } = useLoading();
+  const { loading: refreshing, execute: executeRefresh } = useLoading();
   const [offline, setOffline] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<{
@@ -65,87 +66,78 @@ export default function Home() {
 
   const fetchMarketsWithProducts = useCallback(async () => {
     const isFirstLoad = !hasLoadedOnce.current;
+    const executeFn = isFirstLoad ? executeInitial : executeLoadMarkets;
     
-    try {
-      if (isFirstLoad) {
-        setInitialLoading(true);
-      } else {
-        setLoadingMarkets(true);
-      }
+    executeFn(async () => {
+      try {
+        let userLatitude: number | undefined;
+        let userLongitude: number | undefined;
 
-      let userLatitude: number | undefined;
-      let userLongitude: number | undefined;
+        if (sortByDistance && permissions.location.granted) {
+          const userLocation = await getUserLocation();
+          if (userLocation) {
+            userLatitude = userLocation.latitude;
+            userLongitude = userLocation.longitude;
+          }
+        }
 
-      if (sortByDistance && permissions.location.granted) {
-        const userLocation = await getUserLocation();
-        if (userLocation) {
-          userLatitude = userLocation.latitude;
-          userLongitude = userLocation.longitude;
+        const resMarkets = await getMarkets(
+          1,
+          20,
+          undefined,
+          userLatitude,
+          userLongitude
+        );
+        const marketsWithDetails = await Promise.all(
+          resMarkets.markets.map(async (marketFromList: Market) => {
+            try {
+              const marketDetails = await getMarketById(marketFromList.id);
+              const resProducts = await getProducts(
+                1,
+                20,
+                marketDetails.id,
+                undefined,
+                filters.minPrice,
+                filters.maxPrice,
+                filters.categoryIds
+              );
+              return {
+                ...marketDetails,
+                distance: marketFromList.distance,
+                latitude: marketFromList.latitude,
+                longitude: marketFromList.longitude,
+                products: resProducts.products,
+                productsPage: 1,
+                hasMoreProducts: resProducts.products.length === 20,
+                loadingMoreProducts: false
+              };
+            } catch (err: any) {
+              console.error(`Erro ao buscar dados completos do mercado ${marketFromList.name}:`, err);
+              if (isNetworkError(err)) {
+                setOffline(true);
+              }
+              return {
+                ...marketFromList,
+                products: [],
+                productsPage: 0,
+                hasMoreProducts: false,
+                loadingMoreProducts: false
+              };
+            }
+          })
+        );
+        
+        setMarkets(marketsWithDetails);
+        setOffline(false);
+        hasLoadedOnce.current = true;
+      } catch (error: any) {
+        console.error("Erro ao buscar mercados:", error);
+        if (isNetworkError(error)) {
+          setOffline(true);
         }
       }
-
-      const resMarkets = await getMarkets(
-        1,
-        20,
-        undefined,
-        userLatitude,
-        userLongitude
-      );
-      const marketsWithDetails = await Promise.all(
-        resMarkets.markets.map(async (marketFromList: Market) => {
-          try {
-            const marketDetails = await getMarketById(marketFromList.id);
-            const resProducts = await getProducts(
-              1,
-              20,
-              marketDetails.id,
-              undefined,
-              filters.minPrice,
-              filters.maxPrice,
-              filters.categoryIds
-            );
-            return {
-              ...marketDetails,
-              distance: marketFromList.distance,
-              latitude: marketFromList.latitude,
-              longitude: marketFromList.longitude,
-              products: resProducts.products,
-              productsPage: 1,
-              hasMoreProducts: resProducts.products.length === 20,
-              loadingMoreProducts: false
-            };
-          } catch (err: any) {
-            console.error(`Erro ao buscar dados completos do mercado ${marketFromList.name}:`, err);
-            if (isNetworkError(err)) {
-              setOffline(true);
-            }
-            return {
-              ...marketFromList,
-              products: [],
-              productsPage: 0,
-              hasMoreProducts: false,
-              loadingMoreProducts: false
-            };
-          }
-        })
-      );
-      
-      setMarkets(marketsWithDetails);
-      setOffline(false);
-      hasLoadedOnce.current = true;
-    } catch (error: any) {
-      console.error("Erro ao buscar mercados:", error);
-      if (isNetworkError(error)) {
-        setOffline(true);
-      }
-    } finally {
-      if (isFirstLoad) {
-        setInitialLoading(false);
-      } else {
-        setLoadingMarkets(false);
-      }
-    }
-  }, [filters, sortByDistance, permissions.location.granted, getUserLocation]);
+    });
+  }, [filters, sortByDistance, permissions.location.granted, getUserLocation, executeInitial, executeLoadMarkets, executeRefresh]);
 
   useEffect(() => {
     fetchMarketsWithProducts();
@@ -166,9 +158,9 @@ export default function Home() {
   };
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchMarketsWithProducts();
-    setRefreshing(false);
+    executeRefresh(async () => {
+      await fetchMarketsWithProducts();
+    });
   };
 
   const handleApplyFilters = (newFilters: { minPrice?: number; maxPrice?: number; categoryIds?: string[] }) => {

@@ -18,7 +18,19 @@ export type HomeStackParamList = {
   };
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
+  AddAddress: { 
+    onAddressAdded?: (address: any) => void;
+    initialData?: {
+      name?: string;
+      street?: string;
+      number?: string;
+      complement?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+    };
+  } | undefined;
   EditAddress: { addressId: string };
   History: undefined;
   Notifications: undefined;
@@ -41,7 +53,19 @@ export type SearchStackParamList = {
   };
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
+  AddAddress: { 
+    onAddressAdded?: (address: any) => void;
+    initialData?: {
+      name?: string;
+      street?: string;
+      number?: string;
+      complement?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+    };
+  } | undefined;
   EditAddress: { addressId: string };
   History: undefined;
   Notifications: undefined;
@@ -58,7 +82,19 @@ export type SettingsStackParamList = {
   PaymentPix: { marketId?: string; items?: CartItem[]; addressId?: string; total?: number };
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
+  AddAddress: { 
+    onAddressAdded?: (address: any) => void;
+    initialData?: {
+      name?: string;
+      street?: string;
+      number?: string;
+      complement?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+    };
+  } | undefined;
   EditAddress: { addressId: string };
   Orders: undefined;
   OrderDetail: { orderId: string };
@@ -92,7 +128,19 @@ export type AIStackParamList = {
   };
   EditProfile: undefined;
   AddressesMain: undefined;
-  AddAddress: { onAddressAdded?: (address: any) => void } | undefined;
+  AddAddress: { 
+    onAddressAdded?: (address: any) => void;
+    initialData?: {
+      name?: string;
+      street?: string;
+      number?: string;
+      complement?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+    };
+  } | undefined;
   EditAddress: { addressId: string };
   History: undefined;
   Notifications: undefined;

@@ -33,6 +33,7 @@ import { getScreenBottomPadding } from '../../utils/tabBarUtils';
 import Card from '../../components/ui/Card';
 import PaymentCardModal from '../../components/ui/PaymentCardModal';
 import PaymentPixModal from '../../components/ui/PaymentPixModal';
+import { useLoading } from '../../hooks/useLoading';
 
 type CheckoutScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 type CheckoutScreenRouteProp = RouteProp<HomeStackParamList, 'Checkout'>;
@@ -59,8 +60,8 @@ export default function CheckoutScreen() {
   const [selectedPaymentContext, setSelectedPaymentContext] = useState<'delivery' | 'app' | ''>('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [changeAmount, setChangeAmount] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [creatingOrder, setCreatingOrder] = useState(false);
+  const { loading, execute, stopLoading } = useLoading({ initialValue: true });
+  const { loading: creatingOrder, execute: executeCreateOrder } = useLoading();
   const [showCardModal, setShowCardModal] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
 
@@ -92,42 +93,41 @@ export default function CheckoutScreen() {
   }, [route.params, checkoutItems]);
 
   const loadAddresses = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await getUserAddresses(1, 100);
-      const addressesList = (response.addresses || [])
-        .filter(addr => addr.isActive)
-        .map(addr => ({
-          ...addr,
-          complement: addr.complement ?? undefined
-        }));
-      setAddresses(addressesList);
-      
-      if (addressesList.length > 0) {
-        setSelectedAddress(prev => {
-          if (prev && addressesList.find(addr => addr.id === prev.id)) {
-            return prev;
-          }
-          const favorite = addressesList.find(addr => addr.isFavorite);
-          return favorite || addressesList[0];
-        });
-      } else {
-        setSelectedAddress(null);
+    execute(async () => {
+      try {
+        const response = await getUserAddresses(1, 100);
+        const addressesList = (response.addresses || [])
+          .filter(addr => addr.isActive)
+          .map(addr => ({
+            ...addr,
+            complement: addr.complement ?? undefined
+          }));
+        setAddresses(addressesList);
+        
+        if (addressesList.length > 0) {
+          setSelectedAddress(prev => {
+            if (prev && addressesList.find(addr => addr.id === prev.id)) {
+              return prev;
+            }
+            const favorite = addressesList.find(addr => addr.isFavorite);
+            return favorite || addressesList[0];
+          });
+        } else {
+          setSelectedAddress(null);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar endereços:', error);
       }
-    } catch (error) {
-      console.error('Erro ao carregar endereços:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    });
+  }, [execute]);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadAddresses();
     } else {
-      setLoading(false);
+      stopLoading();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadAddresses, stopLoading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -196,47 +196,47 @@ export default function CheckoutScreen() {
   };
 
   const handleFinalizeOrderWithPayment = async (paymentMethod: string) => {
-    try {
-      setCreatingOrder(true);
-      const orderData = createOrderData(paymentMethod);
-      const newOrder = await createOrder(orderData);
+    executeCreateOrder(async () => {
+      try {
+        const orderData = createOrderData(paymentMethod);
+        const newOrder = await createOrder(orderData);
 
-      checkoutItems.forEach(item => {
-        removeItem(item.id);
-      });
+        checkoutItems.forEach(item => {
+          removeItem(item.id);
+        });
 
-      showSuccess(
-        'Compra Finalizada! 🎉',
-        `Pedido #${newOrder.id} criado com sucesso!\n\nTotal: ${formatCurrency(checkoutTotal)}`,
-        {
-          text: 'Ver Pedidos',
-          onPress: () => {
-            hideModal();
-            navigation.getParent()?.navigate('SettingsStack', { screen: 'Orders' } as any);
+        showSuccess(
+          'Compra Finalizada! 🎉',
+          `Pedido #${newOrder.id} criado com sucesso!\n\nTotal: ${formatCurrency(checkoutTotal)}`,
+          {
+            text: 'Ver Pedidos',
+            onPress: () => {
+              hideModal();
+              navigation.getParent()?.navigate('SettingsStack', { screen: 'Orders' } as any);
+            },
+            style: 'success',
           },
-          style: 'success',
-        },
-        {
-          text: 'Continuar Comprando',
-          onPress: () => {
-            hideModal();
-            navigation.goBack();
-          },
-        }
-      );
-    } catch (error: any) {
-      console.error('Erro ao criar pedido:', error);
-      showWarning(
-        'Erro ao finalizar',
-        'Não foi possível processar seu pedido. Tente novamente.',
-        {
-          text: 'OK',
-          onPress: hideModal,
-        }
-      );
-    } finally {
-      setCreatingOrder(false);
-    }
+          {
+            text: 'Continuar Comprando',
+            onPress: () => {
+              hideModal();
+              navigation.goBack();
+            },
+          }
+        );
+      } catch (error: any) {
+        console.error('Erro ao criar pedido:', error);
+        showWarning(
+          'Erro ao finalizar',
+          'Não foi possível processar seu pedido. Tente novamente.',
+          {
+            text: 'OK',
+            onPress: hideModal,
+          }
+        );
+        throw error;
+      }
+    });
   };
 
   const handleFinalizeOrder = async () => {

@@ -17,6 +17,7 @@ import { getProductById } from "../../services/productService";
 import { Order, OrderItem } from "../../domain/orderDomain";
 import { SettingsStackParamList } from "../../navigation/types";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { useLoading } from "../../hooks/useLoading";
 
 type OrderDetailScreenNavigationProp = NativeStackNavigationProp<SettingsStackParamList, 'OrderDetail'>;
 
@@ -35,54 +36,53 @@ export default function OrderDetailScreen() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItemWithProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading, execute } = useLoading({ initialValue: true });
   const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        
-        const orderData = await getOrderById(orderId);
-        setOrder(orderData);
+      if (!orderId) return;
+      
+      execute(async () => {
+        try {
+          setError(false);
+          
+          const orderData = await getOrderById(orderId);
+          setOrder(orderData);
 
-        if (orderData.items && orderData.items.length > 0) {
-          const itemsWithProducts = await Promise.all(
-            orderData.items.map(async (item) => {
-              try {
-                const product = await getProductById(item.productId);
-                return {
-                  ...item,
-                  productName: product.name,
-                  productImage: product.image,
-                };
-              } catch (error) {
-                console.warn(`Erro ao buscar produto ${item.productId}:`, error);
-                return {
-                  ...item,
-                  productName: `Produto #${item.productId.slice(0, 8)}`,
-                  productImage: undefined,
-                };
-              }
-            })
-          );
-          setOrderItems(itemsWithProducts);
-        } else {
-          setOrderItems([]);
+          if (orderData.items && orderData.items.length > 0) {
+            const itemsWithProducts = await Promise.all(
+              orderData.items.map(async (item) => {
+                try {
+                  const product = await getProductById(item.productId);
+                  return {
+                    ...item,
+                    productName: product.name,
+                    productImage: product.image,
+                  };
+                } catch (error) {
+                  console.warn(`Erro ao buscar produto ${item.productId}:`, error);
+                  return {
+                    ...item,
+                    productName: `Produto #${item.productId.slice(0, 8)}`,
+                    productImage: undefined,
+                  };
+                }
+              })
+            );
+            setOrderItems(itemsWithProducts);
+          } else {
+            setOrderItems([]);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar detalhes do pedido:", error);
+          setError(true);
         }
-      } catch (error) {
-        console.error("Erro ao buscar detalhes do pedido:", error);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+      });
     };
 
-    if (orderId) {
-      fetchOrderDetails();
-    }
-  }, [orderId]);
+    fetchOrderDetails();
+  }, [orderId, execute]);
 
   if (loading) {
     return <LoadingScreen message="Carregando detalhes do pedido..." />;

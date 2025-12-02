@@ -4,11 +4,12 @@ import { Product, getProducts } from "../services/productService";
 import { getMarkets } from "../services/marketService";
 import { MarketInfo } from "../types/market";
 import { calculateDistanceInKm } from "../utils/distance";
+import { useLoading } from "./useLoading";
 
 export const useMarketLoader = () => {
   const [markets, setMarkets] = useState<MarketInfo[]>([]);
   const [productsCache, setProductsCache] = useState<Map<string, Product[]>>(new Map());
-  const [loading, setLoading] = useState(false);
+  const { loading, execute } = useLoading();
 
   const loadMarkets = useCallback(async (suggestionData: Suggestion, userLocation?: { latitude: number; longitude: number } | null) => {
     if (suggestionData.data.items.length === 0) {
@@ -16,8 +17,8 @@ export const useMarketLoader = () => {
       return;
     }
 
-    setLoading(true);
-    try {
+    return execute(async () => {
+      try {
       const marketsResponse = await getMarkets(
         1,
         100,
@@ -84,14 +85,13 @@ export const useMarketLoader = () => {
         })
       );
 
-      setProductsCache(newProductsCache);
-      setMarkets(marketsInfo.filter((m): m is MarketInfo => m !== null));
-    } catch {
-      setMarkets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setProductsCache(newProductsCache);
+        setMarkets(marketsInfo.filter((m): m is MarketInfo => m !== null));
+      } catch {
+        setMarkets([]);
+      }
+    });
+  }, [execute]);
 
   return {
     markets,

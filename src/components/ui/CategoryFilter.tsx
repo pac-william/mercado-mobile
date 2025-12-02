@@ -6,6 +6,7 @@ import { getCategories } from '../../services/categoryService';
 import { Category } from '../../domain/categoryDomain';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
+import { useLoading } from '../../hooks/useLoading';
 
 interface CategoryFilterProps {
   selectedCategoryIds: string[];
@@ -18,23 +19,22 @@ export default function CategoryFilter({
 }: CategoryFilterProps) {
   const paperTheme = useCustomTheme();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading, execute } = useLoading({ initialValue: true });
 
   useEffect(() => {
     loadCategories();
   }, []);
 
   const loadCategories = async () => {
-    try {
-      setLoading(true);
-      const response = await getCategories(1, 100);
-      const categoriesData = (response as any).categories || response.category || [];
-      setCategories(categoriesData);
-    } catch (error) {
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
+    execute(async () => {
+      try {
+        const response = await getCategories(1, 100);
+        const categoriesData = (response as any).categories || response.category || [];
+        setCategories(categoriesData);
+      } catch (error) {
+        setCategories([]);
+      }
+    });
   };
 
   const handleCategoryPress = (categoryId: string) => {

@@ -1,10 +1,11 @@
 import * as React from "react";
 import { View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Searchbar } from "react-native-paper";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import { getProducts } from "../../services/productService";
 import { getMarkets } from "../../services/marketService";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
+import { useLoading } from "../../hooks/useLoading";
 import { SPACING, BORDER_RADIUS, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
 export interface SearchResults {
@@ -52,27 +53,26 @@ const SearchItens: React.FC<SearchItensProps> = ({ onResult, placeholder = "Digi
     },
   }));
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
+  const { loading, execute } = useLoading();
 
   const handleSearch = async () => {
     if (!searchQuery.trim() || loading) return;
 
-    setLoading(true);
-    try {
-      const [productsResponse, marketsResponse] = await Promise.all([
-        getProducts(1, 20, undefined, searchQuery.trim()).catch(() => ({ products: [] })),
-        getMarkets(1, 20, searchQuery.trim()).catch(() => ({ markets: [] })),
-      ]);
+    execute(async () => {
+      try {
+        const [productsResponse, marketsResponse] = await Promise.all([
+          getProducts(1, 20, undefined, searchQuery.trim()).catch(() => ({ products: [] })),
+          getMarkets(1, 20, searchQuery.trim()).catch(() => ({ markets: [] })),
+        ]);
 
-      onResult({
-        products: productsResponse?.products || [],
-        markets: marketsResponse?.markets || [],
-      });
-    } catch (err: any) {
-      onResult({ products: [], markets: [] });
-    } finally {
-      setLoading(false);
-    }
+        onResult({
+          products: productsResponse?.products || [],
+          markets: marketsResponse?.markets || [],
+        });
+      } catch (err: any) {
+        onResult({ products: [], markets: [] });
+      }
+    });
   };
 
   return (

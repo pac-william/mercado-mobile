@@ -21,6 +21,7 @@ import { isNetworkError } from '../../utils/networkUtils';
 import { isValidImageUri } from '../../utils/imageUtils';
 import { normalizeString } from '../../utils/stringUtils';
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
+import { useLoading } from '../../hooks/useLoading';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -47,36 +48,35 @@ export default function MarketDetailsScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [loading, setLoading] = useState(true);
+  const { loading, execute } = useLoading({ initialValue: true });
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
     const fetchMarketData = async () => {
-      try {
-        setLoading(true);
-        const marketResponse = await getMarketById(marketId);
-        setMarket(marketResponse);
+      if (!marketId) return;
+      
+      execute(async () => {
+        try {
+          const marketResponse = await getMarketById(marketId);
+          setMarket(marketResponse);
 
-        const productsResponse = await getProducts(1, 100, marketId);
-        setProducts(productsResponse?.products ?? []);
+          const productsResponse = await getProducts(1, 100, marketId);
+          setProducts(productsResponse?.products ?? []);
 
-        const categoriesResponse = await getCategories(1, 100);
-        setCategories(categoriesResponse?.category ?? []);
-        setOffline(false);
-      } catch (error: any) {
-        console.error('Erro ao buscar dados do mercado:', error);
-        if (isNetworkError(error)) {
-          setOffline(true);
+          const categoriesResponse = await getCategories(1, 100);
+          setCategories(categoriesResponse?.category ?? []);
+          setOffline(false);
+        } catch (error: any) {
+          console.error('Erro ao buscar dados do mercado:', error);
+          if (isNetworkError(error)) {
+            setOffline(true);
+          }
         }
-      } finally {
-        setLoading(false);
-      }
+      });
     };
 
-    if (marketId) {
-      fetchMarketData();
-    }
-  }, [marketId]);
+    fetchMarketData();
+  }, [marketId, execute]);
 
   const filteredAndCategorizedProducts = useMemo(() => {
     if (products.length === 0) {

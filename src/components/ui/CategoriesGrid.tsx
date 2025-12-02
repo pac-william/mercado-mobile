@@ -8,6 +8,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeStackParamList } from "../../../App";
 import { SPACING } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { useLoading } from "../../hooks/useLoading";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -19,25 +20,24 @@ const cardWidth = (width - cardMargin * (numColumns + 1)) / numColumns;
 const CategoriesGrid = () => {
     const paperTheme = useCustomTheme();
     const [markets, setMarkets] = useState<Market[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { loading, execute } = useLoading({ initialValue: true });
 
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
     useEffect(() => {
         const fetchMarkets = async () => {
-            try {
-                setLoading(true);
-                const response = await getMarkets(1, 50); // Fetch up to 50 markets
-                setMarkets(response.markets);
-            } catch (error) {
-                console.error("Erro ao buscar mercados:", error);
-            } finally {
-                setLoading(false);
-            }
+            execute(async () => {
+                try {
+                    const response = await getMarkets(1, 50);
+                    setMarkets(response.markets);
+                } catch (error) {
+                    console.error("Erro ao buscar mercados:", error);
+                }
+            });
         };
 
         fetchMarkets();
-    }, []);
+    }, [execute]);
 
     if (loading) {
         return (

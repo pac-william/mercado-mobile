@@ -10,6 +10,7 @@ import { Header } from '../../components/layout/header';
 import { ScreenHeader } from '../../components/layout/ScreenHeader';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useSession } from '../../hooks/useSession';
+import { useLoading } from '../../hooks/useLoading';
 import { formatCEP } from '../../services/cepService';
 import { Address, deleteAddress, getUserAddresses } from '../../services/addressService';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
@@ -22,8 +23,8 @@ export default function AddressesScreen() {
   const { user, refreshSession } = useSession();
   const permissions = usePermissions();
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingLocation, setLoadingLocation] = useState(false);
+  const { loading: refreshing, execute: executeRefresh } = useLoading();
+  const { loading: loadingLocation, execute: executeLoadLocation } = useLoading();
 
   const loadAddresses = useCallback(async () => {
     try {
@@ -44,10 +45,10 @@ export default function AddressesScreen() {
 
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await refreshSession();
-    await loadAddresses();
-    setRefreshing(false);
+    executeRefresh(async () => {
+      await refreshSession();
+      await loadAddresses();
+    });
   };
 
   const handleAddAddress = () => {
@@ -72,47 +73,47 @@ export default function AddressesScreen() {
   };
 
   const getCurrentLocation = async () => {
-    setLoadingLocation(true);
-    try {
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (reverseGeocode && reverseGeocode.length > 0) {
-        const addressData = reverseGeocode[0];
-        
-        const street = addressData.street || addressData.name || '';
-        const neighborhood = addressData.district || addressData.subregion || '';
-        const city = addressData.city || '';
-        const state = addressData.region || '';
-        const rawZipCode = addressData.postalCode || '';
-        const zipCode = rawZipCode ? formatCEP(rawZipCode) : '';
-        
-        navigation.navigate('AddAddress', {
-          initialData: {
-            street,
-            neighborhood,
-            city,
-            state,
-            zipCode,
-            number: '',
-            complement: '',
-            name: 'Minha Localização',
-          },
+    executeLoadLocation(async () => {
+      try {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
         });
-      } else {
-        Alert.alert('Erro', 'Não foi possível obter o endereço da sua localização.');
+
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+
+        if (reverseGeocode && reverseGeocode.length > 0) {
+          const addressData = reverseGeocode[0];
+          
+          const street = addressData.street || addressData.name || '';
+          const neighborhood = addressData.district || addressData.subregion || '';
+          const city = addressData.city || '';
+          const state = addressData.region || '';
+          const rawZipCode = addressData.postalCode || '';
+          const zipCode = rawZipCode ? formatCEP(rawZipCode) : '';
+          
+          navigation.navigate('AddAddress', {
+            initialData: {
+              street,
+              neighborhood,
+              city,
+              state,
+              zipCode,
+              number: '',
+              complement: '',
+              name: 'Minha Localização',
+            },
+          });
+        } else {
+          Alert.alert('Erro', 'Não foi possível obter o endereço da sua localização.');
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Não foi possível obter sua localização. Verifique se o GPS está ativado.');
+        throw error;
       }
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível obter sua localização. Verifique se o GPS está ativado.');
-    } finally {
-      setLoadingLocation(false);
-    }
+    });
   };
 
   const handleEditAddress = (addressId: string) => {

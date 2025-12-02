@@ -5,6 +5,7 @@ import { getActiveCampaignsForCarousel, Campaign } from "../../services/campaign
 import { getMarketById } from "../../services/marketService";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
+import { useLoading } from "../../hooks/useLoading";
 
 const { width } = Dimensions.get("window");
 
@@ -12,42 +13,42 @@ const HeroBanner = () => {
   const { colors } = useCustomTheme();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [marketNames, setMarketNames] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const { loading, execute } = useLoading({ initialValue: true });
 
   useEffect(() => {
     const fetchCampaigns = async () => {
-      try {
-        const activeCampaigns = await getActiveCampaignsForCarousel();
+      execute(async () => {
+        try {
+          const activeCampaigns = await getActiveCampaignsForCarousel();
 
-        const sortedCampaigns = activeCampaigns.sort((a, b) => a.slot - b.slot);
-        setCampaigns(sortedCampaigns);
+          const sortedCampaigns = activeCampaigns.sort((a, b) => a.slot - b.slot);
+          setCampaigns(sortedCampaigns);
 
-        const uniqueMarketIds = [...new Set(sortedCampaigns.map(c => c.marketId))];
-        const marketNamesMap: Record<string, string> = {};
-        
-        await Promise.all(
-          uniqueMarketIds.map(async (marketId) => {
-            try {
-              const market = await getMarketById(marketId);
-              marketNamesMap[marketId] = market.name;
-            } catch (error) {
-              console.error(`Erro ao buscar mercado ${marketId}:`, error);
-              marketNamesMap[marketId] = "Mercado";
-            }
-          })
-        );
-        
-        setMarketNames(marketNamesMap);
-      } catch (error) {
-        console.error("Erro ao buscar campanhas:", error);
-        setCampaigns([]);
-      } finally {
-        setLoading(false);
-      }
+          const uniqueMarketIds = [...new Set(sortedCampaigns.map(c => c.marketId))];
+          const marketNamesMap: Record<string, string> = {};
+          
+          await Promise.all(
+            uniqueMarketIds.map(async (marketId) => {
+              try {
+                const market = await getMarketById(marketId);
+                marketNamesMap[marketId] = market.name;
+              } catch (error) {
+                console.error(`Erro ao buscar mercado ${marketId}:`, error);
+                marketNamesMap[marketId] = "Mercado";
+              }
+            })
+          );
+          
+          setMarketNames(marketNamesMap);
+        } catch (error) {
+          console.error("Erro ao buscar campanhas:", error);
+          setCampaigns([]);
+        }
+      });
     };
 
     fetchCampaigns();
-  }, []);
+  }, [execute]);
 
   if (loading || campaigns.length === 0) {
     return null;
