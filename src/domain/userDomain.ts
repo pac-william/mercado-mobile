@@ -15,8 +15,8 @@ export class User {
         public refreshToken?: string | null,
         public role: string = 'CUSTOMER',
         public marketId?: string | null,
-        public createdAt: Date = new Date(),
-        public updatedAt: Date = new Date(),
+        public createdAt?: string,
+        public updatedAt?: string,
     ) { }
 }
 

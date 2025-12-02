@@ -1,6 +1,20 @@
 import * as SQLite from 'expo-sqlite';
-import { Order } from '../orderDomain'; 
+import { Order } from '../orderDomain';
+
 let db: SQLite.SQLiteDatabase | null = null;
+
+interface OrderRow {
+  id: string;
+  userId: string;
+  marketId: string;
+  delivererId?: string | null;
+  totalPrice: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  rawData?: string | null;
+  syncedAt?: string;
+}
 
 export const initDB = async () => {
   if (!db) db = await SQLite.openDatabaseAsync('app.db');
@@ -28,7 +42,6 @@ export const saveOrder = async (order: Order) => {
   if (!db) db = await SQLite.openDatabaseAsync('app.db');
 
   try {
-    // Salva o objeto completo como JSON para preservar todos os campos
     const rawData = JSON.stringify(order);
     const syncedAt = new Date().toISOString();
 
@@ -50,9 +63,8 @@ export const saveOrder = async (order: Order) => {
         syncedAt,
       ]
     );
-    
-  } catch (error) {
-    console.error('❌ Erro ao salvar pedido localmente:', error);
+  } catch (error: unknown) {
+    console.error('Erro ao salvar pedido localmente:', error);
     throw error;
   }
 };
@@ -61,22 +73,20 @@ export const getOrders = async (userId: string): Promise<Order[]> => {
   if (!db) db = await SQLite.openDatabaseAsync('app.db');
 
   try {
-    const result = await db.getAllAsync(
+    const result = await db.getAllAsync<OrderRow>(
       `SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC`,
       [userId]
     );
 
-    // Tenta usar rawData primeiro (dados completos), senão reconstrói
-    return result.map(row => {
+    return result.map((row) => {
       if (row.rawData) {
         try {
           return JSON.parse(row.rawData) as Order;
-        } catch (e) {
+        } catch (e: unknown) {
           console.warn('Erro ao parsear rawData, usando dados do banco:', e);
         }
       }
-      
-      // Fallback: reconstrói Order dos campos do banco
+
       return {
         id: row.id,
         userId: row.userId,
@@ -88,8 +98,8 @@ export const getOrders = async (userId: string): Promise<Order[]> => {
         updatedAt: row.updatedAt || row.createdAt,
       } as Order;
     });
-  } catch (error) {
-    console.error('❌ Erro ao buscar pedidos locais:', error);
+  } catch (error: unknown) {
+    console.error('Erro ao buscar pedidos locais:', error);
     return [];
   }
 };
@@ -118,7 +128,7 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
     if (result.rawData) {
       try {
         return JSON.parse(result.rawData) as Order;
-      } catch (e) {
+      } catch (e: unknown) {
         console.warn('Erro ao parsear rawData:', e);
       }
     }
@@ -133,8 +143,8 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt || result.createdAt,
     } as Order;
-  } catch (error) {
-    console.error('❌ Erro ao buscar pedido por ID:', error);
+  } catch (error: unknown) {
+    console.error('Erro ao buscar pedido por ID:', error);
     return null;
   }
 };

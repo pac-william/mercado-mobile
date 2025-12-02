@@ -1,14 +1,15 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect, useCallback, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface CartItem {
-  id: string; // productId
+  id: string;
   name: string;
   price: number;
   image: string;
   marketName: string;
   quantity: number;
   marketId: string;
-  cartItemId?: string; // ID do item no carrinho da API (opcional)
+  cartItemId?: string;
 }
 
 interface CartState {
@@ -21,12 +22,21 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: Omit<CartItem, 'quantity'> & { initialQuantity?: number } }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'CLEAR_CART' };
+  | { type: 'CLEAR_CART' }
+  | { type: 'LOAD_CART'; payload: CartState };
 
 export const initialState: CartState = {
   items: [],
   total: 0,
   itemCount: 0,
+};
+
+const CART_STORAGE_KEY = '@cart_items';
+
+const calculateCartTotals = (items: CartItem[]): { total: number; itemCount: number } => {
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  return { total, itemCount };
 };
 
 export const cartReducer = (state: CartState, action: CartAction): CartState => {
@@ -36,8 +46,10 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
       const existingItem = state.items.find(item => String(item.id) === payloadId);
       const quantityToAdd = action.payload.initialQuantity || 1;
       
+      let updatedItems: CartItem[];
+      
       if (existingItem) {
-        const updatedItems = state.items.map(item =>
+        updatedItems = state.items.map(item =>
           String(item.id) === payloadId
             ? { 
                 ...item, 
@@ -46,35 +58,25 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
               }
             : item
         );
-        
-        const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
-        
-        return {
-          items: updatedItems,
-          total,
-          itemCount,
-        };
       } else {
         const { initialQuantity, ...itemData } = action.payload;
         const newItem = { ...itemData, quantity: quantityToAdd, id: payloadId };
-        const updatedItems = [...state.items, newItem];
-        const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
-        
-        return {
-          items: updatedItems,
-          total,
-          itemCount,
-        };
+        updatedItems = [...state.items, newItem];
       }
+      
+      const { total, itemCount } = calculateCartTotals(updatedItems);
+      
+      return {
+        items: updatedItems,
+        total,
+        itemCount,
+      };
     }
     
     case 'REMOVE_ITEM': {
       const payloadId = String(action.payload);
       const updatedItems = state.items.filter(item => String(item.id) !== payloadId);
-      const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+      const { total, itemCount } = calculateCartTotals(updatedItems);
       
       return {
         items: updatedItems,
@@ -85,14 +87,15 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
     
     case 'UPDATE_QUANTITY': {
       const payloadId = String(action.payload.id);
-      const updatedItems = state.items.map(item =>
-        String(item.id) === payloadId
-          ? { ...item, quantity: action.payload.quantity }
-          : item
-      ).filter(item => item.quantity > 0);
+      const updatedItems = state.items
+        .map(item =>
+          String(item.id) === payloadId
+            ? { ...item, quantity: action.payload.quantity }
+            : item
+        )
+        .filter(item => item.quantity > 0);
       
-      const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+      const { total, itemCount } = calculateCartTotals(updatedItems);
       
       return {
         items: updatedItems,
@@ -103,6 +106,9 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
     
     case 'CLEAR_CART':
       return initialState;
+    
+    case 'LOAD_CART':
+      return action.payload;
     
     default:
       return state;
@@ -121,22 +127,70 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const isInitialLoadRef = useRef(true);
 
-  const addItem = (item: Omit<CartItem, 'quantity'>) => {
+  const saveCartToStorage = useCallback(async (cartState: CartState) => {
+    try {
+      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartState));
+    } catch (error) {
+      console.error('Erro ao salvar carrinho:', error);
+    }
+  }, []);
+
+  const loadCartFromStorage = useCallback(async () => {
+    try {
+      const cartData = await AsyncStorage.getItem(CART_STORAGE_KEY);
+      if (cartData) {
+        const parsedCart = JSON.parse(cartData) as CartState;
+        if (parsedCart.items && Array.isArray(parsedCart.items)) {
+          const { total, itemCount } = calculateCartTotals(parsedCart.items);
+          dispatch({
+            type: 'LOAD_CART',
+            payload: {
+              items: parsedCart.items,
+              total,
+              itemCount,
+            },
+          });
+        }
+      }
+      isInitialLoadRef.current = false;
+    } catch (error) {
+      console.error('Erro ao carregar carrinho:', error);
+      isInitialLoadRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCartFromStorage();
+  }, [loadCartFromStorage]);
+
+  useEffect(() => {
+    if (!isInitialLoadRef.current) {
+      saveCartToStorage(state);
+    }
+  }, [state, saveCartToStorage]);
+
+  const addItem = useCallback((item: Omit<CartItem, 'quantity'> & { initialQuantity?: number }) => {
     dispatch({ type: 'ADD_ITEM', payload: item });
-  };
+  }, []);
 
-  const removeItem = (id: string) => {
+  const removeItem = useCallback((id: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: id });
-  };
+  }, []);
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = useCallback((id: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
-  };
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(async () => {
     dispatch({ type: 'CLEAR_CART' });
-  };
+    try {
+      await AsyncStorage.removeItem(CART_STORAGE_KEY);
+    } catch (error) {
+      console.error('Erro ao limpar carrinho do storage:', error);
+    }
+  }, []);
 
   return (
     <CartContext.Provider value={{ state, addItem, removeItem, updateQuantity, clearCart }}>

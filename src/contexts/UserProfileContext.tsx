@@ -37,7 +37,7 @@ const removeStorageKeys = async (keys: string[]) => {
   try {
     await AsyncStorage.multiRemove(keys);
   } catch {
-    // ignora falhas de limpeza
+
   }
 };
 
@@ -154,7 +154,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
             await api.post('/users', payload);
             await fetchProfile();
           } catch {
-            // ignora falha de criação
+
           }
         }
       } finally {

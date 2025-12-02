@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface OnboardingState {
@@ -18,10 +18,31 @@ const ONBOARDING_KEY = '@onboarding_completed';
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<OnboardingState>({
     hasCompletedOnboarding: false,
-    isLoading: false,
+    isLoading: true,
   });
 
-  const completeOnboarding = async () => {
+  const loadOnboardingStatus = useCallback(async () => {
+    try {
+      const savedStatus = await AsyncStorage.getItem(ONBOARDING_KEY);
+      const hasCompleted = savedStatus === 'true';
+      setState({
+        hasCompletedOnboarding: hasCompleted,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error('Erro ao carregar status do onboarding:', error);
+      setState({
+        hasCompletedOnboarding: false,
+        isLoading: false,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    loadOnboardingStatus();
+  }, [loadOnboardingStatus]);
+
+  const completeOnboarding = useCallback(async () => {
     try {
       await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
       setState(prev => ({
@@ -31,7 +52,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     } catch (error) {
       console.error('Erro ao salvar status do onboarding:', error);
     }
-  };
+  }, []);
 
   return (
     <OnboardingContext.Provider value={{ state, completeOnboarding }}>
