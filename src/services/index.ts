@@ -5,6 +5,7 @@ export * from './categoryService';
 export * from './cepService';
 export * from './geocodingService';
 export * from './marketService';
+export * from './notificationService';
 export * from './orderService';
 export * from './productService';
 export * from './suggestionService';

@@ -8,15 +8,18 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "sdkVersion": "54.0.0",
-    "scheme": "smart.marketin",
+    "scheme": "com.smart.marketin",
+
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+
     "ios": {
+      "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
-      "bundleIdentifier": "com.mercado.mobile",
+      "bundleIdentifier": "com.smart.marketin",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para encontrar mercados próximos.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Precisamos da sua localização para encontrar mercados próximos.",
@@ -24,48 +27,67 @@
         "NSCameraUsageDescription": "Precisamos da câmera para tirar foto de perfil."
       }
     },
+
     "android": {
+      "googleServicesFile": "./google-services.json",
+
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+
       "edgeToEdgeEnabled": true,
-      "package": "smart.marketin",
+      "package": "com.smart.marketin",
+
+      "manifest": {
+        "metaData": [
+          {
+            "android:name": "com.google.firebase.messaging.default_notification_color",
+            "android:resource": "@color/white",
+            "tools:replace": "android:resource"
+          }
+        ]
+      },
+
       "intentFilters": [
         {
           "action": "VIEW",
           "autoVerify": true,
           "data": [
             {
-              "scheme": "smart.marketin",
+              "scheme": "com.smart.marketin",
               "host": "auth0"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
+
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
+
     "extra": {
       "eas": {
         "projectId": "167a1015-6ef3-40b6-8c0b-7f98e1bd46c8"
       }
     },
+
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       "expo-web-browser",
       "expo-font",
+
       [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Precisamos da sua localização para encontrar mercados próximos."
         }
       ],
+
       [
         "expo-image-picker",
         {
@@ -73,6 +95,7 @@
           "cameraPermission": "Precisamos da câmera para tirar foto de perfil."
         }
       ],
+
       [
         "expo-notifications",
         {
@@ -80,8 +103,18 @@
           "color": "#2E7D32",
           "sounds": []
         }
+      ],
+
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
       ]
     ],
+
     "owner": "rissong"
   }
 }

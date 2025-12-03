@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "989003913858",
+    "project_id": "mercadomobile-dc38a",
+    "storage_bucket": "mercadomobile-dc38a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989003913858:android:538c3fd2d3bb4f42c6f29b",
+        "android_client_info": {
+          "package_name": "com.smart.marketin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKNLxfk8uB7-ZxEmx5rXIwWgytBEMvknI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989003913858:android:cdbab22f60b2c9aec6f29b",
+        "android_client_info": {
+          "package_name": "com.smartmarket.mercado_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKNLxfk8uB7-ZxEmx5rXIwWgytBEMvknI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,6 +8,8 @@ import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { UserProfileProvider } from './src/contexts/UserProfileContext';
 import { RootNavigator } from './src/navigation';
 import { InitialLoadingScreen } from './src/views/splash/SplashScreen';
+import { notificationService } from './src/services/notificationService';
+import { useSession } from './src/hooks/useSession';
 
 export type {
   AuthStackParamList, HomeStackParamList, RootStackParamList, SearchStackParamList,
@@ -16,6 +18,18 @@ export type {
 
 const AppContent: React.FC = () => {
   const { isDark } = useTheme();
+  const { isAuthenticated, user } = useSession();
+  React.useEffect(() => {
+    notificationService.initialize();
+    console.info('Notificações inicializadas');
+  }, []);
+  React.useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      notificationService.associateTokenToUser(user.id);
+    } else if (!isAuthenticated) {
+      notificationService.unregisterToken();
+    }
+  }, [isAuthenticated, user?.id]);
 
   return (
     <>
