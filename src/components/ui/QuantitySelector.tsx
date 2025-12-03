@@ -42,7 +42,7 @@ export default function QuantitySelector({
           disabled={isMinQuantity}
           style={[
             styles.compactButton,
-            { backgroundColor: isMinQuantity ? paperTheme.colors.surfaceVariant : paperTheme.colors.primary }
+            { backgroundColor: isMinQuantity ? paperTheme.colors.surfaceVariant : paperTheme.colors.buttonDanger }
           ]}
         >
           <Ionicons
@@ -83,7 +83,7 @@ export default function QuantitySelector({
           disabled={isMinQuantity}
           style={[
             styles.button,
-            { backgroundColor: isMinQuantity ? paperTheme.colors.surfaceVariant : paperTheme.colors.primary }
+            { backgroundColor: isMinQuantity ? paperTheme.colors.surfaceVariant : paperTheme.colors.buttonDanger }
           ]}
         >
           <Ionicons

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { FlatList, View, Image, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Platform } from "react-native";
+import { FlatList, View, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Platform } from "react-native";
 import { Text, ActivityIndicator, useTheme, Searchbar } from "react-native-paper";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +21,7 @@ import { Market } from "../../domain/marketDomain";
 import { isNetworkError } from "../../utils/networkUtils";
 import { isValidImageUri } from "../../utils/imageUtils";
 import { normalizeString } from "../../utils/stringUtils";
+import { CachedImage } from "../../components/ui/CachedImage";
 import { useUserLocation } from "../../hooks/useUserLocation";
 import { usePermissions } from "../../hooks/usePermissions";
 import { useLoading } from "../../hooks/useLoading";
@@ -273,9 +274,11 @@ export default function Home() {
             activeOpacity={0.7}
           >
             {isValidImageUri(market.profilePicture) ? (
-              <Image
-                source={{ uri: market.profilePicture }}
+              <CachedImage
+                source={market.profilePicture}
                 style={styles.marketImage}
+                resizeMode="cover"
+                cachePolicy="memory-disk"
               />
             ) : (
               <View style={[styles.marketImage, styles.marketImagePlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>

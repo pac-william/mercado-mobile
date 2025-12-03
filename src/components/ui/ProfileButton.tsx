@@ -132,7 +132,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
       const userId = sessionUser.sub;
       if (lastRefreshRef.current.token !== token || lastRefreshRef.current.userId !== userId) {
         lastRefreshRef.current = { token, userId };
-        refreshProfile(false);
+        setTimeout(() => {
+          refreshProfile(true);
+        }, 300);
       }
     }
   }, [token, sessionUser, refreshProfile]);

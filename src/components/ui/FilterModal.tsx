@@ -16,7 +16,6 @@ import PriceFilter from './PriceFilter';
 import CategoryFilter from './CategoryFilter';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
-import { useResponsive } from '../../hooks/useResponsive';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FilterModalProps {
@@ -40,7 +39,6 @@ export default function FilterModal({
 }: FilterModalProps) {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = useResponsive();
   const [minPrice, setMinPrice] = useState<number | undefined>(currentFilters.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(currentFilters.maxPrice);
   const [categoryIds, setCategoryIds] = useState<string[]>(currentFilters.categoryIds || []);
@@ -95,10 +93,6 @@ export default function FilterModal({
   const hasActiveFilters =
     minPrice !== undefined || maxPrice !== undefined || (categoryIds && categoryIds.length > 0);
 
-  const availableHeight = keyboardHeight > 0 && Platform.OS === 'android'
-    ? screenHeight - keyboardHeight - insets.bottom
-    : screenHeight * 0.85;
-
   const handleInputFocus = () => {
     if (scrollViewRef.current && Platform.OS === 'android' && keyboardHeight > 0) {
       setTimeout(() => {
@@ -116,8 +110,8 @@ export default function FilterModal({
     >
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
@@ -127,7 +121,7 @@ export default function FilterModal({
                   styles.modalContent,
                   { 
                     backgroundColor: paperTheme.colors.surface,
-                    maxHeight: availableHeight,
+                    maxHeight: '90%',
                   },
                 ]}
               >

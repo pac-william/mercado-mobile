@@ -7,6 +7,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -46,6 +47,7 @@ const CartScreen: React.FC = () => {
   
   const bottomPadding = getScreenBottomPadding(insets);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef(0);
   const cartStateRef = useRef(cartState);
@@ -197,6 +199,16 @@ const CartScreen: React.FC = () => {
     }, [isAuthenticated, sessionLoading])
   );
 
+  const handleRefresh = useCallback(async () => {
+    if (!isAuthenticated || isLoadingRef.current) return;
+    setRefreshing(true);
+    try {
+      await loadCartRef.current(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [isAuthenticated]);
+
 
 
   const handleRemoveItem = async (id: string, name: string) => {
@@ -341,6 +353,14 @@ const CartScreen: React.FC = () => {
             showsVerticalScrollIndicator={true}
             bounces={true}
             indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={paperTheme.colors.primary}
+                colors={[paperTheme.colors.primary]}
+              />
+            }
           >
           <View style={[styles.headerCard, { backgroundColor: paperTheme.colors.surface }]}>
             <Text style={[styles.headerTitle, { color: paperTheme.colors.onSurface }]}>

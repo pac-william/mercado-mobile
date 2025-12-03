@@ -1,5 +1,6 @@
 export { default as Button } from './Button';
 export { default as Card } from './Card';
+export { CachedImage } from './CachedImage';
 export { default as CategoriesGrid } from './CategoriesGrid';
 export { default as CategoryFilter } from './CategoryFilter';
 export { default as CategorySmallCard } from './CategorySmallCard';

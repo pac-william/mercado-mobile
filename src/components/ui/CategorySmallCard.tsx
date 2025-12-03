@@ -1,8 +1,9 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, Image, View } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE } from "../../constants/styles";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useResponsive } from "../../hooks/useResponsive";
+import { CachedImage } from "./CachedImage";
 
 interface Props {
   name: string;
@@ -31,7 +32,7 @@ const CategorySmallCard: React.FC<Props> = ({ name, image, onPress, subtitle }) 
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Image source={{ uri: image }} style={styles.image} />
+      <CachedImage source={image} style={styles.image} resizeMode="contain" cachePolicy="memory-disk" />
       <View style={styles.textContainer}>
         <Text style={[styles.text, { color: paperTheme.colors.onSurface }]}>
           {name}

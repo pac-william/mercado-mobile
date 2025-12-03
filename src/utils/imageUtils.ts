@@ -7,3 +7,12 @@ export const isValidImageUri = (uri: string | null | undefined): boolean => {
   return false;
 };
 
+export const getCachedImageUrl = (baseUrl: string, timestamp?: number): string => {
+  if (!baseUrl || baseUrl.startsWith('data:') || baseUrl.startsWith('file://')) {
+    return baseUrl;
+  }
+  const ts = timestamp || Date.now();
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  return `${baseUrl}${separator}t=${ts}`;
+};
+

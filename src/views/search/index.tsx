@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { View, FlatList, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
+import { View, FlatList, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { Text } from "react-native-paper";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -14,6 +14,7 @@ import { SearchStackParamList } from "../../navigation/types";
 import { isValidImageUri } from "../../utils/imageUtils";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { CachedImage } from "../../components/ui/CachedImage";
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<SearchStackParamList>;
 
@@ -70,7 +71,7 @@ export default function Search() {
       onPress={() => navigation.navigate("ProductDetail", { product: item })}
     >
       {item.image && isValidImageUri(item.image) && (
-        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <CachedImage source={item.image} style={styles.productImage} resizeMode="contain" cachePolicy="memory-disk" />
       )}
       <View style={styles.productInfo}>
         <Text style={[styles.productName, { color: paperTheme.colors.onSurface }]} numberOfLines={2}>
@@ -98,7 +99,7 @@ export default function Search() {
       onPress={() => navigation.navigate("MarketDetails", { marketId: item.id })}
     >
       {isValidImageUri(item.profilePicture) ? (
-        <Image source={{ uri: item.profilePicture }} style={styles.marketImage} />
+        <CachedImage source={item.profilePicture} style={styles.marketImage} resizeMode="cover" cachePolicy="memory-disk" />
       ) : (
         <View style={[styles.marketImage, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
           <Ionicons name="storefront-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSurfaceVariant} />

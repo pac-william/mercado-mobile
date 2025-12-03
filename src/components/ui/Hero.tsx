@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Image, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import Swiper from "react-native-swiper";
 import { getActiveCampaignsForCarousel, Campaign } from "../../services/campaignService";
 import { getMarketById } from "../../services/marketService";
@@ -7,6 +7,7 @@ import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/s
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { useResponsive } from "../../hooks/useResponsive";
 import { useLoading } from "../../hooks/useLoading";
+import { CachedImage } from "./CachedImage";
 
 const HeroBanner = () => {
   const { colors } = useCustomTheme();
@@ -60,10 +61,12 @@ const HeroBanner = () => {
   if (campaigns.length === 1) {
     return (
       <View style={styles.container}>
-        <Image
-          source={{ uri: campaigns[0].imageUrl }}
+        <CachedImage
+          source={campaigns[0].imageUrl}
           style={[styles.image, { width: imageWidth, height: imageHeight }]}
-          onError={(e) => {
+          resizeMode="cover"
+          cachePolicy="memory-disk"
+          onError={() => {
             console.warn('Erro ao carregar banner:', campaigns[0].imageUrl);
           }}
         />
@@ -89,10 +92,12 @@ const HeroBanner = () => {
           <View key={campaign.id} style={[styles.slideContainer, { width: imageWidth, height: imageHeight }]}>
             {campaign.imageUrl && !campaign.imageUrl.startsWith('blob:') ? (
               <>
-                <Image
-                  source={{ uri: campaign.imageUrl }}
+                <CachedImage
+                  source={campaign.imageUrl}
                   style={[styles.image, { width: imageWidth, height: imageHeight }]}
-                  onError={(e) => {
+                  resizeMode="cover"
+                  cachePolicy="memory-disk"
+                  onError={() => {
                     console.warn('Erro ao carregar banner:', campaign.imageUrl);
                   }}
                 />

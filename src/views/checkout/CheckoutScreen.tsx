@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -64,6 +65,7 @@ export default function CheckoutScreen() {
   const { loading: creatingOrder, execute: executeCreateOrder } = useLoading();
   const [showCardModal, setShowCardModal] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const checkoutItems = useMemo(() => {
     const routeItems = route.params?.items;
@@ -100,7 +102,9 @@ export default function CheckoutScreen() {
           .filter(addr => addr.isActive)
           .map(addr => ({
             ...addr,
-            complement: addr.complement ?? undefined
+            complement: addr.complement ?? undefined,
+            createdAt: new Date(addr.createdAt),
+            updatedAt: new Date(addr.updatedAt),
           }));
         setAddresses(addressesList);
         
@@ -136,6 +140,16 @@ export default function CheckoutScreen() {
       }
     }, [isAuthenticated, loadAddresses])
   );
+
+  const handleRefresh = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setRefreshing(true);
+    try {
+      await loadAddresses();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [isAuthenticated, loadAddresses]);
 
   const handleAddAddress = () => {
     navigation.navigate('AddAddress', {} as any);

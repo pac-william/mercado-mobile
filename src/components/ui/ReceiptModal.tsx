@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Receipt } from '../../types/suggestion';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useCustomTheme } from '../../hooks/useCustomTheme';
-import { useResponsive } from '../../hooks/useResponsive';
 
 interface ReceiptModalProps {
   visible: boolean;
@@ -31,8 +30,6 @@ export default function ReceiptModal({
 }: ReceiptModalProps) {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
-  const { getHeight, height } = useResponsive();
-  const maxModalHeight = getHeight(90) - insets.bottom;
 
   return (
     <Modal
@@ -49,8 +46,8 @@ export default function ReceiptModal({
                 styles.modalContent,
                 { 
                   backgroundColor: paperTheme.colors.surface,
-                  maxHeight: maxModalHeight,
-                  height: maxModalHeight,
+                  maxHeight: '90%',
+                  paddingBottom: Math.max(insets.bottom, SPACING.xlBase),
                 },
               ]}
             >
@@ -74,17 +71,13 @@ export default function ReceiptModal({
 
               <ScrollView
                 style={styles.modalBody}
-                contentContainerStyle={[
-                  styles.contentContainer,
-                  { paddingBottom: Math.max(insets.bottom + SPACING.md, SPACING.xl) }
-                ]}
+                contentContainerStyle={styles.contentContainer}
                 showsVerticalScrollIndicator={true}
                 indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                 keyboardShouldPersistTaps="handled"
                 nestedScrollEnabled={Platform.OS === 'android'}
                 bounces={Platform.OS === 'ios'}
                 scrollEnabled={true}
-                alwaysBounceVertical={false}
               >
                   {mode === 'recipe' ? (
                     <>
@@ -213,12 +206,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalBody: {
-    flex: 1,
-    minHeight: 0,
+    flexGrow: 1,
+    flexShrink: 1,
   },
   contentContainer: {
     paddingHorizontal: SPACING.xlBase,
     paddingTop: SPACING.xlBase,
+    paddingBottom: SPACING.xxxl,
   },
   headerSection: {
     marginBottom: SPACING.xl,

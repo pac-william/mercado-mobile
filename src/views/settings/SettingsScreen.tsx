@@ -154,6 +154,7 @@ export default function SettingsScreen() {
 
                         await fetchUserInfo(data.access_token, session);
                         await refreshSession();
+                        await refreshProfile(true);
                     }
                 } catch (error) {
                 } finally {
@@ -163,7 +164,7 @@ export default function SettingsScreen() {
 
             fetchToken();
         }
-    }, [response, request?.codeVerifier, fetchUserInfo, refreshSession]);
+    }, [response, request?.codeVerifier, fetchUserInfo, refreshSession, refreshProfile]);
 
     const NOTIFICATION_PREFERENCE_KEY = '@notification_preference';
 
@@ -200,8 +201,11 @@ export default function SettingsScreen() {
     useEffect(() => {
         if (isAuthenticated) {
             checkNotificationStatus();
-            refreshProfile(false);
+            const timeoutId = setTimeout(() => {
+                refreshProfile(true);
+            }, 500);
             setAuthAction(null);
+            return () => clearTimeout(timeoutId);
         }
     }, [isAuthenticated, checkNotificationStatus, refreshProfile]);
 

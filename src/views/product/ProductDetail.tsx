@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Image, ScrollView, StyleSheet, Platform } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, RefreshControl, ScrollView, StyleSheet, Platform } from "react-native";
 import { Text, Button, Divider } from "react-native-paper";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { RouteProp, useNavigation } from "@react-navigation/native";
@@ -15,6 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 import { getScreenBottomPadding } from "../../utils/tabBarUtils";
+import { CachedImage } from "../../components/ui/CachedImage";
+import { getProductById } from "../../services/productService";
 
 type ProductDetailRouteProp = RouteProp<HomeStackParamList, "ProductDetail">;
 
@@ -23,12 +25,14 @@ interface Props {
 }
 
 export default function ProductDetail({ route }: Props) {
-  const { product } = route.params;
+  const { product: initialProduct } = route.params;
   const { modalState, hideModal, showSuccess, showWarning } = useModal();
   const navigation = useNavigation();
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState(initialProduct);
+  const [refreshing, setRefreshing] = useState(false);
   
   const bottomPadding = getScreenBottomPadding(insets);
   const { addToCart, isAdding } = useAddToCart({
@@ -90,12 +94,24 @@ export default function ProductDetail({ route }: Props) {
       productId: product.id,
       productName: product.name,
       price: product.price,
-      image: product.image,
-      marketName: product.marketName,
+      image: product.image || '',
+      marketName: product.marketName || '',
       marketId: product.marketId,
       quantity: quantity,
     });
   };
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const updatedProduct = await getProductById(product.id);
+      setProduct({ ...updatedProduct, marketName: product.marketName });
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [product.id, product.marketName]);
 
   return (
     <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
@@ -109,12 +125,24 @@ export default function ProductDetail({ route }: Props) {
         ]}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={paperTheme.colors.primary}
+            colors={[paperTheme.colors.primary]}
+          />
+        }
       >
         <View style={[styles.imageContainer, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
-          <Image
-            source={{ uri: product.image }}
-            style={styles.productImage}
-          />
+          {product.image ? (
+            <CachedImage
+              source={product.image}
+              style={styles.productImage}
+              resizeMode="contain"
+              cachePolicy="memory-disk"
+            />
+          ) : null}
           
           <View style={[styles.discountBadge, { backgroundColor: paperTheme.colors.discountBadge }]}>
             <Text style={[styles.discountText, { color: paperTheme.colors.white }]}>

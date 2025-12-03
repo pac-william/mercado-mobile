@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Image, TouchableOpacity, StyleSheet, ViewStyle, ActivityIndicator, NativeSyntheticEvent, NativeTouchEvent } from "react-native";
+import { View, TouchableOpacity, StyleSheet, ViewStyle, ActivityIndicator, NativeSyntheticEvent, NativeTouchEvent } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -13,6 +13,7 @@ import { useResponsive } from "../../hooks/useResponsive";
 import { useAddToCart } from "../../hooks/useAddToCart";
 import { useModal } from "../../hooks/useModal";
 import CustomModal from "./CustomModal";
+import { CachedImage } from "./CachedImage";
 
 interface ProductCardProps {
   marketLogo: string;
@@ -123,7 +124,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       >
         <View style={styles.header}>
           {isValidImageUri(marketLogo) ? (
-            <Image source={{ uri: marketLogo }} style={styles.logo} />
+            <CachedImage source={marketLogo} style={styles.logo} cachePolicy="memory-disk" />
           ) : (
             <View style={[styles.logo, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
               <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: FONT_SIZE.xs }}>Sem logo</Text>
@@ -142,7 +143,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         <View style={styles.productImageContainer}>
           {isValidImageUri(imageUrl) ? (
-            <Image source={{ uri: imageUrl }} style={styles.productImage} />
+            <CachedImage source={imageUrl} style={styles.productImage} resizeMode="contain" cachePolicy="memory-disk" />
           ) : (
             <View style={[styles.productImage, { backgroundColor: paperTheme.colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' }]}>
               <Text style={{ color: paperTheme.colors.onSurfaceVariant, fontSize: FONT_SIZE.sm }}>Sem imagem</Text>

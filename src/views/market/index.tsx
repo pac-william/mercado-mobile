@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ import { isValidImageUri } from '../../utils/imageUtils';
 import { normalizeString } from '../../utils/stringUtils';
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from '../../constants/styles';
 import { useLoading } from '../../hooks/useLoading';
+import { CachedImage } from '../../components/ui/CachedImage';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -50,33 +51,49 @@ export default function MarketDetailsScreen() {
 
   const { loading, execute } = useLoading({ initialValue: true });
   const [offline, setOffline] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchMarketData = async () => {
-      if (!marketId) return;
-      
-      execute(async () => {
-        try {
-          const marketResponse = await getMarketById(marketId);
-          setMarket(marketResponse);
+  const fetchMarketData = useCallback(async (forceRefresh = false) => {
+    if (!marketId) return;
+    
+    const fetchData = async () => {
+      try {
+        const marketResponse = await getMarketById(marketId);
+        setMarket(marketResponse);
 
-          const productsResponse = await getProducts(1, 100, marketId);
-          setProducts(productsResponse?.products ?? []);
+        const productsResponse = await getProducts(1, 100, marketId);
+        setProducts(productsResponse?.products ?? []);
 
-          const categoriesResponse = await getCategories(1, 100);
-          setCategories(categoriesResponse?.category ?? []);
-          setOffline(false);
-        } catch (error: any) {
-          console.error('Erro ao buscar dados do mercado:', error);
-          if (isNetworkError(error)) {
-            setOffline(true);
-          }
+        const categoriesResponse = await getCategories(1, 100);
+        setCategories(categoriesResponse?.category ?? []);
+        setOffline(false);
+      } catch (error: any) {
+        console.error('Erro ao buscar dados do mercado:', error);
+        if (isNetworkError(error)) {
+          setOffline(true);
         }
-      });
+      }
     };
 
-    fetchMarketData();
+    if (forceRefresh) {
+      await fetchData();
+    } else {
+      execute(fetchData);
+    }
   }, [marketId, execute]);
+
+  useEffect(() => {
+    fetchMarketData();
+  }, [fetchMarketData]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchMarketData(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchMarketData]);
 
   const filteredAndCategorizedProducts = useMemo(() => {
     if (products.length === 0) {
@@ -174,10 +191,18 @@ export default function MarketDetailsScreen() {
         ]}
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={paperTheme.colors.primary}
+            colors={[paperTheme.colors.primary]}
+          />
+        }
       >
         <View style={[styles.marketInfoCard, { backgroundColor: paperTheme.colors.surface }]}>
           {isValidImageUri(market.profilePicture) ? (
-            <Image source={{ uri: market.profilePicture }} style={styles.marketImage} />
+            <CachedImage source={market.profilePicture} style={styles.marketImage} resizeMode="cover" cachePolicy="memory-disk" />
           ) : (
             <View style={[styles.marketImage, styles.marketImagePlaceholder, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
               <Ionicons name="storefront-outline" size={32} color={paperTheme.colors.onSurfaceVariant} />

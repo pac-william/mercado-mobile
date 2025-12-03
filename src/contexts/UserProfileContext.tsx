@@ -166,7 +166,10 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     if (isAuthenticated) {
-      refreshProfile(false);
+      const timeoutId = setTimeout(() => {
+        refreshProfile(true);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     } else {
       setProfile(null);
       setLocalPhotoState(null);
