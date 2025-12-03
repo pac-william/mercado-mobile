@@ -17,7 +17,6 @@ api.interceptors.request.use(
       // Busca o session e extrai o idToken
       const sessionString = await SecureStore.getItemAsync('session');
 
-
       if (sessionString) {
         try {
           const session = JSON.parse(sessionString) as Session;
@@ -26,17 +25,15 @@ api.interceptors.request.use(
           if (idToken && !config.headers.Authorization) {
             config.headers.Authorization = `Bearer ${idToken}`;
           }
-        } catch (parseError) {
-          // Erro ao fazer parse do session
+        } catch (parseError: unknown) {
         }
       }
-    } catch (error) {
-      // Erro ao buscar session
+    } catch (error: unknown) {
     }
 
     return config;
   },
-  (error) => {
+  (error: unknown) => {
     return Promise.reject(error);
   }
 );
@@ -45,7 +42,7 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  (error: any) => {
     if (error.request && !error.response) {
       error.isNetworkError = true;
       error.networkError = true;
@@ -73,7 +70,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// para testar a api no mobile a URL tem que ser a http://10.0.2.2:8080 não pode ser http://localhost:8080
 
 export default api;

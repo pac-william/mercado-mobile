@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useSession } from './useSession';
 import { useLoading } from './useLoading';
@@ -15,7 +16,7 @@ interface AddToCartParams {
 
 interface UseAddToCartOptions {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
 }
 
 export const useAddToCart = (options: UseAddToCartOptions = {}) => {
@@ -23,11 +24,10 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
   const { isAuthenticated } = useSession();
   const { loading: isAdding, execute } = useLoading();
 
-  const addToCart = async (params: AddToCartParams) => {
+  const addToCart = useCallback(async (params: AddToCartParams) => {
     if (isAdding) return;
 
     return execute(async () => {
-
       const quantity = params.quantity || 1;
 
       try {
@@ -52,7 +52,7 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
               cartItemId: addedItem?.id,
               initialQuantity: quantity,
             });
-          } catch (apiError: any) {
+          } catch (apiError: unknown) {
             console.error('Erro ao adicionar item ao carrinho na API:', apiError);
             addItem({
               id: params.productId,
@@ -84,7 +84,7 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
         if (options.onSuccess) {
           options.onSuccess();
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao adicionar item ao carrinho:', error);
         if (options.onError) {
           options.onError(error);
@@ -92,7 +92,7 @@ export const useAddToCart = (options: UseAddToCartOptions = {}) => {
         throw error;
       }
     });
-  };
+  }, [addItem, isAuthenticated, isAdding, execute, options.onSuccess, options.onError]);
 
   return {
     addToCart,

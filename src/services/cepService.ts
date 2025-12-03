@@ -1,4 +1,4 @@
-import { CEPDTO, CEPErrorDTO } from "../dtos/cepDTO";
+import { CEPDTO } from "../dtos/cepDTO";
 
 export const searchAddressByCEP = async (zipCode: string): Promise<CEPDTO> => {
     try {
@@ -28,7 +28,7 @@ export const searchAddressByCEP = async (zipCode: string): Promise<CEPDTO> => {
             state: data.uf,
             complement: data.complemento || null,
         };
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Erro ao buscar CEP:", error);
         throw error;
     }

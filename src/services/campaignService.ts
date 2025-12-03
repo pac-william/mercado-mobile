@@ -13,9 +13,13 @@ export interface Campaign {
   updatedAt: string;
 }
 
+interface CampaignParams {
+  marketId?: string;
+}
+
 export const getActiveCampaignsForCarousel = async (marketId?: string): Promise<Campaign[]> => {
   try {
-    const params: any = {};
+    const params: CampaignParams = {};
     if (marketId) {
       params.marketId = marketId;
     }
@@ -25,7 +29,7 @@ export const getActiveCampaignsForCarousel = async (marketId?: string): Promise<
     });
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao buscar campanhas:", error);
     return [];
   }

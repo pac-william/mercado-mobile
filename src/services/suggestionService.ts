@@ -12,6 +12,16 @@ interface CreateSuggestionResponse {
   id: string;
 }
 
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (error && typeof error === 'object' && 'response' in error) {
+    return (error.response as { data?: { message?: string } })?.data?.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return undefined;
+};
+
 const convertSuggestionToResponse = (suggestion: Suggestion): Omit<SuggestionResponse, 'suggestionId'> => {
   const essential_products: string[] = [];
   const common_products: string[] = [];
@@ -42,10 +52,9 @@ export const createSuggestion = async (task: string): Promise<CreateSuggestionRe
   try {
     const response = await api.post<CreateSuggestionResponse>("/suggestions", { task });
     return response.data;
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || "Erro ao criar sugestão"
-    );
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    throw new Error(message || "Erro ao criar sugestão");
   }
 };
 
@@ -59,10 +68,9 @@ export const getSuggestions = async (task: string): Promise<SuggestionResponse> 
       suggestionId: createResponse.id,
       ...convertSuggestionToResponse(suggestion),
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || error.message || "Erro ao buscar sugestões"
-    );
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    throw new Error(message || "Erro ao buscar sugestões");
   }
 };
 
@@ -76,11 +84,10 @@ export const getUserSuggestions = async (
     });
 
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erro ao buscar histórico de sugestões:", error);
-    throw new Error(
-      error.response?.data?.message || "Erro ao buscar histórico de sugestões"
-    );
+    const message = getErrorMessage(error);
+    throw new Error(message || "Erro ao buscar histórico de sugestões");
   }
 };
 
@@ -88,10 +95,9 @@ export const getSuggestionById = async (id: string): Promise<Suggestion> => {
   try {
     const response = await api.get<Suggestion>(`/suggestions/${id}`);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Erro ao buscar sugestão com ID ${id}:`, error);
-    throw new Error(
-      error.response?.data?.message || "Erro ao buscar sugestão"
-    );
+    const message = getErrorMessage(error);
+    throw new Error(message || "Erro ao buscar sugestão");
   }
 };

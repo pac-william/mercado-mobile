@@ -6,7 +6,7 @@ export const getUserMe = async (): Promise<User> => {
     try {
         const response = await api.get<User>("/users/me");
         return response.data;
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Erro ao buscar usuário atual:", error);
         throw error;
     }
@@ -16,7 +16,7 @@ export const updateUserMe = async (updateData: UserUpdateDTO): Promise<User> => 
     try {
         const response = await api.patch<User>("/users/me", updateData);
         return response.data;
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Erro ao atualizar usuário:", error);
         throw error;
     }

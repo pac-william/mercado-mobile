@@ -109,7 +109,7 @@ export const usePermissions = (): UsePermissionsReturn => {
       }
       
       return result.granted;
-    } catch (error) {
+    } catch (error: unknown) {
       showErrorToast('Erro ao solicitar permissão de localização');
       return false;
     } finally {
@@ -140,7 +140,7 @@ export const usePermissions = (): UsePermissionsReturn => {
       }
       
       return status === 'granted';
-    } catch (error) {
+    } catch (error: unknown) {
       showErrorToast('Erro ao solicitar permissão da câmera');
       return false;
     } finally {
@@ -171,7 +171,7 @@ export const usePermissions = (): UsePermissionsReturn => {
       }
       
       return status === 'granted';
-    } catch (error) {
+    } catch (error: unknown) {
       showErrorToast('Erro ao solicitar permissão da galeria');
       return false;
     } finally {
@@ -223,7 +223,7 @@ export const usePermissions = (): UsePermissionsReturn => {
       }
       
       return result.granted;
-    } catch (error) {
+    } catch (error: unknown) {
       showErrorToast('Erro ao solicitar permissões de mídia');
       return false;
     } finally {
@@ -254,7 +254,7 @@ export const usePermissions = (): UsePermissionsReturn => {
       }
       
       return result.granted;
-    } catch (error) {
+    } catch (error: unknown) {
       showErrorToast('Erro ao solicitar permissão de notificações');
       return false;
     } finally {

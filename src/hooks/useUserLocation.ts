@@ -42,7 +42,7 @@ export const useUserLocation = () => {
 
         cachedLocation.current = coords;
         return coords;
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn("Erro ao obter localização do usuário", error);
         return null;
       }

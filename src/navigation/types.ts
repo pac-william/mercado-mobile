@@ -1,11 +1,12 @@
 import { Product } from "../services/productService";
 import { SearchResults } from "../components/ui/SearchItens";
 import { CartItem } from "../contexts/CartContext";
+import { AddressResponseDTO } from "../dtos/addressDTO";
 
 export type HomeStackParamList = {
   HomeMain: undefined;
   SearchMain: { initialResults?: SearchResults } | undefined;
-  ProductDetail: { product: any };
+  ProductDetail: { product: Product & { marketName?: string } };
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
@@ -19,7 +20,7 @@ export type HomeStackParamList = {
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { 
-    onAddressAdded?: (address: any) => void;
+    onAddressAdded?: (address: AddressResponseDTO) => void;
     initialData?: {
       name?: string;
       street?: string;
@@ -40,7 +41,7 @@ export type HomeStackParamList = {
 
 export type SearchStackParamList = {
   SearchMain: { initialResults?: SearchResults } | undefined;
-  ProductDetail: { product: any };
+  ProductDetail: { product: Product & { marketName?: string } };
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
@@ -54,7 +55,7 @@ export type SearchStackParamList = {
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { 
-    onAddressAdded?: (address: any) => void;
+    onAddressAdded?: (address: AddressResponseDTO) => void;
     initialData?: {
       name?: string;
       street?: string;
@@ -75,7 +76,7 @@ export type SearchStackParamList = {
 
 export type SettingsStackParamList = {
   SettingsMain: undefined;
-  ProductDetail: { product: any };
+  ProductDetail: { product: Product & { marketName?: string } };
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   PaymentCard: { marketId?: string; items?: CartItem[]; addressId?: string; total?: number };
@@ -83,7 +84,7 @@ export type SettingsStackParamList = {
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { 
-    onAddressAdded?: (address: any) => void;
+    onAddressAdded?: (address: AddressResponseDTO) => void;
     initialData?: {
       name?: string;
       street?: string;
@@ -115,7 +116,7 @@ export type AuthStackParamList = {};
 
 export type AIStackParamList = {
   AIMain: undefined;
-  ProductDetail: { product: any };
+  ProductDetail: { product: Product & { marketName?: string } };
   Cart: undefined;
   Checkout: { marketId?: string; items?: CartItem[] } | undefined;
   MarketDetails: { marketId: string };
@@ -129,7 +130,7 @@ export type AIStackParamList = {
   EditProfile: undefined;
   AddressesMain: undefined;
   AddAddress: { 
-    onAddressAdded?: (address: any) => void;
+    onAddressAdded?: (address: AddressResponseDTO) => void;
     initialData?: {
       name?: string;
       street?: string;
@@ -163,5 +164,6 @@ export type NavigationParamList =
   | HomeStackParamList 
   | SearchStackParamList 
   | SettingsStackParamList 
+  | AIStackParamList
   | AuthStackParamList;
 

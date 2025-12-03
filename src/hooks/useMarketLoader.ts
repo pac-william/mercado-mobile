@@ -19,7 +19,7 @@ export const useMarketLoader = () => {
 
     return execute(async () => {
       try {
-      const marketsResponse = await getMarkets(
+        const marketsResponse = await getMarkets(
         1,
         100,
         undefined,

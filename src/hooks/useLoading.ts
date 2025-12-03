@@ -7,7 +7,6 @@ interface UseLoadingOptions {
 
 interface UseLoadingReturn {
   loading: boolean;
-  isLoading: boolean;
   setLoading: (value: boolean) => void;
   startLoading: () => void;
   stopLoading: () => void;
@@ -76,7 +75,6 @@ export const useLoading = (options: UseLoadingOptions = {}): UseLoadingReturn =>
 
   return {
     loading,
-    isLoading: loading,
     setLoading,
     startLoading,
     stopLoading,

@@ -63,7 +63,8 @@ export const getProducts = async (
     });
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("Erro ao buscar produtos:", error);
     throw error;
   }
 };
@@ -72,7 +73,7 @@ export const getProductById = async (id: string): Promise<Product> => {
   try {
     const response = await api.get<Product>(`/products/${id}`);
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`Erro ao buscar produto com ID ${id}:`, error);
     throw error;
   }

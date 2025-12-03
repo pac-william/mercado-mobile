@@ -46,7 +46,7 @@ export const getCart = async (): Promise<CartResponse[]> => {
       return data;
     }
     return [data];
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao buscar carrinho:", error);
     throw error;
   }
@@ -56,7 +56,7 @@ export const addItemToCart = async (item: CartItemDTO): Promise<CartResponse> =>
   try {
     const response = await api.post<CartResponse>("/cart/items", item);
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao adicionar item ao carrinho:", error);
     throw error;
   }
@@ -66,7 +66,7 @@ export const addMultipleItemsToCart = async (items: AddMultipleItemsDTO): Promis
   try {
     const response = await api.post<CartResponse[]>("/cart/items/multiple", items);
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao adicionar múltiplos itens ao carrinho:", error);
     throw error;
   }
@@ -76,7 +76,7 @@ export const updateCartItem = async (itemId: string, quantity: number): Promise<
   try {
     const response = await api.put<CartResponse>(`/cart/items/${itemId}`, { quantity });
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao atualizar item do carrinho:", error);
     throw error;
   }
@@ -85,7 +85,7 @@ export const updateCartItem = async (itemId: string, quantity: number): Promise<
 export const removeCartItem = async (itemId: string): Promise<void> => {
   try {
     await api.delete(`/cart/items/${itemId}`);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao remover item do carrinho:", error);
     throw error;
   }
@@ -99,7 +99,7 @@ export const clearCart = async (): Promise<void> => {
         carts.map(cart => api.delete(`/cart?cartId=${cart.id}`))
       );
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao limpar carrinho:", error);
     throw error;
   }

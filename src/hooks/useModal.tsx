@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 interface ModalState {
   visible: boolean;
@@ -24,21 +24,21 @@ export const useModal = () => {
     type: 'info',
   });
 
-  const showModal = (config: Omit<ModalState, 'visible'>) => {
+  const showModal = useCallback((config: Omit<ModalState, 'visible'>) => {
     setModalState({
       ...config,
       visible: true,
     });
-  };
+  }, []);
 
-  const hideModal = () => {
+  const hideModal = useCallback(() => {
     setModalState(prev => ({
       ...prev,
       visible: false,
     }));
-  };
+  }, []);
 
-  const showSuccess = (title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
+  const showSuccess = useCallback((title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
     showModal({
       title,
       message,
@@ -46,9 +46,9 @@ export const useModal = () => {
       primaryButton,
       secondaryButton,
     });
-  };
+  }, [showModal]);
 
-  const showError = (title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
+  const showError = useCallback((title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
     showModal({
       title,
       message,
@@ -56,9 +56,9 @@ export const useModal = () => {
       primaryButton,
       secondaryButton,
     });
-  };
+  }, [showModal]);
 
-  const showWarning = (title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
+  const showWarning = useCallback((title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
     showModal({
       title,
       message,
@@ -66,9 +66,9 @@ export const useModal = () => {
       primaryButton,
       secondaryButton,
     });
-  };
+  }, [showModal]);
 
-  const showInfo = (title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
+  const showInfo = useCallback((title: string, message: string, primaryButton?: ModalState['primaryButton'], secondaryButton?: ModalState['secondaryButton']) => {
     showModal({
       title,
       message,
@@ -76,7 +76,7 @@ export const useModal = () => {
       primaryButton,
       secondaryButton,
     });
-  };
+  }, [showModal]);
 
   return {
     modalState,

@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Session } from '../types/session';
 import { User } from '../types/user';
 
@@ -26,14 +26,14 @@ export const useSession = (): UseSessionReturn => {
         try {
           const parsedSession = JSON.parse(sessionString) as Session;
           setSession(parsedSession);
-        } catch (parseError) {
+        } catch (parseError: unknown) {
           console.error('Erro ao fazer parse da sessão:', parseError);
           setSession(null);
         }
       } else {
         setSession(null);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar sessão:', error);
       setSession(null);
     } finally {
@@ -50,7 +50,7 @@ export const useSession = (): UseSessionReturn => {
       await SecureStore.deleteItemAsync('session');
       setSession(null);
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao limpar sessão:', error);
     }
   }, []);
@@ -59,13 +59,16 @@ export const useSession = (): UseSessionReturn => {
     loadSession();
   }, [loadSession]);
 
-  const user = session?.user ? {
-    id: session.user.sub,
-    name: session.user.name,
-    email: session.user.email,
-    profilePicture: session.user.picture,
-    auth0Id: session.user.sub,
-  } as User : null;
+  const user = useMemo<User | null>(() => {
+    if (!session?.user) return null;
+    return {
+      id: session.user.sub,
+      name: session.user.name,
+      email: session.user.email,
+      profilePicture: session.user.picture,
+      auth0Id: session.user.sub,
+    } as User;
+  }, [session?.user]);
 
   return {
     user: user,
