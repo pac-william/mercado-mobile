@@ -297,8 +297,8 @@ describe('cartService', () => {
       updatedAt: '2024-01-01T00:00:00Z',
     };
 
-    it('deve converter CartItemResponse em CartItem sem getMarketName', async () => {
-      const result = await mapCartItemResponseToCartItem(mockCartItemResponse);
+    it('deve converter CartItemResponse em CartItem sem getMarketName', () => {
+      const result = mapCartItemResponseToCartItem(mockCartItemResponse);
 
       expect(result).toEqual({
         id: 'p1',
@@ -312,23 +312,16 @@ describe('cartService', () => {
       });
     });
 
-    it('deve usar getMarketName quando fornecido', async () => {
-      const getMarketName = jest.fn().mockResolvedValue('Supermercado ABC');
-
-      const result = await mapCartItemResponseToCartItem(mockCartItemResponse, getMarketName);
+    it('deve usar marketName quando fornecido', () => {
+      const result = mapCartItemResponseToCartItem(mockCartItemResponse, 'Supermercado ABC');
 
       expect(result.marketName).toBe('Supermercado ABC');
-      expect(getMarketName).toHaveBeenCalledWith('m1');
-      expect(getMarketName).toHaveBeenCalledTimes(1);
     });
 
-    it('deve usar nome padrão se getMarketName falhar', async () => {
-      const getMarketName = jest.fn().mockRejectedValue(new Error('Erro ao buscar'));
-
-      const result = await mapCartItemResponseToCartItem(mockCartItemResponse, getMarketName);
+    it('deve usar nome padrão quando marketName não fornecido', () => {
+      const result = mapCartItemResponseToCartItem(mockCartItemResponse);
 
       expect(result.marketName).toBe('Mercado');
-      expect(getMarketName).toHaveBeenCalledWith('m1');
     });
   });
 });

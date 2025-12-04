@@ -462,6 +462,11 @@ class NotificationService {
     }
     return 'system';
   }
+
+  reset(): void {
+    this.isInitialized = false;
+    this.fcmToken = null;
+  }
 }
 
 export const notificationService = new NotificationService();

@@ -11,6 +11,6 @@
     "baseUrl": "./src",
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src", "App.tsx", "src/types/**/*"],
+  "include": ["src", "App.tsx", "src/types/**/*", "tests/**/*"],
   "files": ["src/types/react-native-paper.d.ts"]
 }
