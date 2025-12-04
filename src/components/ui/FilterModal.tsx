@@ -101,30 +101,19 @@ export default function FilterModal({
     }
   };
 
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <TouchableWithoutFeedback onPress={onClose}>
-          <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View
-                style={[
-                  styles.modalContent,
-                  { 
-                    backgroundColor: paperTheme.colors.surface,
-                    maxHeight: '90%',
-                  },
-                ]}
-              >
+  const modalContent = (
+    <TouchableWithoutFeedback onPress={onClose}>
+      <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
+        <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <View
+            style={[
+              styles.modalContent,
+              { 
+                backgroundColor: paperTheme.colors.surface,
+                maxHeight: '90%',
+              },
+            ]}
+          >
                 <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
                   <Text
                     style={[
@@ -146,12 +135,7 @@ export default function FilterModal({
                 <ScrollView
                   ref={scrollViewRef}
                   style={styles.modalBody}
-                  contentContainerStyle={[
-                    styles.scrollContent,
-                    keyboardHeight > 0 && Platform.OS === 'android' && {
-                      paddingBottom: keyboardHeight + SPACING.xl,
-                    },
-                  ]}
+                  contentContainerStyle={styles.scrollContent}
                   showsVerticalScrollIndicator={true}
                   indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                   keyboardShouldPersistTaps="handled"
@@ -175,7 +159,9 @@ export default function FilterModal({
                     styles.modalFooter, 
                     { 
                       borderTopColor: paperTheme.colors.outline,
-                      paddingBottom: Math.max(insets.bottom, SPACING.lg),
+                      paddingBottom: Platform.OS === 'android' && keyboardHeight > 0
+                        ? Math.max(insets.bottom, SPACING.lg)
+                        : Math.max(insets.bottom, SPACING.lg),
                       paddingTop: SPACING.lg,
                     }
                   ]}
@@ -215,10 +201,25 @@ export default function FilterModal({
                     </Text>
                   </TouchableOpacity>
                 </View>
-              </View>
-            </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
+      </View>
+    </TouchableWithoutFeedback>
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -insets.bottom}
+      >
+        {modalContent}
       </KeyboardAvoidingView>
     </Modal>
   );

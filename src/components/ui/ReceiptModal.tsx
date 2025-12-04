@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
@@ -30,6 +31,9 @@ export default function ReceiptModal({
 }: ReceiptModalProps) {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
+  const screenHeight = Dimensions.get('window').height;
+  const maxModalHeight = screenHeight * 0.9;
+  const safeAreaBottom = Math.max(insets.bottom, Platform.OS === 'android' ? SPACING.xlBase : SPACING.md);
 
   return (
     <Modal
@@ -46,8 +50,7 @@ export default function ReceiptModal({
                 styles.modalContent,
                 { 
                   backgroundColor: paperTheme.colors.surface,
-                  maxHeight: '90%',
-                  paddingBottom: Math.max(insets.bottom, SPACING.xlBase),
+                  maxHeight: maxModalHeight,
                 },
               ]}
             >
@@ -71,13 +74,17 @@ export default function ReceiptModal({
 
               <ScrollView
                 style={styles.modalBody}
-                contentContainerStyle={styles.contentContainer}
+                contentContainerStyle={[
+                  styles.contentContainer,
+                  { paddingBottom: SPACING.xxxl * 4 + safeAreaBottom },
+                ]}
                 showsVerticalScrollIndicator={true}
                 indicatorStyle={paperTheme.dark ? 'white' : 'default'}
                 keyboardShouldPersistTaps="handled"
                 nestedScrollEnabled={Platform.OS === 'android'}
                 bounces={Platform.OS === 'ios'}
                 scrollEnabled={true}
+                alwaysBounceVertical={false}
               >
                   {mode === 'recipe' ? (
                     <>
@@ -191,6 +198,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: BORDER_RADIUS.xl,
     flexDirection: 'column',
     width: '100%',
+    paddingBottom: 0,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -208,11 +216,12 @@ const styles = StyleSheet.create({
   modalBody: {
     flexGrow: 1,
     flexShrink: 1,
+    minHeight: 200,
   },
   contentContainer: {
     paddingHorizontal: SPACING.xlBase,
     paddingTop: SPACING.xlBase,
-    paddingBottom: SPACING.xxxl,
+    flexGrow: 0,
   },
   headerSection: {
     marginBottom: SPACING.xl,
