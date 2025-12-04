@@ -33,6 +33,10 @@ import { Dimensions } from "react-native";
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.45;
 
+const MARKET_IMAGE_SIZE = SPACING.xxxl * 2;
+const PRODUCT_LIST_MIN_HEIGHT = SPACING.xxxl * 6 + SPACING.xlBase;
+const MARKETS_LOADING_PADDING = SPACING.xxxl * 2;
+
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 type MarketWithProducts = Market & {
@@ -131,7 +135,7 @@ export default function Home() {
         setMarkets(marketsWithDetails);
         setOffline(false);
         hasLoadedOnce.current = true;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Erro ao buscar mercados:", error);
         if (isNetworkError(error)) {
           setOffline(true);
@@ -461,8 +465,8 @@ const styles = StyleSheet.create({
         ...SHADOWS.large,
     },
     marketImage: {
-        width: SPACING.xxxl * 2,
-        height: SPACING.xxxl * 2,
+        width: MARKET_IMAGE_SIZE,
+        height: MARKET_IMAGE_SIZE,
         borderRadius: BORDER_RADIUS.lg,
         marginRight: SPACING.lg,
     },
@@ -500,16 +504,16 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     productList: {
-        minHeight: SPACING.xxxl * 6 + SPACING.xlBase,
+        minHeight: PRODUCT_LIST_MIN_HEIGHT,
     },
     listFooter: {
         justifyContent: 'center',
         alignItems: 'center',
         paddingRight: SPACING.lg,
-        height: SPACING.xxxl * 6 + SPACING.xlBase,
+        height: PRODUCT_LIST_MIN_HEIGHT,
     },
     marketsLoadingContainer: {
-        paddingVertical: SPACING.xxxl * 2,
+        paddingVertical: MARKETS_LOADING_PADDING,
         alignItems: 'center',
         justifyContent: 'center',
     },

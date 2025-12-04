@@ -51,7 +51,7 @@ export default function MarketCategoryProductsScreen() {
         setHasMore(fetchedProducts.length === 20);
         setPage(1);
         setOffline(false);
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (isNetworkError(error)) {
           setOffline(true);
         }
@@ -80,7 +80,7 @@ export default function MarketCategoryProductsScreen() {
             setHasMore(fetchedProducts.length === 20);
             setPage(pageToLoad);
             setOffline(false);
-          } catch (error: any) {
+          } catch (error: unknown) {
             if (isNetworkError(error)) {
               setOffline(true);
             }
@@ -111,7 +111,7 @@ export default function MarketCategoryProductsScreen() {
             setHasMore(fetchedProducts.length === 20);
             setPage(pageToLoad);
             setOffline(false);
-          } catch (error: any) {
+          } catch (error: unknown) {
             if (isNetworkError(error)) {
               setOffline(true);
             }

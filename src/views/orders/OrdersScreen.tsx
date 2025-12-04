@@ -100,7 +100,7 @@ export default function OrdersScreen() {
         if (forceRefresh) {
           stopLoading();
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         const localOrders = await loadLocalOrders(userId);
         if (localOrders.length > 0) {
           setOrders(localOrders);

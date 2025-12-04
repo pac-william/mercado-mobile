@@ -103,8 +103,8 @@ export default function CheckoutScreen() {
           .map(addr => ({
             ...addr,
             complement: addr.complement ?? undefined,
-            createdAt: new Date(addr.createdAt),
-            updatedAt: new Date(addr.updatedAt),
+            createdAt: addr.createdAt,
+            updatedAt: addr.updatedAt,
           }));
         setAddresses(addressesList);
         
@@ -238,7 +238,7 @@ export default function CheckoutScreen() {
             },
           }
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Erro ao criar pedido:', error);
         showWarning(
           'Erro ao finalizar',

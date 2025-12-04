@@ -73,7 +73,7 @@ export default function AddEditAddressScreen() {
       const loadAddress = async () => {
         try {
           const addressData = await getAddressById(addressId);
-          const addressWithFixedTypes = {
+          const addressWithFixedTypes: Address = {
             ...addressData,
             complement: addressData.complement ?? undefined
           };
@@ -124,15 +124,16 @@ export default function AddEditAddressScreen() {
           }
           navigation.goBack();
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         let errorMessage = 'Não foi possível salvar o endereço.';
+        const axiosError = error as { response?: { data?: { message?: string; error?: string } }; message?: string };
         
-        if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        } else if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
+        if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        } else if (axiosError.message) {
+          errorMessage = axiosError.message;
+        } else if (axiosError.response?.data?.error) {
+          errorMessage = axiosError.response.data.error;
         }
 
         Alert.alert('Erro', errorMessage);
@@ -204,8 +205,9 @@ export default function AddEditAddressScreen() {
               state: prev.state.trim() ? prev.state : (cepData.state || ''),
               complement: (prev.complement && prev.complement.trim()) ? prev.complement : (cepData.complement || ''),
             }));
-          } catch (error: any) {
-            setCepError(error.message || 'CEP não encontrado');
+          } catch (error: unknown) {
+            const errorWithMessage = error as { message?: string };
+            setCepError(errorWithMessage.message || 'CEP não encontrado');
             throw error;
           }
         });
@@ -281,18 +283,19 @@ export default function AddEditAddressScreen() {
           zipCode: prev.zipCode.trim() || (addressData.zipCode ? formatCEP(addressData.zipCode) : ''),
           complement: prev.complement.trim() || '',
         }));
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Erro ao buscar localização:', error);
         let errorMessage = 'Não foi possível obter sua localização.';
+        const errorWithProps = error as { message?: string; response?: { status?: number } };
         
-        if (error.message?.includes('permission')) {
+        if (errorWithProps.message?.includes('permission')) {
           errorMessage = 'Permissão de localização negada. Por favor, permita o acesso à localização nas configurações.';
-        } else if (error.message?.includes('timeout')) {
+        } else if (errorWithProps.message?.includes('timeout')) {
           errorMessage = 'Tempo esgotado ao buscar localização. Tente novamente.';
-        } else if (error.response?.status === 404) {
+        } else if (errorWithProps.response?.status === 404) {
           errorMessage = 'Endereço não encontrado para as coordenadas fornecidas.';
-        } else if (error.message) {
-          errorMessage = error.message;
+        } else if (errorWithProps.message) {
+          errorMessage = errorWithProps.message;
         }
         
         Alert.alert('Erro', errorMessage);

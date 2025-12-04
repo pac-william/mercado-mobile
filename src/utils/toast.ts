@@ -4,7 +4,6 @@ export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface ToastOptions {
   title?: string;
-  duration?: number;
   onPress?: () => void;
 }
 
@@ -62,4 +61,3 @@ export const showInfoToast = (message: string, options?: ToastOptions): void => 
 export const showWarningToast = (message: string, options?: ToastOptions): void => {
   showToast(message, 'warning', options);
 };
-

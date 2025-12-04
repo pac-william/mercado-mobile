@@ -64,8 +64,9 @@ export default function AISearch() {
       const auth0Id = auth0User.sub;
       try {
         await api.get(`/users/auth0/${auth0Id}`);
-      } catch (error: any) {
-        if (error.response?.status === 500 || error.response?.status === 404) {
+      } catch (error: unknown) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status === 500 || axiosError.response?.status === 404) {
           const createData = {
             name: auth0User.name || auth0User.email || '',
             email: auth0User.email,
@@ -445,8 +446,9 @@ export default function AISearch() {
         const suggestionResponse = await getSuggestions(searchTerm.trim());
         setResults(suggestionResponse);
         setSuggestion(null);
-      } catch (error: any) {
-        const status = error?.response?.status;
+      } catch (error: unknown) {
+        const axiosError = error as { response?: { status?: number } };
+        const status = axiosError.response?.status;
         if (status === 401 || status === 403) {
           setLoginModalVisible(true);
         }

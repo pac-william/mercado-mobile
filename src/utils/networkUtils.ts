@@ -1,9 +1,25 @@
+interface NetworkErrorLike {
+  response?: unknown;
+  request?: unknown;
+  isNetworkError?: boolean;
+  networkError?: boolean;
+  isAxiosError?: boolean;
+  name?: string;
+  code?: string;
+  config?: unknown;
+  message?: string;
+}
+
+const isNetworkErrorLike = (error: unknown): error is NetworkErrorLike => {
+  return typeof error === 'object' && error !== null;
+};
+
 /**
  * Utilitário para detectar se um erro é relacionado à rede/conexão
  * IMPORTANTE: Se há error.response (resposta do servidor), NÃO é erro de rede
  */
-export const isNetworkError = (error: any): boolean => {
-  if (!error) return false;
+export const isNetworkError = (error: unknown): boolean => {
+  if (!error || !isNetworkErrorLike(error)) return false;
 
   // REGRA PRINCIPAL: Se há resposta do servidor, NÃO é erro de rede
   // Erros de rede acontecem quando NÃO há resposta do servidor
@@ -56,7 +72,7 @@ export const isNetworkError = (error: any): boolean => {
 
   // Verifica mensagens específicas de erro de rede (apenas se não há resposta)
   if (!error.response) {
-    const errorMessage = error?.message?.toLowerCase() || '';
+    const errorMessage = error.message?.toLowerCase() || '';
     if (
       errorMessage.includes('network request failed') || 
       errorMessage.includes('failed to fetch') ||
@@ -76,4 +92,3 @@ export const isNetworkError = (error: any): boolean => {
 export const getNetworkErrorMessage = (): string => {
   return "Sem conexão com a internet. Verifique sua conexão e tente novamente.";
 };
-

@@ -1,11 +1,32 @@
 const toRadians = (value: number): number => (value * Math.PI) / 180;
 
+const isValidCoordinate = (value: number): boolean => {
+  return Number.isFinite(value) && !Number.isNaN(value);
+};
+
+const isValidLatitude = (lat: number): boolean => {
+  return isValidCoordinate(lat) && lat >= -90 && lat <= 90;
+};
+
+const isValidLongitude = (lon: number): boolean => {
+  return isValidCoordinate(lon) && lon >= -180 && lon <= 180;
+};
+
 export const calculateDistanceInKm = (
   latitudeA: number,
   longitudeA: number,
   latitudeB: number,
   longitudeB: number,
 ): number => {
+  if (
+    !isValidLatitude(latitudeA) ||
+    !isValidLongitude(longitudeA) ||
+    !isValidLatitude(latitudeB) ||
+    !isValidLongitude(longitudeB)
+  ) {
+    return NaN;
+  }
+
   const earthRadiusKm = 6371;
 
   const latDistance = toRadians(latitudeB - latitudeA);
@@ -35,4 +56,3 @@ export const formatDistance = (distance?: number | null): string | null => {
 
   return `${distance.toFixed(1)} km`;
 };
-

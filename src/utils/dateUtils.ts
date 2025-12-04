@@ -5,12 +5,23 @@ const formatDatePart = (date: Date): string => {
   return `${day}/${month}/${year}`;
 };
 
+const isValidDate = (date: Date): boolean => {
+  return date instanceof Date && !Number.isNaN(date.getTime());
+};
+
 export const formatDate = (dateString: string): string => {
-  return formatDatePart(new Date(dateString));
+  const date = new Date(dateString);
+  if (!isValidDate(date)) {
+    return 'Data inválida';
+  }
+  return formatDatePart(date);
 };
 
 export const formatDateTime = (dateString: string): string => {
   const date = new Date(dateString);
+  if (!isValidDate(date)) {
+    return 'Data inválida';
+  }
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
   return `${formatDatePart(date)} às ${hours}:${minutes}`;
@@ -18,6 +29,10 @@ export const formatDateTime = (dateString: string): string => {
 
 export const getRelativeTime = (dateString: string): string => {
   const date = new Date(dateString);
+  if (!isValidDate(date)) {
+    return 'Data inválida';
+  }
+  
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -48,4 +63,3 @@ export const getRelativeTime = (dateString: string): string => {
   const diffInYears = Math.floor(diffInDays / 365);
   return `há ${diffInYears} ${diffInYears === 1 ? 'ano' : 'anos'}`;
 };
-

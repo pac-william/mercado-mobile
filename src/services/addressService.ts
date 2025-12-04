@@ -14,8 +14,8 @@ export interface Address {
     zipCode: string;
     isFavorite: boolean;
     isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export const getUserAddresses = async (

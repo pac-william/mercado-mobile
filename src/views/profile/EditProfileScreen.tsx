@@ -274,8 +274,9 @@ const EditProfileScreen: React.FC = () => {
         await setProfilePhoto(previousLocalPhoto || null);
       }
       setIsLoading(false);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Não foi possível atualizar o perfil.';
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Não foi possível atualizar o perfil.';
       showModal('error', 'Erro', errorMessage, { text: 'OK', onPress: () => setModalVisible(false) });
       if (pendingLocalPhoto) {
         await setProfilePhoto(previousLocalPhoto || null);
@@ -312,8 +313,9 @@ const EditProfileScreen: React.FC = () => {
         }
       });
       return true;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Não foi possível atualizar o perfil.';
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Não foi possível atualizar o perfil.';
       showModal('error', 'Erro', errorMessage, { text: 'OK', onPress: () => setModalVisible(false) });
       return false;
     } finally {

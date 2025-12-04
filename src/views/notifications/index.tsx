@@ -10,6 +10,8 @@ import { getRelativeTime } from "../../utils/dateUtils";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { SPACING, FONT_SIZE, BORDER_RADIUS, ICON_SIZES, SHADOWS } from "../../constants/styles";
 
+const NOTIFICATIONS_LIST_PADDING = SPACING.xxxl * 2 + SPACING.xlBase;
+
 type NotificationsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
 interface Notification {
@@ -77,7 +79,7 @@ export default function NotificationsScreen() {
       color: theme.colors.onBackground,
     },
     list: {
-      paddingBottom: SPACING.xxxl * 2 + SPACING.xlBase,
+      paddingBottom: NOTIFICATIONS_LIST_PADDING,
     },
     notificationCard: {
       marginBottom: SPACING.md,

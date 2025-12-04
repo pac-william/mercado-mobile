@@ -1,3 +1,5 @@
+import { Image } from 'expo-image';
+
 export const isValidImageUri = (uri: string | null | undefined): boolean => {
   if (!uri) return false;
   if (uri.startsWith('blob:')) return false;
@@ -16,3 +18,17 @@ export const getCachedImageUrl = (baseUrl: string, timestamp?: number): string =
   return `${baseUrl}${separator}t=${ts}`;
 };
 
+export const invalidateImageCache = async (uri: string): Promise<void> => {
+  if (!isValidImageUri(uri)) {
+    return;
+  }
+  
+  try {
+    if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      await Image.clearMemoryCache();
+      await Image.clearDiskCache();
+    }
+  } catch (error) {
+    // Silently fail if cache clearing fails
+  }
+};

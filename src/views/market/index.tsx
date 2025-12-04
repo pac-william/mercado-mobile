@@ -67,7 +67,7 @@ export default function MarketDetailsScreen() {
         const categoriesResponse = await getCategories(1, 100);
         setCategories(categoriesResponse?.category ?? []);
         setOffline(false);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Erro ao buscar dados do mercado:', error);
         if (isNetworkError(error)) {
           setOffline(true);

@@ -1,9 +1,15 @@
 export const formatCurrency = (value: number): string => {
+  if (!Number.isFinite(value)) {
+    return 'R$ 0,00';
+  }
   return `R$ ${value.toFixed(2).replace('.', ',')}`;
 };
 
 export const formatOrderDate = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) {
+    return 'Data inválida';
+  }
   return dateObj.toLocaleDateString("pt-BR", {
     day: '2-digit',
     month: '2-digit',
@@ -40,4 +46,3 @@ export const formatPhone = (text: string): string => {
   
   return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
 };
-

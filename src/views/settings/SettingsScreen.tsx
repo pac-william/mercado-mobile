@@ -61,8 +61,9 @@ export default function SettingsScreen() {
             
             try {
                 await api.get(`/users/auth0/${auth0Id}`);
-            } catch (error: any) {
-                if (error.response?.status === 500 || error.response?.status === 404) {
+            } catch (error: unknown) {
+                const axiosError = error as { response?: { status?: number } };
+                if (axiosError.response?.status === 500 || axiosError.response?.status === 404) {
                     const createData = {
                         name: auth0User.name || auth0User.email || '',
                         email: auth0User.email,

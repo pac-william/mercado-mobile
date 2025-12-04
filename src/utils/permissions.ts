@@ -34,7 +34,7 @@ export const checkLocationPermission = async (): Promise<LocationPermissionResul
       status: permissionStatus,
       granted: status === 'granted',
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       status: 'undetermined',
       granted: false,
@@ -55,7 +55,7 @@ export const requestLocationPermission = async (): Promise<LocationPermissionRes
       status: permissionStatus,
       granted: status === 'granted',
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       status: 'undetermined',
       granted: false,
@@ -85,7 +85,7 @@ export const checkMediaPermissions = async (): Promise<MediaPermissionResult> =>
       mediaLibrary: mediaLibraryPermission,
       granted: cameraStatus.status === 'granted' && mediaLibraryStatus.status === 'granted',
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       camera: 'undetermined',
       mediaLibrary: 'undetermined',
@@ -101,7 +101,7 @@ export const requestCameraPermission = async (): Promise<PermissionStatus> => {
     return status === 'granted' ? 'granted' :
            status === 'denied' ? 'denied' :
            status === 'undetermined' ? 'undetermined' : 'blocked';
-  } catch (error) {
+  } catch (error: unknown) {
     return 'undetermined';
   }
 };
@@ -113,7 +113,7 @@ export const requestMediaLibraryPermission = async (): Promise<PermissionStatus>
     return status === 'granted' ? 'granted' :
            status === 'denied' ? 'denied' :
            status === 'undetermined' ? 'undetermined' : 'blocked';
-  } catch (error) {
+  } catch (error: unknown) {
     return 'undetermined';
   }
 };
@@ -130,7 +130,7 @@ export const requestMediaPermissions = async (): Promise<MediaPermissionResult> 
       mediaLibrary: mediaLibraryStatus,
       granted: cameraStatus === 'granted' && mediaLibraryStatus === 'granted',
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       camera: 'undetermined',
       mediaLibrary: 'undetermined',
@@ -152,7 +152,7 @@ export const checkNotificationPermission = async (): Promise<NotificationPermiss
       status: permissionStatus,
       granted: status === 'granted',
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       status: 'undetermined',
       granted: false,
@@ -173,7 +173,7 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
       status: permissionStatus,
       granted: status === 'granted',
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       status: 'undetermined',
       granted: false,
@@ -190,7 +190,7 @@ export const openSettings = async (): Promise<boolean> => {
       await Linking.openSettings();
       return true;
     }
-  } catch (error) {
+  } catch (error: unknown) {
     return false;
   }
 };
