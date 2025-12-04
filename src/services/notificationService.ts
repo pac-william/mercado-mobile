@@ -3,13 +3,12 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import api from './api';
 import * as SecureStore from 'expo-secure-store';
+import { navigateToOrderDetail } from '../navigation/navigationRef';
 
 let messaging: any = null;
 let isExpoGo = false;
 
 try {
-  const firebase = require('@react-native-firebase/app');
-  firebase.getApp();
   messaging = require('@react-native-firebase/messaging').default;
   isExpoGo = Constants.executionEnvironment === 'storeClient';
 } catch (error) {
@@ -20,34 +19,37 @@ try {
 class NotificationService {
   private fcmToken: string | null = null;
   private isInitialized = false;
-
   private isFirebaseAvailable(): boolean {
     return !isExpoGo && messaging !== null;
   }
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
+    Notifications.addNotificationResponseReceivedListener((response) => {
+      try {
+        const data = response.notification.request.content.data as Record<string, any> | undefined;
+        this.handleNotificationNavigation(data);
+      } catch (error) {
+        console.error('Erro ao processar clique na notificação (Expo):', error);
+      }
+    });
 
-    this.setupLocalNotificationsOnly();
-
-    const hasPermission = await this.requestPermission();
-    
-    if (!hasPermission) {
-      console.log('Permissão de notificações negada');
+    if (!this.isFirebaseAvailable()) {
+      console.log('Notificações Firebase desabilitadas - use um development build para ativar');
+      this.setupLocalNotificationsOnly();
       this.isInitialized = true;
       return;
     }
 
-    if (this.isFirebaseAvailable()) {
-      try {
-        await this.getFCMToken();
-        this.setupNotificationHandlers();
-      } catch (error) {
-        console.error('Erro ao configurar Firebase:', error);
-      }
-    }
+    try {
+      await this.requestPermission();
+      await this.getFCMToken();
+      this.setupNotificationHandlers();
 
-    this.isInitialized = true;
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('Erro ao inicializar notificações:', error);
+    }
   }
 
   private setupLocalNotificationsOnly(): void {
@@ -62,37 +64,23 @@ class NotificationService {
     });
   }
 
-  async requestPermission(): Promise<boolean> {
+  private async requestPermission(): Promise<boolean> {
+    if (!this.isFirebaseAvailable()) {
+      const { status } = await Notifications.requestPermissionsAsync();
+      return status === 'granted';
+    }
+
     try {
-      const { status } = await Notifications.requestPermissionsAsync({
-        ios: {
-          allowAlert: true,
-          allowBadge: true,
-          allowSound: true,
-        },
-      });
-
-      const granted = status === 'granted';
-
-      if (this.isFirebaseAvailable() && granted) {
-        try {
-          if (Platform.OS === 'ios') {
-            const authStatus = await messaging().requestPermission();
-            const enabled =
-              authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-              authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-            return enabled;
-          } else {
-            const authStatus = await messaging().requestPermission();
-            return authStatus === messaging.AuthorizationStatus.AUTHORIZED;
-          }
-        } catch (error) {
-          console.error('Erro ao solicitar permissão do Firebase:', error);
-          return granted;
-        }
+      if (Platform.OS === 'ios') {
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        return enabled;
+      } else {
+        const authStatus = await messaging().requestPermission();
+        return authStatus === messaging.AuthorizationStatus.AUTHORIZED;
       }
-
-      return granted;
     } catch (error) {
       console.error('Erro ao solicitar permissão de notificações:', error);
       return false;
@@ -101,6 +89,7 @@ class NotificationService {
 
   async getFCMToken(): Promise<string | null> {
     if (!this.isFirebaseAvailable()) {
+      console.log('FCM não disponível no Expo Go');
       return null;
     }
 
@@ -121,14 +110,12 @@ class NotificationService {
     try {
       const deviceId = await this.getDeviceId();
       await api.post('/notifications/register', {
-        fcmToken: token,
-        deviceId:deviceId,
+        token,
+        deviceId,
         platform: Platform.OS,
       });
-
-
     } catch (error: any) {
-      console.error('Erro ao registrar token:', error?.response?.data || error?.message);
+      console.error('Erro ao registrar token:', error?.response?.data || error);
     }
   }
 
@@ -144,14 +131,15 @@ class NotificationService {
       }
 
       if (this.fcmToken) {
+        const deviceId = await this.getDeviceId();
         await api.post('/notifications/associate-user', {
-          fcmToken: this.fcmToken,
+          token: this.fcmToken,
           userId,
+          deviceId,
         });
-        
       }
     } catch (error: any) {
-      console.error('Erro ao associar token ao usuário:', error?.response?.data || error?.message);
+      console.error('Erro ao associar token ao usuário:', error?.response?.data || error);
     }
   }
 
@@ -163,11 +151,11 @@ class NotificationService {
     try {
       if (this.fcmToken) {
         await api.post('/notifications/unregister', {
-          fcmToken: this.fcmToken,
+          token: this.fcmToken,
         });
       }
     } catch (error: any) {
-      console.error('Erro ao remover token:', error?.response?.data || error?.message);
+      console.error('Erro ao remover token:', error?.response?.data || error);
     } finally {
       this.fcmToken = null;
     }
@@ -186,6 +174,7 @@ class NotificationService {
     }
   }
 
+
   private setupNotificationHandlers(): void {
     if (!this.isFirebaseAvailable()) {
       return;
@@ -200,7 +189,6 @@ class NotificationService {
         shouldShowList: true,
       }),
     });
-
     messaging().onMessage(async (remoteMessage: any) => {
       console.log('Notificação recebida com app aberto:', remoteMessage);
       if (remoteMessage.notification) {
@@ -217,6 +205,13 @@ class NotificationService {
 
     messaging().onNotificationOpenedApp((remoteMessage: any) => {
       console.log('Notificação aberta com app em background:', remoteMessage);
+      try {
+        if (remoteMessage?.data) {
+          this.handleNotificationNavigation(remoteMessage.data);
+        }
+      } catch (error) {
+        console.error('Erro ao processar notificação em background:', error);
+      }
     });
 
     messaging()
@@ -224,8 +219,34 @@ class NotificationService {
       .then((remoteMessage: any) => {
         if (remoteMessage) {
           console.log('App aberto através de notificação:', remoteMessage);
+          try {
+            if (remoteMessage?.data) {
+              this.handleNotificationNavigation(remoteMessage.data);
+            }
+          } catch (error) {
+            console.error('Erro ao processar notificação inicial:', error);
+          }
         }
       });
+  }
+
+
+  private handleNotificationNavigation(data?: Record<string, any>): void {
+    try {
+      if (!data) return;
+
+      const type = (data.type || data.notificationType) as string | undefined;
+      const orderId =
+        (data.orderId as string | undefined) ||
+        (data.order_id as string | undefined) ||
+        (data.orderID as string | undefined);
+
+      if (orderId && (type === 'NEW_ORDER' || type === 'ORDER_STATUS_UPDATE')) {
+        navigateToOrderDetail(String(orderId));
+      }
+    } catch (error) {
+      console.error('Erro ao navegar a partir da notificação:', error);
+    }
   }
 
   getToken(): string | null {
@@ -290,128 +311,7 @@ class NotificationService {
       console.error('Erro ao cancelar todas as notificações:', error);
     }
   }
-
-  async getNotifications(params?: {
-    page?: number;
-    size?: number;
-    isRead?: boolean;
-  }): Promise<{
-    notifications: Notification[];
-    pagination: {
-      page: number;
-      size: number;
-      total: number;
-      totalPages: number;
-    };
-  }> {
-    try {
-      const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append('page', params.page.toString());
-      if (params?.size) queryParams.append('size', params.size.toString());
-      if (params?.isRead !== undefined) queryParams.append('isRead', params.isRead.toString());
-
-      const response = await api.get(`/notifications?${queryParams.toString()}`);
-      
-      if (response.data?.success && response.data?.data) {
-        return {
-          notifications: response.data.data.notifications
-            .filter((n: any) => n && n.id)
-            .map((n: any) => {
-              let notificationTime: Date;
-              if (n.createdAt) {
-                notificationTime = new Date(n.createdAt);
-                if (isNaN(notificationTime.getTime())) {
-                  notificationTime = new Date();
-                }
-              } else {
-                notificationTime = new Date();
-              }
-
-              return {
-                id: n.id,
-                title: n.title || 'Notificação',
-                message: n.body || '',
-                time: notificationTime,
-                read: n.isRead || false,
-                type: this.mapNotificationType(n.type || 'system'),
-                data: n.data,
-              };
-            }),
-          pagination: response.data.data.pagination,
-        };
-      }
-      
-      throw new Error('Resposta inválida da API');
-    } catch (error: any) {
-      console.error('Erro ao buscar notificações:', error?.response?.data || error?.message);
-      throw error;
-    }
-  }
-
-  async getUnreadCount(): Promise<number> {
-    try {
-      const response = await api.get('/notifications/unread/count');
-      
-      if (response.data?.success && response.data?.data) {
-        return response.data.data.count || 0;
-      }
-      
-      return 0;
-    } catch (error: any) {
-      console.error('Erro ao contar notificações não lidas:', error?.response?.data || error?.message);
-      return 0;
-    }
-  }
-
-  async markAsRead(notificationId: string): Promise<boolean> {
-    try {
-      const response = await api.patch(`/notifications/${notificationId}/read`);
-      return response.data?.success || false;
-    } catch (error: any) {
-      console.error('Erro ao marcar notificação como lida:', error?.response?.data || error?.message);
-      return false;
-    }
-  }
-
-  async markAllAsRead(): Promise<number> {
-    try {
-      const response = await api.patch('/notifications/read-all');
-      if (response.data?.success && response.data?.data) {
-        return response.data.data.count || 0;
-      }
-      return 0;
-    } catch (error: any) {
-      console.error('Erro ao marcar todas as notificações como lidas:', error?.response?.data || error?.message);
-      return 0;
-    }
-  }
-
-  async deleteNotification(notificationId: string): Promise<boolean> {
-    try {
-      const response = await api.delete(`/notifications/${notificationId}`);
-      return response.data?.success || false;
-    } catch (error: any) {
-      console.error('Erro ao deletar notificação:', error?.response?.data || error?.message);
-      return false;
-    }
-  }
-
-  private mapNotificationType(type: string): 'order' | 'system' {
-    if (type === 'NEW_ORDER' || type === 'ORDER_UPDATE' || type === 'ORDER_DELIVERED') {
-      return 'order';
-    }
-    return 'system';
-  }
-}
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: Date;
-  read: boolean;
-  type: 'order' | 'system';
-  data?: Record<string, any>;
 }
 
 export const notificationService = new NotificationService();
+
