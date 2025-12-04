@@ -1,4 +1,4 @@
-package smart.marketin
+package com.smart.marketin
 
 import android.app.Application
 import android.content.res.Configuration

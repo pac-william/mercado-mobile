@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { View, FlatList, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { View, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
 import { Text } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { HomeStackParamList } from "../../../App";
@@ -9,58 +9,120 @@ import { Header } from "../../components/layout/header";
 import { getRelativeTime } from "../../utils/dateUtils";
 import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { SPACING, FONT_SIZE, BORDER_RADIUS, ICON_SIZES, SHADOWS } from "../../constants/styles";
+import { notificationService, type Notification } from "../../services/notificationService";
+import { useSession } from "../../hooks/useSession";
+import LoadingScreen from "../../components/ui/LoadingScreen";
 
-const NOTIFICATIONS_LIST_PADDING = SPACING.xxxl * 2 + SPACING.xlBase;
+type NotificationsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, "Notifications">;
 
-type NotificationsScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: Date;
-  read: boolean;
-  type: 'order' | 'system';
-}
-
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'Pedido confirmado',
-    message: 'Seu pedido #1234 foi confirmado e está sendo preparado',
-    time: new Date(Date.now() - 1000 * 60 * 30),
-    read: false,
-    type: 'order'
-  },
-  {
-    id: '2',
-    title: 'Pedido a caminho',
-    message: 'Seu pedido #1230 saiu para entrega',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    read: false,
-    type: 'order'
-  },
-  {
-    id: '3',
-    title: 'Pedido entregue',
-    message: 'Seu pedido #1228 foi entregue com sucesso',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 5),
-    read: true,
-    type: 'order'
-  },
-  {
-    id: '4',
-    title: 'Atualização do app',
-    message: 'Nova versão disponível com melhorias de performance',
-    time: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    read: true,
-    type: 'system'
-  },
-];
-
-export default function NotificationsScreen() {
+function NotificationsScreen() {
   const navigation = useNavigation<NotificationsScreenNavigationProp>();
-  const [notifications] = useState<Notification[]>(mockNotifications);
+  const { isAuthenticated } = useSession();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const hasLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false);
+
+  const loadNotifications = useCallback(async (pageNum: number = 1, append: boolean = false) => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    if (isLoadingRef.current && !append) {
+      return;
+    }
+
+    try {
+      isLoadingRef.current = true;
+      if (!append) {
+        setError(null);
+        setLoading(true);
+      }
+
+      const result = await notificationService.getNotifications({
+        page: pageNum,
+        size: 20,
+      });
+
+      console.info('result notifications', result.notifications);
+
+      if (append) {
+        setNotifications(prev => [...prev, ...result.notifications]);
+      } else {
+        setNotifications(result.notifications);
+        hasLoadedRef.current = true;
+      }
+
+      setHasMore(result.pagination.page < result.pagination.totalPages);
+    } catch (err: any) {
+      console.error('Erro ao carregar notificações:', err);
+      setError(err?.message || 'Erro ao carregar notificações');
+      if (!append) {
+        setNotifications([]);
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      isLoadingRef.current = false;
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated && !hasLoadedRef.current && !isLoadingRef.current) {
+      loadNotifications(1, false);
+    } else if (!isAuthenticated) {
+      setLoading(false);
+      setNotifications([]);
+      hasLoadedRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Apenas recarregar se não estiver carregando e já tiver carregado antes
+      if (isAuthenticated && hasLoadedRef.current && !isLoadingRef.current) {
+        loadNotifications(1, false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated])
+  );
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setPage(1);
+    loadNotifications(1, false);
+  }, [loadNotifications]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!loading && hasMore && !refreshing) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadNotifications(nextPage, true);
+    }
+  }, [loading, hasMore, refreshing, page, loadNotifications]);
+
+  const handleNotificationPress = useCallback(async (notification: Notification) => {
+    if (!notification.read) {
+      const success = await notificationService.markAsRead(notification.id);
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n =>
+            n.id === notification.id ? { ...n, read: true } : n
+          )
+        );
+      }
+    }
+
+    // TODO: Navegar para detalhes do pedido quando a navegação entre stacks estiver configurada
+    // Por enquanto, apenas marca como lida
+  }, []);
+
   const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
     container: {
       flex: 1,
@@ -143,6 +205,21 @@ export default function NotificationsScreen() {
       marginTop: SPACING.md,
       color: theme.colors.onSurfaceVariant,
     },
+    errorContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: SPACING.jumbo + SPACING.xxxl,
+    },
+    errorText: {
+      fontSize: FONT_SIZE.md,
+      marginTop: SPACING.md,
+      color: theme.colors.error,
+      textAlign: "center",
+    },
+    loadingMore: {
+      paddingVertical: SPACING.lg,
+    },
   }));
 
   const getNotificationIcon = (type: string) => {
@@ -152,20 +229,40 @@ export default function NotificationsScreen() {
   };
 
   const renderNotificationItem = ({ item }: { item: Notification }) => {
+    if (!item || !item.id) {
+      return null;
+    }
+
+    const title = item.title || 'Notificação';
+    const message = item.message || '';
+    const type = item.type || 'system';
+    const isRead = item.read || false;
+    
+    let timeText = 'Agora';
+    if (item.time && item.time instanceof Date && !isNaN(item.time.getTime())) {
+      try {
+        timeText = getRelativeTime(item.time.toISOString());
+      } catch (error) {
+        console.warn('Erro ao formatar data da notificação:', error);
+        timeText = 'Agora';
+      }
+    }
+
     return (
       <TouchableOpacity
         style={[
           styles.notificationCard,
           {
-            borderLeftColor: item.read ? "transparent" : paperTheme.colors.primary,
+            borderLeftColor: isRead ? "transparent" : paperTheme.colors.primary,
           },
         ]}
         activeOpacity={0.7}
+        onPress={() => handleNotificationPress(item)}
       >
         <View style={styles.cardContent}>
           <View style={styles.iconContainer}>
             <Ionicons
-              name={getNotificationIcon(item.type) as any}
+              name={getNotificationIcon(type) as any}
               size={ICON_SIZES.xl}
               color={paperTheme.colors.primary}
             />
@@ -176,13 +273,13 @@ export default function NotificationsScreen() {
               style={[
                 styles.title,
                 {
-                  fontWeight: item.read ? "normal" : "bold",
+                  fontWeight: isRead ? "normal" : "bold",
                 },
               ]}
             >
-                {item.title}
+                {title}
               </Text>
-              {!item.read && (
+              {!isRead && (
               <View style={styles.unreadDot} />
               )}
             </View>
@@ -190,12 +287,12 @@ export default function NotificationsScreen() {
             style={styles.message}
             numberOfLines={2}
           >
-              {item.message}
+              {message}
             </Text>
           <Text
             style={styles.time}
           >
-              {getRelativeTime(item.time.toISOString())}
+              {timeText}
             </Text>
           </View>
         </View>
@@ -203,17 +300,66 @@ export default function NotificationsScreen() {
     );
   };
 
+  const renderFooter = () => {
+    if (!hasMore) return null;
+    return (
+      <View style={styles.loadingMore}>
+        <ActivityIndicator size="small" color={paperTheme.colors.primary} />
+      </View>
+    );
+  };
+
+  if (loading && notifications.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Header />
+        <LoadingScreen />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <Header />
+        <View style={styles.emptyContainer}>
+          <Ionicons
+            name="notifications-off-outline"
+            size={ICON_SIZES.xxxl + ICON_SIZES.sm}
+            color={paperTheme.colors.onSurfaceVariant}
+          />
+          <Text style={styles.emptyText}>
+            Faça login para ver suas notificações
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Header />
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            Notificações
-          </Text>
-        </View>
-
-        {notifications.length === 0 ? (
+        {error && notifications.length === 0 ? (
+          <View style={styles.errorContainer}>
+            <Ionicons
+              name="alert-circle-outline"
+              size={ICON_SIZES.xxxl + ICON_SIZES.sm}
+              color={paperTheme.colors.error}
+            />
+            <Text style={styles.errorText}>
+              {error}
+            </Text>
+            <TouchableOpacity
+              onPress={handleRefresh}
+              style={{ marginTop: SPACING.md }}
+            >
+              <Text style={{ color: paperTheme.colors.primary }}>
+                Tentar novamente
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : notifications.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons
               name="notifications-off-outline"
@@ -231,6 +377,16 @@ export default function NotificationsScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[paperTheme.colors.primary]}
+              />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={renderFooter}
           />
         )}
       </View>
@@ -238,3 +394,4 @@ export default function NotificationsScreen() {
   );
 }
 
+export default NotificationsScreen;

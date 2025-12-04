@@ -2,7 +2,6 @@ import axios from "axios";
 import * as SecureStore from 'expo-secure-store';
 import { Session } from "../types/session";
 import { apiBaseUrl } from "../utils/server";
-
 const api = axios.create({
   baseURL: `${apiBaseUrl}/api/v1`,
   timeout: 60000,
