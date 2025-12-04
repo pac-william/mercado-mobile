@@ -123,10 +123,6 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
 
-  useEffect(() => {
-    loadTheme();
-  }, [loadTheme]);
-
   const loadTheme = useCallback(async () => {
     try {
       const savedTheme = await AsyncStorage.getItem(THEME_KEY);
@@ -137,6 +133,10 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       console.error('Erro ao carregar tema:', error);
     }
   }, []);
+
+  useEffect(() => {
+    loadTheme();
+  }, [loadTheme]);
 
   const saveTheme = useCallback(async (mode: ThemeMode) => {
     try {

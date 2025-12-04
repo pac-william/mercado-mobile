@@ -311,6 +311,162 @@ class NotificationService {
       console.error('Erro ao cancelar todas as notificações:', error);
     }
   }
+
+  async getNotifications(params?: {
+    page?: number;
+    size?: number;
+    isRead?: boolean;
+  }): Promise<{
+    notifications: Notification[];
+    pagination: {
+      page: number;
+      size: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.size) queryParams.append('size', params.size.toString());
+      if (params?.isRead !== undefined) queryParams.append('isRead', params.isRead.toString());
+
+      const response = await api.get(`/notifications?${queryParams.toString()}`);
+      
+      if (response.data?.success && response.data?.data) {
+        return {
+          notifications: response.data.data.notifications
+            .filter((n: any) => n && n.id)
+            .map((n: any) => {
+              let notificationTime: Date;
+              if (n.createdAt) {
+                notificationTime = new Date(n.createdAt);
+                if (isNaN(notificationTime.getTime())) {
+                  notificationTime = new Date();
+                }
+              } else {
+                notificationTime = new Date();
+              }
+
+              return {
+                id: n.id,
+                title: n.title || 'Notificação',
+                message: n.body || '',
+                time: notificationTime,
+                read: n.isRead || false,
+                type: this.mapNotificationType(n.type || 'system'),
+                data: n.data,
+              };
+            }),
+          pagination: response.data.data.pagination,
+        };
+      }
+      
+      throw new Error('Resposta inválida da API');
+    } catch (error: any) {
+      // Se for 404, a rota não existe no backend ainda
+      if (error?.response?.status === 404) {
+        console.warn('Rota de notificações não encontrada no backend (404)');
+        // Retorna estrutura vazia ao invés de lançar erro
+        return {
+          notifications: [],
+          pagination: {
+            page: 1,
+            size: 20,
+            total: 0,
+            totalPages: 0,
+          },
+        };
+      }
+      console.error('Erro ao buscar notificações:', error?.response?.data || error?.message);
+      throw error;
+    }
+  }
+
+  async getUnreadCount(): Promise<number> {
+    try {
+      const response = await api.get('/notifications/unread/count');
+      
+      if (response.data?.success && response.data?.data) {
+        return response.data.data.count || 0;
+      }
+      
+      return 0;
+    } catch (error: any) {
+      // Se for 404, a rota não existe no backend ainda
+      if (error?.response?.status === 404) {
+        console.warn('Rota de contagem de notificações não encontrada no backend (404)');
+        return 0;
+      }
+      console.error('Erro ao contar notificações não lidas:', error?.response?.data || error?.message);
+      return 0;
+    }
+  }
+
+  async markAsRead(notificationId: string): Promise<boolean> {
+    try {
+      const response = await api.patch(`/notifications/${notificationId}/read`);
+      return response.data?.success || false;
+    } catch (error: any) {
+      // Se for 404, a rota não existe no backend ainda
+      if (error?.response?.status === 404) {
+        console.warn('Rota de marcar notificação como lida não encontrada no backend (404)');
+        return false;
+      }
+      console.error('Erro ao marcar notificação como lida:', error?.response?.data || error?.message);
+      return false;
+    }
+  }
+
+  async markAllAsRead(): Promise<number> {
+    try {
+      const response = await api.patch('/notifications/read-all');
+      if (response.data?.success && response.data?.data) {
+        return response.data.data.count || 0;
+      }
+      return 0;
+    } catch (error: any) {
+      // Se for 404, a rota não existe no backend ainda
+      if (error?.response?.status === 404) {
+        console.warn('Rota de marcar todas como lidas não encontrada no backend (404)');
+        return 0;
+      }
+      console.error('Erro ao marcar todas as notificações como lidas:', error?.response?.data || error?.message);
+      return 0;
+    }
+  }
+
+  async deleteNotification(notificationId: string): Promise<boolean> {
+    try {
+      const response = await api.delete(`/notifications/${notificationId}`);
+      return response.data?.success || false;
+    } catch (error: any) {
+      // Se for 404, a rota não existe no backend ainda
+      if (error?.response?.status === 404) {
+        console.warn('Rota de deletar notificação não encontrada no backend (404)');
+        return false;
+      }
+      console.error('Erro ao deletar notificação:', error?.response?.data || error?.message);
+      return false;
+    }
+  }
+
+  private mapNotificationType(type: string): 'order' | 'system' {
+    if (type === 'NEW_ORDER' || type === 'ORDER_UPDATE' || type === 'ORDER_DELIVERED') {
+      return 'order';
+    }
+    return 'system';
+  }
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: Date;
+  read: boolean;
+  type: 'order' | 'system';
+  data?: Record<string, any>;
 }
 
 export const notificationService = new NotificationService();

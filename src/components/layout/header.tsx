@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import React from "react";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import React, { useState, useCallback } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../../contexts/CartContext";
 import { ProfileButton } from "../ui/ProfileButton";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { notificationService } from "../../services/notificationService";
+import { useSession } from "../../hooks/useSession";
 
 const Logo = require("../../../assets/logotipo.png");
 
@@ -14,6 +16,35 @@ export const Header: React.FC = () => {
   const navigation = useNavigation<any>();
   const { state: cartState } = useCart();
   const paperTheme = useCustomTheme();
+  const { isAuthenticated } = useSession();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Erro ao carregar contador de notificações:', error);
+      setUnreadCount(0);
+    }
+  }, [isAuthenticated]);
+
+  // Atualiza o contador quando a tela ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      loadUnreadCount();
+    }, [loadUnreadCount])
+  );
+
+  // Atualiza o contador quando o usuário faz login/logout
+  React.useEffect(() => {
+    loadUnreadCount();
+  }, [loadUnreadCount]);
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: paperTheme.colors.surface }]}>
@@ -38,9 +69,13 @@ export const Header: React.FC = () => {
             onPress={() => navigation.navigate("Notifications")}
           >
             <Ionicons name="notifications-outline" size={ICON_SIZES.xl} color={paperTheme.colors.tertiary} />
-            <View style={[styles.notificationBadge, { backgroundColor: paperTheme.colors.primary }]}>
-              <Text style={[styles.notificationBadgeText, { color: paperTheme.colors.onPrimary }]}>2</Text>
-            </View>
+            {unreadCount > 0 && (
+              <View style={[styles.notificationBadge, { backgroundColor: paperTheme.colors.primary }]}>
+                <Text style={[styles.notificationBadgeText, { color: paperTheme.colors.onPrimary }]}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity

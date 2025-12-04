@@ -9,6 +9,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useCustomTheme } from "../../hooks/useCustomTheme";
 import { HomeStackParamList } from "../../../App";
 import { useUserProfile } from "../../contexts/UserProfileContext";
+import { useSession } from "../../hooks/useSession";
 import { auth0Domain, clientId, discovery, redirectUri } from "../../config/auth0";
 import api from "../../services/api";
 import { Session, SessionUser } from "../../types/session";
@@ -41,6 +42,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
   const processedCodesRef = useRef<Set<string>>(new Set());
   const lastRefreshRef = useRef<{ token: string | null; userId: string | null }>({ token: null, userId: null });
   const { displayPhoto, refreshProfile } = useUserProfile();
+  const { refreshSession } = useSession();
 
   const fetchOrCreateUser = useCallback(async (auth0User: SessionUser) => {
     try {
@@ -74,6 +76,11 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
       const userData = response.data as SessionUser;
 
+      if (userData.sub) {
+        await fetchOrCreateUser(userData);
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+
       if (sessionData) {
         const updatedSession: Session = {
           ...sessionData,
@@ -81,10 +88,6 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
         } as Session;
         await SecureStore.setItemAsync('session', JSON.stringify(updatedSession));
         setSessionUser(userData);
-      }
-
-      if (userData.sub) {
-        await fetchOrCreateUser(userData);
       }
     } catch (error) {
     }
@@ -208,9 +211,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
               exp: expiresAt,
             };
 
-            await SecureStore.setItemAsync('session', JSON.stringify(session));
-
             await fetchUserInfo(data.access_token, session);
+            await refreshSession();
+            await new Promise(resolve => setTimeout(resolve, 100));
             setToken(data.id_token);
             await refreshProfile(true);
           }
@@ -220,7 +223,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
 
       fetchToken();
     }
-  }, [response, request?.codeVerifier, fetchUserInfo, refreshProfile]);
+  }, [response, request?.codeVerifier, fetchUserInfo, refreshProfile, refreshSession]);
 
   const handlePress = async () => {
     const sessionString = await SecureStore.getItemAsync('session');
@@ -298,9 +301,9 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ buttonStyle }) => 
                 exp: expiresAt,
               };
 
-              await SecureStore.setItemAsync('session', JSON.stringify(session));
-
               await fetchUserInfo(data.access_token, session);
+              await refreshSession();
+              await new Promise(resolve => setTimeout(resolve, 100));
               setToken(data.id_token);
               await refreshProfile(true);
             }

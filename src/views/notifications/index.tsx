@@ -80,16 +80,14 @@ function NotificationsScreen() {
       setNotifications([]);
       hasLoadedRef.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [isAuthenticated]);
 
   useFocusEffect(
     useCallback(() => {
-      // Apenas recarregar se não estiver carregando e já tiver carregado antes
       if (isAuthenticated && hasLoadedRef.current && !isLoadingRef.current) {
         loadNotifications(1, false);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated])
   );
 
@@ -154,7 +152,7 @@ function NotificationsScreen() {
       color: theme.colors.onBackground,
     },
     list: {
-      paddingBottom: NOTIFICATIONS_LIST_PADDING,
+      paddingBottom: SPACING.xxl,
     },
     notificationCard: {
       marginBottom: SPACING.md,

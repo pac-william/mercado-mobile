@@ -6,8 +6,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
@@ -31,9 +31,6 @@ export default function ReceiptModal({
 }: ReceiptModalProps) {
   const paperTheme = useCustomTheme();
   const insets = useSafeAreaInsets();
-  const screenHeight = Dimensions.get('window').height;
-  const maxModalHeight = screenHeight * 0.9;
-  const safeAreaBottom = Math.max(insets.bottom, Platform.OS === 'android' ? SPACING.xlBase : SPACING.md);
 
   return (
     <Modal
@@ -45,47 +42,49 @@ export default function ReceiptModal({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View
-              style={[
-                styles.modalContent,
-                { 
-                  backgroundColor: paperTheme.colors.surface,
-                  maxHeight: maxModalHeight,
-                },
-              ]}
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+              style={{ flex: 1, justifyContent: 'flex-end' }}
             >
-              <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
-                <Text
-                  style={[
-                    styles.modalTitle,
-                    { color: paperTheme.colors.onSurface },
-                  ]}
-                >
-                  {mode === 'recipe' ? 'Receita' : 'Modo de Preparo'}
-                </Text>
-                <TouchableOpacity onPress={onClose}>
-                  <Ionicons
-                    name="close"
-                    size={ICON_SIZES.xl}
-                    color={paperTheme.colors.onSurface}
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView
-                style={styles.modalBody}
-                contentContainerStyle={[
-                  styles.contentContainer,
-                  { paddingBottom: SPACING.xxxl * 4 + safeAreaBottom },
+              <View
+                style={[
+                  styles.modalContent,
+                  { backgroundColor: paperTheme.colors.surface },
                 ]}
-                showsVerticalScrollIndicator={true}
-                indicatorStyle={paperTheme.dark ? 'white' : 'default'}
-                keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled={Platform.OS === 'android'}
-                bounces={Platform.OS === 'ios'}
-                scrollEnabled={true}
-                alwaysBounceVertical={false}
               >
+                <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      { color: paperTheme.colors.onSurface },
+                    ]}
+                  >
+                    {mode === 'recipe' ? 'Receita' : 'Modo de Preparo'}
+                  </Text>
+                  <TouchableOpacity onPress={onClose}>
+                    <Ionicons
+                      name="close"
+                      size={ICON_SIZES.xl}
+                      color={paperTheme.colors.onSurface}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                  style={styles.modalBody}
+                  contentContainerStyle={[
+                    styles.contentContainer,
+                    { paddingBottom: SPACING.xxxl * 2 + Math.max(insets.bottom, Platform.OS === 'android' ? SPACING.xlBase : SPACING.md) },
+                  ]}
+                  showsVerticalScrollIndicator={true}
+                  indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={Platform.OS === 'android'}
+                  bounces={Platform.OS === 'ios'}
+                  scrollEnabled={true}
+                  alwaysBounceVertical={false}
+                >
                   {mode === 'recipe' ? (
                     <>
                       <View style={styles.headerSection}>
@@ -179,8 +178,9 @@ export default function ReceiptModal({
                       )}
                     </>
                   )}
-              </ScrollView>
-            </View>
+                </ScrollView>
+              </View>
+            </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
@@ -196,9 +196,8 @@ const styles = StyleSheet.create({
   modalContent: {
     borderTopLeftRadius: BORDER_RADIUS.xl,
     borderTopRightRadius: BORDER_RADIUS.xl,
-    flexDirection: 'column',
-    width: '100%',
-    paddingBottom: 0,
+    maxHeight: '90%',
+    paddingBottom: SPACING.xlBase,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -207,21 +206,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xlBase,
     paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
-    flexShrink: 0,
   },
   modalTitle: {
     fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
   },
   modalBody: {
-    flexGrow: 1,
-    flexShrink: 1,
-    minHeight: 200,
-  },
-  contentContainer: {
     paddingHorizontal: SPACING.xlBase,
     paddingTop: SPACING.xlBase,
-    flexGrow: 0,
+  },
+  contentContainer: {
+    paddingBottom: SPACING.xlBase,
   },
   headerSection: {
     marginBottom: SPACING.xl,
@@ -310,4 +305,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

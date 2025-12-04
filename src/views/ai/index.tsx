@@ -18,6 +18,7 @@ import { useThemedStyles } from "../../hooks/useThemedStyles";
 import { formatCurrency } from "../../utils/format";
 import { SPACING, BORDER_RADIUS, FONT_SIZE, SHADOWS, ICON_SIZES } from "../../constants/styles";
 import { useSession } from "../../hooks/useSession";
+import { useUserProfile } from "../../contexts/UserProfileContext";
 import CustomModal from "../../components/ui/CustomModal";
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
@@ -33,6 +34,7 @@ export default function AISearch() {
   const navigation = useNavigation<AISearchNavigationProp>();
   const tabNavigation = useNavigation<TabNavigationProp>();
   const { isAuthenticated, refreshSession } = useSession();
+  const { refreshProfile } = useUserProfile();
   const [results, setResults] = useState<SuggestionResponse | null>(null);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,6 +94,7 @@ export default function AISearch() {
 
       if (userData.sub) {
         await fetchOrCreateUser(userData);
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
 
       if (sessionData) {
@@ -156,6 +159,8 @@ export default function AISearch() {
 
             await fetchUserInfo(data.access_token, session);
             await refreshSession();
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await refreshProfile(true);
           }
         } catch (error) {
         }
@@ -163,7 +168,7 @@ export default function AISearch() {
 
       fetchToken();
     }
-  }, [response, request?.codeVerifier, fetchUserInfo, refreshSession]);
+  }, [response, request?.codeVerifier, fetchUserInfo, refreshSession, refreshProfile]);
 
   const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
     container: {

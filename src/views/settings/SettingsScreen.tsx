@@ -90,6 +90,7 @@ export default function SettingsScreen() {
 
             if (userData.sub) {
                 await fetchOrCreateUser(userData);
+                await new Promise(resolve => setTimeout(resolve, 150));
             }
 
             if (sessionData) {
@@ -155,6 +156,7 @@ export default function SettingsScreen() {
 
                         await fetchUserInfo(data.access_token, session);
                         await refreshSession();
+                        await new Promise(resolve => setTimeout(resolve, 100));
                         await refreshProfile(true);
                     }
                 } catch (error) {
@@ -320,6 +322,8 @@ export default function SettingsScreen() {
 
                         await fetchUserInfo(data.access_token, session);
                         await refreshSession();
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        await refreshProfile(true);
                     }
                 } catch (error) {
                 } finally {
