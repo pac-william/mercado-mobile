@@ -5,6 +5,19 @@ import api from './api';
 import * as SecureStore from 'expo-secure-store';
 import { navigateToOrderDetail } from '../navigation/navigationRef';
 
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: Date;
+  read: boolean;
+  type: 'order' | 'system';
+  data?: Record<string, any>;
+}
+
+
+
 let messaging: any = null;
 let isExpoGo = false;
 
@@ -18,6 +31,7 @@ try {
 class NotificationService {
   private fcmToken: string | null = null;
   private isInitialized = false;
+
   private isFirebaseAvailable(): boolean {
     return !isExpoGo && messaging !== null;
   }
@@ -354,10 +368,8 @@ class NotificationService {
       
       throw new Error('Resposta inválida da API');
     } catch (error: any) {
-      // Se for 404, a rota não existe no backend ainda
       if (error?.response?.status === 404) {
         console.warn('Rota de notificações não encontrada no backend (404)');
-        // Retorna estrutura vazia ao invés de lançar erro
         return {
           notifications: [],
           pagination: {
@@ -383,7 +395,6 @@ class NotificationService {
       
       return 0;
     } catch (error: any) {
-      // Se for 404, a rota não existe no backend ainda
       if (error?.response?.status === 404) {
         console.warn('Rota de contagem de notificações não encontrada no backend (404)');
         return 0;
@@ -398,7 +409,6 @@ class NotificationService {
       const response = await api.patch(`/notifications/${notificationId}/read`);
       return response.data?.success || false;
     } catch (error: any) {
-      // Se for 404, a rota não existe no backend ainda
       if (error?.response?.status === 404) {
         console.warn('Rota de marcar notificação como lida não encontrada no backend (404)');
         return false;
@@ -416,7 +426,6 @@ class NotificationService {
       }
       return 0;
     } catch (error: any) {
-      // Se for 404, a rota não existe no backend ainda
       if (error?.response?.status === 404) {
         console.warn('Rota de marcar todas como lidas não encontrada no backend (404)');
         return 0;
@@ -431,7 +440,6 @@ class NotificationService {
       const response = await api.delete(`/notifications/${notificationId}`);
       return response.data?.success || false;
     } catch (error: any) {
-      // Se for 404, a rota não existe no backend ainda
       if (error?.response?.status === 404) {
         console.warn('Rota de deletar notificação não encontrada no backend (404)');
         return false;
@@ -441,23 +449,19 @@ class NotificationService {
     }
   }
 
-  private mapNotificationType(type: string): 'order' | 'system' {
-    if (type === 'NEW_ORDER' || type === 'ORDER_UPDATE' || type === 'ORDER_DELIVERED') {
+  private mapNotificationType(type: string | undefined): 'order' | 'system' {
+    if (!type) return 'system';
+    const normalized = String(type).toUpperCase();
+    if (
+      normalized === 'NEW_ORDER' ||
+      normalized === 'ORDER_STATUS_UPDATE' ||
+      normalized === 'ORDER_UPDATE' ||
+      normalized === 'ORDER_DELIVERED'
+    ) {
       return 'order';
     }
     return 'system';
   }
 }
 
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: Date;
-  read: boolean;
-  type: 'order' | 'system';
-  data?: Record<string, any>;
-}
-
 export const notificationService = new NotificationService();
-

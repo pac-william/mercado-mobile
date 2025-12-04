@@ -49,7 +49,9 @@ function NotificationsScreen() {
         size: 20,
       });
 
-      console.info('result notifications', result.notifications);
+      if(!result) {
+        return;
+      }
 
       if (append) {
         setNotifications(prev => [...prev, ...result.notifications]);
