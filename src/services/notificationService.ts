@@ -5,6 +5,19 @@ import api from './api';
 import * as SecureStore from 'expo-secure-store';
 import { navigateToOrderDetail } from '../navigation/navigationRef';
 
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: Date;
+  read: boolean;
+  type: 'order' | 'system';
+  data?: Record<string, any>;
+}
+
+
+
 let messaging: any = null;
 let isExpoGo = false;
 
@@ -18,6 +31,7 @@ try {
 class NotificationService {
   private fcmToken: string | null = null;
   private isInitialized = false;
+
   private isFirebaseAvailable(): boolean {
     return !isExpoGo && messaging !== null;
   }
@@ -301,7 +315,88 @@ class NotificationService {
       return;
     }
   }
+
+  async markAsRead(notificationId: string): Promise<boolean> {
+    try {
+      const response = await api.patch(`/notifications/${notificationId}/read`);
+      return !!response.data?.success;
+    } catch (error: any) {
+      console.error('Erro ao marcar notificação como lida:', error?.response?.data || error?.message || error);
+      return false;
+    }
+  }
+
+  async getNotifications(params?: {
+    page?: number;
+    size?: number;
+    isRead?: boolean;
+  }): Promise<{
+    notifications: Notification[];
+    pagination: {
+      page: number;
+      size: number;
+      total: number;
+      totalPages: number;
+    };
+  } | null> {
+    try {
+      const queryParams: Record<string, any> = {};
+      if (params?.page !== undefined) queryParams.page = params.page;
+      if (params?.size !== undefined) queryParams.size = params.size;
+      if (params?.isRead !== undefined) queryParams.isRead = params.isRead;
+
+      const response = await api.get('/notifications', {
+        params: queryParams,
+      });
+
+      if (!response.data?.success || !response.data?.data) {
+        return null;
+      }
+
+      const apiNotifications = response.data.data.notifications || [];
+
+      const notifications: Notification[] = apiNotifications.map((n: any) => {
+        let time = new Date();
+        if (n.createdAt) {
+          const parsed = new Date(n.createdAt);
+          if (!isNaN(parsed.getTime())) {
+            time = parsed;
+          }
+        }
+
+        return {
+          id: String(n.id),
+          title: n.title || '',
+          message: n.body || '',
+          time,
+          read: !!n.isRead,
+          type: this.mapNotificationType(n.type),
+          data: (n.data || undefined) as Record<string, any> | undefined,
+        };
+      });
+
+      return {
+        notifications,
+        pagination: response.data.data.pagination,
+      };
+    } catch (error: any) {
+      return null;
+    }
+  }
+
+  private mapNotificationType(type: string | undefined): 'order' | 'system' {
+    if (!type) return 'system';
+    const normalized = String(type).toUpperCase();
+    if (
+      normalized === 'NEW_ORDER' ||
+      normalized === 'ORDER_STATUS_UPDATE' ||
+      normalized === 'ORDER_UPDATE' ||
+      normalized === 'ORDER_DELIVERED'
+    ) {
+      return 'order';
+    }
+    return 'system';
+  }
 }
 
 export const notificationService = new NotificationService();
-

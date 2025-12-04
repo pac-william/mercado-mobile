@@ -49,7 +49,9 @@ function NotificationsScreen() {
         size: 20,
       });
 
-      console.info('result notifications', result.notifications);
+      if(!result) {
+        return;
+      }
 
       if (append) {
         setNotifications(prev => [...prev, ...result.notifications]);
@@ -154,7 +156,7 @@ function NotificationsScreen() {
       color: theme.colors.onBackground,
     },
     list: {
-      paddingBottom: NOTIFICATIONS_LIST_PADDING,
+      paddingBottom: 10,
     },
     notificationCard: {
       marginBottom: SPACING.md,
