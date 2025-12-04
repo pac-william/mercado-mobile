@@ -13,7 +13,6 @@ try {
   isExpoGo = Constants.executionEnvironment === 'storeClient';
 } catch (error) {
   isExpoGo = true;
-  console.log('Firebase não disponível - rodando no Expo Go ou módulo não instalado');
 }
 
 class NotificationService {
@@ -30,12 +29,11 @@ class NotificationService {
         const data = response.notification.request.content.data as Record<string, any> | undefined;
         this.handleNotificationNavigation(data);
       } catch (error) {
-        console.error('Erro ao processar clique na notificação (Expo):', error);
+        //
       }
     });
 
     if (!this.isFirebaseAvailable()) {
-      console.log('Notificações Firebase desabilitadas - use um development build para ativar');
       this.setupLocalNotificationsOnly();
       this.isInitialized = true;
       return;
@@ -48,7 +46,7 @@ class NotificationService {
 
       this.isInitialized = true;
     } catch (error) {
-      console.error('Erro ao inicializar notificações:', error);
+      this.isInitialized = false;
     }
   }
 
@@ -82,14 +80,12 @@ class NotificationService {
         return authStatus === messaging.AuthorizationStatus.AUTHORIZED;
       }
     } catch (error) {
-      console.error('Erro ao solicitar permissão de notificações:', error);
       return false;
     }
   }
 
   async getFCMToken(): Promise<string | null> {
     if (!this.isFirebaseAvailable()) {
-      console.log('FCM não disponível no Expo Go');
       return null;
     }
 
@@ -101,7 +97,6 @@ class NotificationService {
       }
       return token;
     } catch (error) {
-      console.error('Erro ao obter token FCM:', error);
       return null;
     }
   }
@@ -121,7 +116,6 @@ class NotificationService {
 
   async associateTokenToUser(userId: string): Promise<void> {
     if (!this.isFirebaseAvailable()) {
-      console.log('Associação de token desabilitada no Expo Go');
       return;
     }
 
@@ -155,7 +149,7 @@ class NotificationService {
         });
       }
     } catch (error: any) {
-      console.error('Erro ao remover token:', error?.response?.data || error);
+      this.fcmToken = null;
     } finally {
       this.fcmToken = null;
     }
@@ -190,7 +184,6 @@ class NotificationService {
       }),
     });
     messaging().onMessage(async (remoteMessage: any) => {
-      console.log('Notificação recebida com app aberto:', remoteMessage);
       if (remoteMessage.notification) {
         await Notifications.scheduleNotificationAsync({
           content: {
@@ -204,7 +197,6 @@ class NotificationService {
     });
 
     messaging().onNotificationOpenedApp((remoteMessage: any) => {
-      console.log('Notificação aberta com app em background:', remoteMessage);
       try {
         if (remoteMessage?.data) {
           this.handleNotificationNavigation(remoteMessage.data);
@@ -218,7 +210,6 @@ class NotificationService {
       .getInitialNotification()
       .then((remoteMessage: any) => {
         if (remoteMessage) {
-          console.log('App aberto através de notificação:', remoteMessage);
           try {
             if (remoteMessage?.data) {
               this.handleNotificationNavigation(remoteMessage.data);
@@ -245,7 +236,7 @@ class NotificationService {
         navigateToOrderDetail(String(orderId));
       }
     } catch (error) {
-      console.error('Erro ao navegar a partir da notificação:', error);
+      return;
     }
   }
 
@@ -268,7 +259,7 @@ class NotificationService {
         trigger: null,
       });
     } catch (error) {
-      console.error('Erro ao enviar notificação local:', error);
+      return;
     }
   }
 
@@ -277,7 +268,7 @@ class NotificationService {
     body: string,
     seconds: number,
     data?: Record<string, any>
-  ): Promise<string> {
+  ): Promise<string|void> {
     try {
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
@@ -291,8 +282,7 @@ class NotificationService {
       });
       return notificationId;
     } catch (error) {
-      console.error('Erro ao agendar notificação local:', error);
-      throw error;
+        return;
     }
   }
 
@@ -300,7 +290,7 @@ class NotificationService {
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
     } catch (error) {
-      console.error('Erro ao cancelar notificação:', error);
+      return;
     }
   }
 
@@ -308,7 +298,7 @@ class NotificationService {
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
     } catch (error) {
-      console.error('Erro ao cancelar todas as notificações:', error);
+      return;
     }
   }
 
