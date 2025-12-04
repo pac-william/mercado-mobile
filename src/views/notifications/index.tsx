@@ -33,7 +33,6 @@ function NotificationsScreen() {
       return;
     }
 
-    // Prevenir múltiplas chamadas simultâneas
     if (isLoadingRef.current && !append) {
       return;
     }
@@ -325,7 +324,7 @@ function NotificationsScreen() {
         <Header />
         <View style={styles.emptyContainer}>
           <Ionicons
-            name="lock-closed-outline"
+            name="notifications-off-outline"
             size={ICON_SIZES.xxxl + ICON_SIZES.sm}
             color={paperTheme.colors.onSurfaceVariant}
           />
@@ -341,12 +340,6 @@ function NotificationsScreen() {
     <View style={styles.container}>
       <Header />
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            Notificações
-          </Text>
-        </View>
-
         {error && notifications.length === 0 ? (
           <View style={styles.errorContainer}>
             <Ionicons
