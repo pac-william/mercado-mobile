@@ -6,6 +6,7 @@ import OnboardingNavigator from '../views/onboarding/OnboardingNavigator';
 import SplashScreen from '../views/splash/SplashScreen';
 import { TabNavigator } from './TabNavigator';
 import { RootStackParamList } from './types';
+import { navigationRef } from './navigationRef';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -21,7 +22,7 @@ export const RootNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="MainTabs" component={TabNavigator} />
       </Stack.Navigator>

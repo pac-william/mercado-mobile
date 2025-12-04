@@ -119,9 +119,22 @@ function NotificationsScreen() {
       }
     }
 
-    // TODO: Navegar para detalhes do pedido quando a navegação entre stacks estiver configurada
-    // Por enquanto, apenas marca como lida
-  }, []);
+    const data = notification.data as any;
+    const orderId =
+      data?.orderId ||
+      data?.order_id ||
+      data?.orderID;
+
+    if (orderId) {
+      const parentNav: any = (navigation as any).getParent?.();
+      if (parentNav) {
+        parentNav.navigate('SettingsStack', {
+          screen: 'OrderDetail',
+          params: { orderId: String(orderId) },
+        });
+      }
+    }
+  }, [navigation, setNotifications]);
 
   const { styles, theme: paperTheme } = useThemedStyles((theme) => ({
     container: {
