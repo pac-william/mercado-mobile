@@ -78,5 +78,8 @@
     "ts-jest": "^29.4.5",
     "typescript": "~5.9.2"
   },
+  "overrides": {
+    "react-native-worklets": "0.6.0"
+  },
   "private": true
 }
