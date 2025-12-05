@@ -537,6 +537,43 @@ export default function SettingsScreen() {
                             </TouchableOpacity>
                         </View>
 
+                        <View style={[styles.section, { backgroundColor: paperTheme.colors.surface, shadowColor: paperTheme.colors.modalShadow }]}>
+                            <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface, opacity: 0.6 }]}>Sobre</Text>
+                            
+                            <View style={styles.aboutContent}>
+                                <View style={styles.aboutHeader}>
+                                    <Ionicons name="storefront" size={ICON_SIZES.xxxl} color={paperTheme.colors.primary} />
+                                    <Text style={[styles.appName, { color: paperTheme.colors.onSurface }]}>Smart Market</Text>
+                                    <Text style={[styles.appVersion, { color: paperTheme.colors.onSurfaceVariant }]}>Versão 1.0.0</Text>
+                                </View>
+                                
+                                <Text style={[styles.aboutDescription, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                    Uma plataforma inteligente que facilita suas compras, oferecendo sugestões personalizadas de produtos e receitas, além de conectar você aos melhores mercados da sua região.
+                                </Text>
+                                
+                                <View style={styles.aboutInfo}>
+                                    <View style={styles.aboutInfoItem}>
+                                        <Ionicons name="bulb-outline" size={ICON_SIZES.md} color={paperTheme.colors.primary} />
+                                        <Text style={[styles.aboutInfoText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                            Sugestões inteligentes com IA
+                                        </Text>
+                                    </View>
+                                    <View style={styles.aboutInfoItem}>
+                                        <Ionicons name="restaurant-outline" size={ICON_SIZES.md} color={paperTheme.colors.primary} />
+                                        <Text style={[styles.aboutInfoText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                            Receitas e modo de preparo
+                                        </Text>
+                                    </View>
+                                    <View style={styles.aboutInfoItem}>
+                                        <Ionicons name="location-outline" size={ICON_SIZES.md} color={paperTheme.colors.primary} />
+                                        <Text style={[styles.aboutInfoText, { color: paperTheme.colors.onSurfaceVariant }]}>
+                                            Mercados próximos a você
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+
                         <TouchableOpacity
                             style={[styles.logoutButton, { 
                                 backgroundColor: paperTheme.colors.surface,
@@ -697,5 +734,41 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: SPACING.lg,
         fontSize: FONT_SIZE.lg,
+    },
+    aboutContent: {
+        paddingHorizontal: SPACING.lg,
+        paddingBottom: SPACING.lg,
+    },
+    aboutHeader: {
+        alignItems: 'center',
+        marginBottom: SPACING.lg,
+    },
+    appName: {
+        fontSize: FONT_SIZE.xxxl,
+        fontWeight: 'bold',
+        marginTop: SPACING.md,
+        marginBottom: SPACING.xs,
+    },
+    appVersion: {
+        fontSize: FONT_SIZE.sm,
+        marginBottom: SPACING.lg,
+    },
+    aboutDescription: {
+        fontSize: FONT_SIZE.md,
+        lineHeight: SPACING.xlBase * 1.3,
+        textAlign: 'center',
+        marginBottom: SPACING.xl,
+    },
+    aboutInfo: {
+        gap: SPACING.md,
+    },
+    aboutInfoItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: SPACING.md,
+    },
+    aboutInfoText: {
+        fontSize: FONT_SIZE.md,
+        flex: 1,
     },
 });

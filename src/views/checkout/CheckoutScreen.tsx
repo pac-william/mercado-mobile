@@ -220,7 +220,7 @@ export default function CheckoutScreen() {
         });
 
         showSuccess(
-          'Compra Finalizada! 🎉',
+          'Compra Finalizada!',
           `Pedido #${newOrder.id} criado com sucesso!\n\nTotal: ${formatCurrency(checkoutTotal)}`,
           {
             text: 'Ver Pedidos',
@@ -295,7 +295,7 @@ export default function CheckoutScreen() {
   };
 
   if (loading) {
-    return <LoadingScreen message="Carregando..." />;
+    return <LoadingScreen message="Carregando..." showHeader={false} />;
   }
 
   return (

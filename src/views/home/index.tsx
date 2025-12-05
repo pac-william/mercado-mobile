@@ -355,7 +355,7 @@ export default function Home() {
   }, [markets, searchQuery, sortByDistance, navigation, paperTheme.colors, handleLoadMoreProducts]);
 
   if (initialLoading) {
-    return <LoadingScreen message="Carregando mercados..." />;
+    return <LoadingScreen message="Carregando mercados..." showHeader={false} />;
   }
 
   return (

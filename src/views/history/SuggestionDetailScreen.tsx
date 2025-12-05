@@ -20,8 +20,9 @@ import { useMarketLoader } from "../../hooks/useMarketLoader";
 import { formatDistance } from "../../utils/distance";
 import { formatCurrency } from "../../utils/format";
 import { useUserLocation } from "../../hooks/useUserLocation";
-import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
+import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from "../../constants/styles";
 import { useLoading } from "../../hooks/useLoading";
+import ReceiptModal from "../../components/ui/ReceiptModal";
 
 type SuggestionDetailScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -35,6 +36,8 @@ export default function SuggestionDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const { markets, productsCache, loadMarkets } = useMarketLoader();
   const { getUserLocation } = useUserLocation();
+  const [receiptModalVisible, setReceiptModalVisible] = useState(false);
+  const [receiptModalMode, setReceiptModalMode] = useState<'recipe' | 'instructions'>('recipe');
 
   const loadData = useCallback(async () => {
     execute(async () => {
@@ -129,6 +132,64 @@ export default function SuggestionDetailScreen() {
         showsVerticalScrollIndicator={true}
         indicatorStyle={paperTheme.dark ? 'white' : 'default'}
       >
+        {suggestion?.data?.receipt && (
+          <View style={styles.receiptCardsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.receiptCard,
+                { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline, shadowColor: paperTheme.colors.modalShadow },
+              ]}
+              activeOpacity={0.7}
+              onPress={() => {
+                setReceiptModalMode('recipe');
+                setReceiptModalVisible(true);
+              }}
+            >
+              <View style={styles.receiptCardContent}>
+                <View style={[styles.receiptCardIcon, { backgroundColor: paperTheme.colors.primaryContainer }]}>
+                  <Ionicons name="book-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onPrimaryContainer} />
+                </View>
+                <View style={styles.receiptCardInfo}>
+                  <Text style={[styles.receiptCardTitle, { color: paperTheme.colors.onSurface }]}>
+                    Receita
+                  </Text>
+                  <Text style={[styles.receiptCardSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                    Ver ingredientes e informações
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.receiptCard,
+                { backgroundColor: paperTheme.colors.surface, borderColor: paperTheme.colors.outline, shadowColor: paperTheme.colors.modalShadow },
+              ]}
+              activeOpacity={0.7}
+              onPress={() => {
+                setReceiptModalMode('instructions');
+                setReceiptModalVisible(true);
+              }}
+            >
+              <View style={styles.receiptCardContent}>
+                <View style={[styles.receiptCardIcon, { backgroundColor: paperTheme.colors.secondaryContainer }]}>
+                  <Ionicons name="restaurant-outline" size={ICON_SIZES.xl} color={paperTheme.colors.onSecondaryContainer} />
+                </View>
+                <View style={styles.receiptCardInfo}>
+                  <Text style={[styles.receiptCardTitle, { color: paperTheme.colors.onSurface }]}>
+                    Modo de Preparo
+                  </Text>
+                  <Text style={[styles.receiptCardSubtitle, { color: paperTheme.colors.onSurfaceVariant }]}>
+                    Ver passos de preparação
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.marketsSection}>
           <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
             Escolha um Mercado
@@ -213,6 +274,15 @@ export default function SuggestionDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {suggestion?.data?.receipt && (
+        <ReceiptModal
+          visible={receiptModalVisible}
+          onClose={() => setReceiptModalVisible(false)}
+          receipt={suggestion.data.receipt}
+          mode={receiptModalMode}
+        />
+      )}
     </View>
   );
 }
@@ -335,6 +405,39 @@ const styles = StyleSheet.create({
   marketPriceText: {
     fontSize: FONT_SIZE.md - 1,
     fontWeight: "600",
+  },
+  receiptCardsContainer: {
+    marginBottom: SPACING.xl,
+    gap: SPACING.md,
+  },
+  receiptCard: {
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    ...SHADOWS.medium,
+  },
+  receiptCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: SPACING.lg,
+  },
+  receiptCardIcon: {
+    width: ICON_SIZES.xxxl,
+    height: ICON_SIZES.xxxl,
+    borderRadius: BORDER_RADIUS.xxl,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: SPACING.md,
+  },
+  receiptCardInfo: {
+    flex: 1,
+  },
+  receiptCardTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: "600",
+    marginBottom: SPACING.xs,
+  },
+  receiptCardSubtitle: {
+    fontSize: FONT_SIZE.sm + 1,
   },
 });
 

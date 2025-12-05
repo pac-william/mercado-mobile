@@ -305,16 +305,21 @@ const CartScreen: React.FC = () => {
   };
 
   if (loading || sessionLoading) {
-    return <LoadingScreen message="Carregando carrinho..." />;
+    return <LoadingScreen message="Carregando carrinho..." showHeader={false} />;
   }
 
   if (cartState.items.length === 0) {
     return (
-      <EmptyState
-        icon="cart-outline"
-        title="Carrinho Vazio"
-        message="Adicione alguns produtos ao seu carrinho para começar suas compras"
-      />
+      <View style={[styles.container, { backgroundColor: paperTheme.colors.background }]}>
+        <Header />
+        <ScreenHeader title="Carrinho" icon="cart" />
+        <EmptyState
+          icon="cart-outline"
+          title="Carrinho Vazio"
+          message="Adicione alguns produtos ao seu carrinho para começar suas compras"
+          showHeader={false}
+        />
+      </View>
     );
   }
 

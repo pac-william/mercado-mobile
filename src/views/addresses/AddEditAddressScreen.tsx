@@ -272,7 +272,6 @@ export default function AddEditAddressScreen() {
         const { latitude, longitude } = location.coords;
 
         const addressData = await reverseGeocode(latitude, longitude);
-        console.log('addressData', addressData);
         setFormData(prev => ({
           ...prev,
           street: prev.street.trim() || addressData.street || '',

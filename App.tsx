@@ -2,6 +2,7 @@ import React from "react";
 import "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { Platform } from "react-native";
 import { CartProvider } from './src/contexts/CartContext';
 import { OnboardingProvider } from './src/contexts/OnboardingContext';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
@@ -19,10 +20,12 @@ export type {
 const AppContent: React.FC = () => {
   const { isDark } = useTheme();
   const { isAuthenticated, user } = useSession();
+  
   React.useEffect(() => {
     notificationService.initialize();
     console.info('Notificações inicializadas');
   }, []);
+  
   React.useEffect(() => {
     if (isAuthenticated && user?.id) {
       notificationService.associateTokenToUser(user.id);
@@ -30,6 +33,23 @@ const AppContent: React.FC = () => {
       notificationService.unregisterToken();
     }
   }, [isAuthenticated, user?.id]);
+
+  React.useEffect(() => {
+    if (Platform.OS === 'android') {
+      const configureNavigationBar = async () => {
+        try {
+          const NavigationBarModule = await import('expo-navigation-bar' as any);
+          const NavigationBar = NavigationBarModule.default || NavigationBarModule;
+          if (NavigationBar && typeof NavigationBar.setBackgroundColorAsync === 'function') {
+            await NavigationBar.setBackgroundColorAsync(isDark ? '#121212' : '#FFFFFF');
+            await NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark');
+          }
+        } catch (error) {
+        }
+      };
+      configureNavigationBar();
+    }
+  }, [isDark]);
 
   return (
     <>

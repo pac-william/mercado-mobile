@@ -256,7 +256,7 @@ export default function OrdersScreen() {
       )}
 
       {loading && orders.length === 0 ? (
-        <LoadingScreen message="Carregando pedidos..." />
+        <LoadingScreen message="Carregando pedidos..." showHeader={false} />
       ) : (
         <FlatList
           data={orders}

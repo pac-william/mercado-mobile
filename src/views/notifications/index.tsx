@@ -326,7 +326,7 @@ function NotificationsScreen() {
     return (
       <View style={styles.container}>
         <Header />
-        <LoadingScreen />
+        <LoadingScreen showHeader={false} />
       </View>
     );
   }

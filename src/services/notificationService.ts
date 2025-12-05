@@ -43,7 +43,6 @@ class NotificationService {
         const data = response.notification.request.content.data as Record<string, any> | undefined;
         this.handleNotificationNavigation(data);
       } catch (error) {
-        //
       }
     });
 

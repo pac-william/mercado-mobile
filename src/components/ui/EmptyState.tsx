@@ -25,29 +25,37 @@ export default function EmptyState({
 }: EmptyStateProps) {
   const theme = useCustomTheme();
 
+  const content = (
+    <View style={showHeader ? styles.emptyContainer : styles.emptyContainerInline}>
+      <Ionicons 
+        name={icon} 
+        size={iconSize} 
+        color={theme.colors.onSurfaceVariant} 
+      />
+      <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>
+        {title}
+      </Text>
+      {message && (
+        <Text style={[styles.emptyText, { color: theme.colors.onSurface }]}>
+          {message}
+        </Text>
+      )}
+      {subtitle && (
+        <Text style={[styles.emptySubtext, { color: theme.colors.onSurfaceVariant }]}>
+          {subtitle}
+        </Text>
+      )}
+    </View>
+  );
+
+  if (!showHeader) {
+    return content;
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {showHeader && <Header />}
-      <View style={styles.emptyContainer}>
-        <Ionicons 
-          name={icon} 
-          size={iconSize} 
-          color={theme.colors.onSurfaceVariant} 
-        />
-        <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>
-          {title}
-        </Text>
-        {message && (
-          <Text style={[styles.emptyText, { color: theme.colors.onSurface }]}>
-            {message}
-          </Text>
-        )}
-        {subtitle && (
-          <Text style={[styles.emptySubtext, { color: theme.colors.onSurfaceVariant }]}>
-            {subtitle}
-          </Text>
-        )}
-      </View>
+      <Header />
+      {content}
     </View>
   );
 }
@@ -62,6 +70,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.xxxl * 2 + SPACING.xlBase,
+  },
+  emptyContainerInline: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xxxl * 2 + SPACING.xlBase,
+    minHeight: SPACING.xxxl * 6,
   },
   emptyTitle: {
     fontSize: FONT_SIZE.xxl,

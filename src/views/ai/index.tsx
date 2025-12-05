@@ -537,7 +537,7 @@ export default function AISearch() {
         {!results && !loading && (
           <View style={styles.suggestionsContainer}>
             <Text style={styles.suggestionsTitle}>
-              💡 Sugestões de Receitas
+              Sugestões de Receitas
             </Text>
             <Text style={styles.suggestionsSubtitle}>
               Toque em uma sugestão para ver os ingredientes

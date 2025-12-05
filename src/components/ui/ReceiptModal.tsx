@@ -5,11 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Receipt } from '../../types/suggestion';
@@ -35,171 +32,167 @@ export default function ReceiptModal({
   return (
     <Modal
       visible={visible}
-      transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
+      presentationStyle="fullScreen"
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.modalOverlay, { backgroundColor: paperTheme.colors.modalOverlay }]}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-              style={{ flex: 1, justifyContent: 'flex-end' }}
-            >
-              <View
-                style={[
-                  styles.modalContent,
-                  { backgroundColor: paperTheme.colors.surface },
-                ]}
-              >
-                <View style={[styles.modalHeader, { borderBottomColor: paperTheme.colors.outline }]}>
-                  <Text
-                    style={[
-                      styles.modalTitle,
-                      { color: paperTheme.colors.onSurface },
-                    ]}
-                  >
-                    {mode === 'recipe' ? 'Receita' : 'Modo de Preparo'}
-                  </Text>
-                  <TouchableOpacity onPress={onClose}>
-                    <Ionicons
-                      name="close"
-                      size={ICON_SIZES.xl}
-                      color={paperTheme.colors.onSurface}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView
-                  style={styles.modalBody}
-                  contentContainerStyle={[
-                    styles.contentContainer,
-                    { paddingBottom: SPACING.xxxl * 2 + Math.max(insets.bottom, Platform.OS === 'android' ? SPACING.xlBase : SPACING.md) },
-                  ]}
-                  showsVerticalScrollIndicator={true}
-                  indicatorStyle={paperTheme.dark ? 'white' : 'default'}
-                  keyboardShouldPersistTaps="handled"
-                  nestedScrollEnabled={Platform.OS === 'android'}
-                  bounces={Platform.OS === 'ios'}
-                  scrollEnabled={true}
-                  alwaysBounceVertical={false}
-                >
-                  {mode === 'recipe' ? (
-                    <>
-                      <View style={styles.headerSection}>
-                        <Text style={[styles.recipeName, { color: paperTheme.colors.onSurface }]}>
-                          {receipt.name}
-                        </Text>
-                        {receipt.description && (
-                          <Text style={[styles.description, { color: paperTheme.colors.onSurfaceVariant }]}>
-                            {receipt.description}
-                          </Text>
-                        )}
-                        <View style={styles.badgesContainer}>
-                          {receipt.prepTime > 0 && (
-                            <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                              <Ionicons name="time-outline" size={ICON_SIZES.sm + SPACING.micro} color={paperTheme.colors.primary} />
-                              <Text style={[styles.badgeText, { color: paperTheme.colors.primary }]}>
-                                {receipt.prepTime} min
-                              </Text>
-                            </View>
-                          )}
-                          {receipt.servings > 0 && (
-                            <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
-                              <Ionicons name="people-outline" size={ICON_SIZES.sm + SPACING.micro} color={paperTheme.colors.primary} />
-                              <Text style={[styles.badgeText, { color: paperTheme.colors.primary }]}>
-                                {receipt.servings} {receipt.servings === 1 ? 'porção' : 'porções'}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      </View>
-
-                      {receipt.ingredients && receipt.ingredients.length > 0 && (
-                        <View style={styles.section}>
-                          <View style={styles.sectionHeader}>
-                            <Ionicons name="list-outline" size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
-                            <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
-                              Ingredientes
-                            </Text>
-                          </View>
-                          <View style={styles.ingredientsList}>
-                            {receipt.ingredients.map((ingredient, index) => (
-                              <View key={index} style={styles.ingredientItem}>
-                                <Text style={[styles.ingredientQuantity, { color: paperTheme.colors.primary }]}>
-                                  {ingredient.quantity}
-                                </Text>
-                                <Text style={[styles.ingredientName, { color: paperTheme.colors.onSurface }]}>
-                                  {ingredient.name}
-                                </Text>
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <View style={styles.headerSection}>
-                        <Text style={[styles.recipeName, { color: paperTheme.colors.onSurface }]}>
-                          {receipt.name}
-                        </Text>
-                        {receipt.description && (
-                          <Text style={[styles.description, { color: paperTheme.colors.onSurfaceVariant }]}>
-                            {receipt.description}
-                          </Text>
-                        )}
-                      </View>
-
-                      {receipt.instructions && receipt.instructions.length > 0 && (
-                        <View style={styles.section}>
-                          <View style={styles.sectionHeader}>
-                            <Ionicons name="restaurant-outline" size={ICON_SIZES.lg} color={paperTheme.colors.primary} />
-                            <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
-                              Modo de Preparo
-                            </Text>
-                          </View>
-                          <View style={styles.instructionsList}>
-                            {receipt.instructions.map((instruction, index) => (
-                              <View key={index} style={styles.instructionItem}>
-                                <View style={[styles.stepNumber, { backgroundColor: paperTheme.colors.primary }]}>
-                                  <Text style={[styles.stepNumberText, { color: paperTheme.colors.onPrimary }]}>
-                                    {index + 1}
-                                  </Text>
-                                </View>
-                                <Text style={[styles.instructionText, { color: paperTheme.colors.onSurface }]}>
-                                  {instruction}
-                                </Text>
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      )}
-                    </>
-                  )}
-                </ScrollView>
-              </View>
-            </KeyboardAvoidingView>
-          </TouchableWithoutFeedback>
+      <SafeAreaView 
+        style={[
+          styles.container,
+          { backgroundColor: paperTheme.colors.surface }
+        ]}
+        edges={['top', 'bottom']}
+      >
+        <View style={[
+          styles.header,
+          { borderBottomColor: paperTheme.colors.outline }
+        ]}>
+          <Text style={[styles.headerTitle, { color: paperTheme.colors.onSurface }]}>
+            {mode === 'recipe' ? 'Receita' : 'Modo de Preparo'}
+          </Text>
+          <TouchableOpacity 
+            onPress={onClose}
+            style={styles.closeButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name="close"
+              size={ICON_SIZES.xl}
+              color={paperTheme.colors.onSurface}
+            />
+          </TouchableOpacity>
         </View>
-      </TouchableWithoutFeedback>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Math.max(insets.bottom, SPACING.xxxl) }
+          ]}
+          showsVerticalScrollIndicator={true}
+          indicatorStyle={paperTheme.dark ? 'white' : 'default'}
+        >
+          {mode === 'recipe' ? (
+            <>
+              <View style={styles.headerSection}>
+                <Text style={[styles.recipeName, { color: paperTheme.colors.onSurface }]}>
+                  {receipt.name}
+                </Text>
+                {receipt.description && (
+                  <Text style={[styles.description, { color: paperTheme.colors.onSurfaceVariant }]}>
+                    {receipt.description}
+                  </Text>
+                )}
+                
+                <View style={styles.badgesContainer}>
+                  {receipt.prepTime > 0 && (
+                    <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                      <Ionicons 
+                        name="time-outline" 
+                        size={ICON_SIZES.sm + SPACING.micro} 
+                        color={paperTheme.colors.primary} 
+                      />
+                      <Text style={[styles.badgeText, { color: paperTheme.colors.primary }]}>
+                        {receipt.prepTime} min
+                      </Text>
+                    </View>
+                  )}
+                  {receipt.servings > 0 && (
+                    <View style={[styles.badge, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                      <Ionicons 
+                        name="people-outline" 
+                        size={ICON_SIZES.sm + SPACING.micro} 
+                        color={paperTheme.colors.primary} 
+                      />
+                      <Text style={[styles.badgeText, { color: paperTheme.colors.primary }]}>
+                        {receipt.servings} {receipt.servings === 1 ? 'porção' : 'porções'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {receipt.ingredients && receipt.ingredients.length > 0 && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons 
+                      name="list-outline" 
+                      size={ICON_SIZES.lg} 
+                      color={paperTheme.colors.primary} 
+                    />
+                    <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
+                      Ingredientes
+                    </Text>
+                  </View>
+                  <View style={styles.ingredientsList}>
+                    {receipt.ingredients.map((ingredient, index) => (
+                      <View key={index} style={styles.ingredientItem}>
+                        <Text style={[styles.ingredientQuantity, { color: paperTheme.colors.primary }]}>
+                          {ingredient.quantity}
+                        </Text>
+                        <Text style={[styles.ingredientName, { color: paperTheme.colors.onSurface }]}>
+                          {ingredient.name}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </>
+          ) : (
+            <>
+              <View style={styles.headerSection}>
+                <Text style={[styles.recipeName, { color: paperTheme.colors.onSurface }]}>
+                  {receipt.name}
+                </Text>
+                {receipt.description && (
+                  <Text style={[styles.description, { color: paperTheme.colors.onSurfaceVariant }]}>
+                    {receipt.description}
+                  </Text>
+                )}
+              </View>
+
+              {receipt.instructions && receipt.instructions.length > 0 && (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons 
+                      name="restaurant-outline" 
+                      size={ICON_SIZES.lg} 
+                      color={paperTheme.colors.primary} 
+                    />
+                    <Text style={[styles.sectionTitle, { color: paperTheme.colors.onSurface }]}>
+                      Modo de Preparo
+                    </Text>
+                  </View>
+                  <View style={styles.instructionsList}>
+                    {receipt.instructions.map((instruction, index) => (
+                      <View key={index} style={styles.instructionItem}>
+                        <View style={[styles.stepNumber, { backgroundColor: paperTheme.colors.primary }]}>
+                          <Text style={[styles.stepNumberText, { color: paperTheme.colors.onPrimary }]}>
+                            {index + 1}
+                          </Text>
+                        </View>
+                        <Text style={[styles.instructionText, { color: paperTheme.colors.onSurface }]}>
+                          {instruction}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </>
+          )}
+        </ScrollView>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  container: {
     flex: 1,
-    justifyContent: 'flex-end',
   },
-  modalContent: {
-    borderTopLeftRadius: BORDER_RADIUS.xl,
-    borderTopRightRadius: BORDER_RADIUS.xl,
-    maxHeight: '90%',
-    paddingBottom: SPACING.xlBase,
-  },
-  modalHeader: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -207,16 +200,19 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
   },
-  modalTitle: {
+  headerTitle: {
     fontSize: FONT_SIZE.xl,
     fontWeight: 'bold',
   },
-  modalBody: {
+  closeButton: {
+    padding: SPACING.xs,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: SPACING.xlBase,
     paddingTop: SPACING.xlBase,
-  },
-  contentContainer: {
-    paddingBottom: SPACING.xlBase,
   },
   headerSection: {
     marginBottom: SPACING.xl,
@@ -228,13 +224,14 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: FONT_SIZE.md,
-    lineHeight: SPACING.xlBase,
+    lineHeight: SPACING.xlBase * 1.2,
     marginBottom: SPACING.md,
   },
   badgesContainer: {
     flexDirection: 'row',
     gap: SPACING.xs,
     flexWrap: 'wrap',
+    marginTop: SPACING.md,
   },
   badge: {
     flexDirection: 'row',
@@ -277,7 +274,7 @@ const styles = StyleSheet.create({
   ingredientName: {
     fontSize: FONT_SIZE.md,
     flex: 1,
-    lineHeight: SPACING.xlBase,
+    lineHeight: SPACING.xlBase * 1.2,
   },
   instructionsList: {
     gap: SPACING.lg,
@@ -301,7 +298,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: FONT_SIZE.md,
-    lineHeight: SPACING.xlBase,
+    lineHeight: SPACING.xlBase * 1.2,
     flex: 1,
   },
 });

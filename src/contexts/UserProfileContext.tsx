@@ -37,7 +37,6 @@ const removeStorageKeys = async (keys: string[]) => {
   try {
     await AsyncStorage.multiRemove(keys);
   } catch {
-
   }
 };
 
@@ -47,6 +46,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [localPhoto, setLocalPhotoState] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const lastFetchRef = useRef<number>(0);
+  const previousAuthRef = useRef<boolean>(false);
 
   const loadCachedData = useCallback(async () => {
     try {
@@ -154,7 +154,6 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
             await api.post('/users', payload);
             await fetchProfile();
           } catch {
-
           }
         }
       } finally {
@@ -165,16 +164,35 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   );
 
   useEffect(() => {
+    const wasAuthenticated = previousAuthRef.current;
+    const isNewLogin = !wasAuthenticated && isAuthenticated;
+
     if (isAuthenticated) {
-      const timeoutId = setTimeout(() => {
-        refreshProfile(true);
-      }, 300);
-      return () => clearTimeout(timeoutId);
+      if (isNewLogin) {
+        setProfile(null);
+        setLocalPhotoState(null);
+        lastFetchRef.current = 0;
+        removeStorageKeys([
+          PROFILE_CACHE_KEY,
+          PROFILE_CACHE_TS_KEY,
+          PROFILE_LOCAL_PHOTO_KEY,
+          PROFILE_LOCAL_PHOTO_TS_KEY,
+        ]).then(() => {
+          refreshProfile(true);
+        });
+      } else {
+        const timeoutId = setTimeout(() => {
+          refreshProfile(true);
+        }, 300);
+        return () => clearTimeout(timeoutId);
+      }
     } else {
       setProfile(null);
       setLocalPhotoState(null);
       lastFetchRef.current = 0;
     }
+
+    previousAuthRef.current = isAuthenticated;
   }, [isAuthenticated, refreshProfile]);
 
   const displayPhoto = useMemo(() => {

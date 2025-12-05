@@ -38,7 +38,7 @@ export default function ProductDetail({ route }: Props) {
   const { addToCart, isAdding } = useAddToCart({
     onSuccess: () => {
       showSuccess(
-        'Produto Adicionado! 🎉',
+        'Produto Adicionado!',
         `${quantity} ${quantity === 1 ? 'unidade' : 'unidades'} de ${product.name} ${quantity === 1 ? 'foi' : 'foram'} adicionada${quantity === 1 ? '' : 's'} ao seu carrinho com sucesso!`,
         {
           text: 'Ver Carrinho',

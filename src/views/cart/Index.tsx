@@ -61,7 +61,7 @@ export default function Cart() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>🛒 Carrinho</Text>
+      <Text style={styles.header}>Carrinho</Text>
 
       {state.items.length === 0 ? (
         <Text style={styles.empty}>Seu carrinho está vazio</Text>
@@ -75,10 +75,10 @@ export default function Cart() {
               <Text style={styles.price}>{formatCurrency(item.price * item.quantity)}</Text>
               <View style={styles.buttons}>
                 <TouchableOpacity onPress={() => decreaseQty(item.id)}>
-                  <Text style={styles.btn}>➖</Text>
+                  <Text style={styles.btn}>-</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => increaseQty(item.id)}>
-                  <Text style={styles.btn}>➕</Text>
+                  <Text style={styles.btn}>+</Text>
                 </TouchableOpacity>
               </View>
             </View>

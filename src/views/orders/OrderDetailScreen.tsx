@@ -85,7 +85,7 @@ export default function OrderDetailScreen() {
   }, [orderId, execute]);
 
   if (loading) {
-    return <LoadingScreen message="Carregando detalhes do pedido..." />;
+    return <LoadingScreen message="Carregando detalhes do pedido..." showHeader={false} />;
   }
 
   if (error || !order) {

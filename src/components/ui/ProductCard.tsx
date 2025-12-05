@@ -52,7 +52,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { addToCart, isAdding } = useAddToCart({
     onSuccess: () => {
       showSuccess(
-        'Produto Adicionado! 🎉',
+        'Produto Adicionado!',
         `${title} foi adicionado ao seu carrinho com sucesso!`,
         {
           text: 'Ver Carrinho',
