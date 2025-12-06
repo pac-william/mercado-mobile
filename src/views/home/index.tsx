@@ -26,6 +26,9 @@ import { useUserLocation } from "../../hooks/useUserLocation";
 import { usePermissions } from "../../hooks/usePermissions";
 import { useLoading } from "../../hooks/useLoading";
 import { formatDistance } from "../../utils/distance";
+import { getMarketOpeningHours, MarketOperatingHoursResponse } from "../../services/marketService";
+import { formatOpeningHours, calculateMarketStatus } from "../../utils/format";
+import OpeningHoursModal from "../../components/ui/OpeningHoursModal";
 import { SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, ICON_SIZES } from "../../constants/styles";
 import { getScreenBottomPadding } from "../../utils/tabBarUtils";
 import { Dimensions } from "react-native";
@@ -44,6 +47,7 @@ type MarketWithProducts = Market & {
   productsPage?: number;
   hasMoreProducts?: boolean;
   loadingMoreProducts?: boolean;
+  openingHours?: MarketOperatingHoursResponse | null;
 };
 
 export default function Home() {
@@ -66,6 +70,7 @@ export default function Home() {
   const hasLoadedOnce = useRef(false);
   const { getUserLocation } = useUserLocation();
   const permissions = usePermissions();
+  const [selectedMarketForHours, setSelectedMarketForHours] = useState<MarketWithProducts | null>(null);
 
   const bottomPadding = getScreenBottomPadding(insets);
 
@@ -106,6 +111,7 @@ export default function Home() {
                 filters.maxPrice,
                 filters.categoryIds
               );
+              const openingHours = await getMarketOpeningHours(marketDetails.id);
               return {
                 ...marketDetails,
                 distance: marketFromList.distance,
@@ -114,7 +120,8 @@ export default function Home() {
                 products: resProducts.products,
                 productsPage: 1,
                 hasMoreProducts: resProducts.products.length === 20,
-                loadingMoreProducts: false
+                loadingMoreProducts: false,
+                openingHours
               };
             } catch (err: any) {
               console.error(`Erro ao buscar dados completos do mercado ${marketFromList.name}:`, err);
@@ -126,7 +133,8 @@ export default function Home() {
                 products: [],
                 productsPage: 0,
                 hasMoreProducts: false,
-                loadingMoreProducts: false
+                loadingMoreProducts: false,
+                openingHours: null
               };
             }
           })
@@ -296,6 +304,20 @@ export default function Home() {
               <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1} ellipsizeMode="tail">
                 {market.address}
               </Text>
+              <TouchableOpacity
+                onPress={() => setSelectedMarketForHours(market)}
+                style={styles.marketHoursButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="time-outline" size={14} color={paperTheme.colors.primary} />
+                <Text style={[styles.marketHoursButtonText, { color: paperTheme.colors.primary }]}>
+                  {(() => {
+                    if (!market.openingHours) return 'Ver horários';
+                    const status = calculateMarketStatus(market.openingHours);
+                    return status.statusText;
+                  })()}
+                </Text>
+              </TouchableOpacity>
               {sortByDistance && market.distance !== null && market.distance !== undefined && (
                 <View style={styles.marketDistanceContainer}>
                   <View
@@ -442,6 +464,15 @@ export default function Home() {
         onClear={handleClearFilters}
         currentFilters={filters}
       />
+
+      {selectedMarketForHours && (
+        <OpeningHoursModal
+          visible={!!selectedMarketForHours}
+          onClose={() => setSelectedMarketForHours(null)}
+          marketName={selectedMarketForHours.name}
+          openingHours={selectedMarketForHours.openingHours || null}
+        />
+      )}
     </View>
   );
 }
@@ -485,6 +516,20 @@ const styles = StyleSheet.create({
     marketAddress: {
         fontSize: FONT_SIZE.md,
         lineHeight: SPACING.xlBase,
+    },
+    marketHoursButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: SPACING.xs,
+        gap: SPACING.xs,
+        alignSelf: 'flex-start',
+        paddingVertical: SPACING.xs,
+        paddingHorizontal: SPACING.sm,
+        borderRadius: BORDER_RADIUS.md,
+    },
+    marketHoursButtonText: {
+        fontSize: FONT_SIZE.sm,
+        fontWeight: '500',
     },
     marketDistanceContainer: {
         marginTop: SPACING.sm,

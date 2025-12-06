@@ -28,6 +28,8 @@ import { useModal } from '../../hooks/useModal';
 import { useSession } from '../../hooks/useSession';
 import { Address, getUserAddresses } from '../../services/addressService';
 import { createOrder } from '../../services/orderService';
+import { getMarketAcceptedPaymentMethods, PaymentMethodsResponse } from '../../services/paymentService';
+import { checkMarketStatus, MarketStatusResponse } from '../../services/marketService';
 import { SPACING, BORDER_RADIUS, FONT_SIZE, ICON_SIZES, SHADOWS } from '../../constants/styles';
 import { formatCurrency, formatOrderDate } from '../../utils/format';
 import { getScreenBottomPadding } from '../../utils/tabBarUtils';
@@ -44,6 +46,8 @@ const PAYMENT_METHODS = [
   { id: 'debit_card', backendValue: 'DEBIT_CARD', name: 'Cartão de Débito', icon: 'card-outline' },
   { id: 'pix', backendValue: 'PIX', name: 'PIX', icon: 'flash' },
   { id: 'cash', backendValue: 'CASH', name: 'Dinheiro', icon: 'cash' },
+  { id: 'meal_voucher', backendValue: 'MEAL_VOUCHER', name: 'Vale Alimentação', icon: 'receipt' },
+  { id: 'food_voucher', backendValue: 'FOOD_VOUCHER', name: 'Vale Refeição', icon: 'ticket' },
 ];
 
 export default function CheckoutScreen() {
@@ -66,6 +70,15 @@ export default function CheckoutScreen() {
   const [showCardModal, setShowCardModal] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodsResponse>({
+    acceptsCreditCard: false,
+    acceptsDebitCard: false,
+    acceptsPix: false,
+    acceptsCash: false,
+    acceptsMealVoucher: false,
+    acceptsFoodVoucher: false,
+  });
+  const [marketStatus, setMarketStatus] = useState<MarketStatusResponse>({ isOpen: true });
 
   const checkoutItems = useMemo(() => {
     const routeItems = route.params?.items;
@@ -132,6 +145,47 @@ export default function CheckoutScreen() {
       stopLoading();
     }
   }, [isAuthenticated, loadAddresses, stopLoading]);
+
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      if (!checkoutMarketId) return;
+      
+      try {
+        const data = await getMarketAcceptedPaymentMethods(checkoutMarketId);
+        setPaymentMethods(data);
+      } catch (error) {
+        console.error('Erro ao buscar formas de pagamento:', error);
+        // Em caso de erro, permite todas as formas como fallback
+        setPaymentMethods({
+          acceptsCreditCard: true,
+          acceptsDebitCard: true,
+          acceptsPix: true,
+          acceptsCash: true,
+          acceptsMealVoucher: true,
+          acceptsFoodVoucher: true,
+        });
+      }
+    };
+
+    fetchPaymentMethods();
+  }, [checkoutMarketId]);
+
+  useEffect(() => {
+    const fetchMarketStatus = async () => {
+      if (!checkoutMarketId) return;
+      
+      try {
+        const status = await checkMarketStatus(checkoutMarketId);
+        setMarketStatus(status);
+      } catch (error) {
+        console.error('Erro ao verificar status do mercado:', error);
+        // Em caso de erro, assume que está aberto
+        setMarketStatus({ isOpen: true });
+      }
+    };
+
+    fetchMarketStatus();
+  }, [checkoutMarketId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -210,6 +264,19 @@ export default function CheckoutScreen() {
   };
 
   const handleFinalizeOrderWithPayment = async (paymentMethod: string) => {
+    // Verifica se o mercado está aberto antes de finalizar
+    if (!marketStatus.isOpen) {
+      showWarning(
+        'Mercado Fechado',
+        marketStatus.message || 'O mercado está fechado no momento. Não é possível realizar pedidos fora do horário de funcionamento.',
+        {
+          text: 'OK',
+          onPress: hideModal,
+        }
+      );
+      return;
+    }
+
     executeCreateOrder(async () => {
       try {
         const orderData = createOrderData(paymentMethod);
@@ -240,14 +307,29 @@ export default function CheckoutScreen() {
         );
       } catch (error: unknown) {
         console.error('Erro ao criar pedido:', error);
-        showWarning(
-          'Erro ao finalizar',
-          'Não foi possível processar seu pedido. Tente novamente.',
-          {
-            text: 'OK',
-            onPress: hideModal,
-          }
-        );
+        // Verifica se o erro é relacionado ao mercado fechado
+        const errorMessage = (error as any)?.response?.data?.message || (error as any)?.message || '';
+        if (errorMessage.includes('fechado') || errorMessage.includes('horário')) {
+          showWarning(
+            'Mercado Fechado',
+            errorMessage || 'O mercado está fechado no momento. Não é possível realizar pedidos fora do horário de funcionamento.',
+            {
+              text: 'OK',
+              onPress: hideModal,
+            }
+          );
+          // Atualiza o status do mercado
+          setMarketStatus({ isOpen: false, message: errorMessage });
+        } else {
+          showWarning(
+            'Erro ao finalizar',
+            errorMessage || 'Não foi possível processar seu pedido. Tente novamente.',
+            {
+              text: 'OK',
+              onPress: hideModal,
+            }
+          );
+        }
         throw error;
       }
     });
@@ -263,19 +345,41 @@ export default function CheckoutScreen() {
   };
 
   const getAvailablePaymentMethods = () => {
-    if (selectedPaymentContext === 'delivery') {
-      return [
-        { id: 'cash', backendValue: 'CASH', name: 'Dinheiro', icon: 'cash' },
-        { id: 'credit_card', backendValue: 'CREDIT_CARD', name: 'Cartão de Crédito', icon: 'card' },
-        { id: 'debit_card', backendValue: 'DEBIT_CARD', name: 'Cartão de Débito', icon: 'card-outline' },
-      ];
-    } else if (selectedPaymentContext === 'app') {
-      return [
-        { id: 'credit_card', backendValue: 'CREDIT_CARD', name: 'Cartão de Crédito', icon: 'card' },
-        { id: 'pix', backendValue: 'PIX', name: 'PIX', icon: 'flash' },
-      ];
+    if (!selectedPaymentContext) {
+      return [];
     }
-    return [];
+
+    const allMethods = PAYMENT_METHODS.filter((method) => {
+      // Filtra baseado no contexto e nas formas aceitas pelo mercado
+      if (selectedPaymentContext === 'delivery') {
+        switch (method.id) {
+          case 'cash':
+            return paymentMethods.acceptsCash;
+          case 'credit_card':
+            return paymentMethods.acceptsCreditCard;
+          case 'debit_card':
+            return paymentMethods.acceptsDebitCard;
+          case 'meal_voucher':
+            return paymentMethods.acceptsMealVoucher;
+          case 'food_voucher':
+            return paymentMethods.acceptsFoodVoucher;
+          default:
+            return false;
+        }
+      } else if (selectedPaymentContext === 'app') {
+        switch (method.id) {
+          case 'credit_card':
+            return paymentMethods.acceptsCreditCard;
+          case 'pix':
+            return paymentMethods.acceptsPix;
+          default:
+            return false;
+        }
+      }
+      return false;
+    });
+
+    return allMethods;
   };
 
   const shouldShowChangeField = () => {
@@ -433,6 +537,15 @@ export default function CheckoutScreen() {
               Forma de Pagamento
             </Text>
 
+            {!marketStatus.isOpen && (
+              <View style={[styles.marketClosedWarning, { backgroundColor: paperTheme.colors.errorContainer }]}>
+                <Ionicons name="alert-circle" size={ICON_SIZES.lg} color={paperTheme.colors.error} />
+                <Text style={[styles.marketClosedText, { color: paperTheme.colors.onErrorContainer }]}>
+                  {marketStatus.message || 'O mercado está fechado no momento. Não é possível realizar pedidos fora do horário de funcionamento.'}
+                </Text>
+              </View>
+            )}
+
             <View style={styles.paymentContextContainer}>
               <TouchableOpacity
                 onPress={() => handleSelectPaymentContext('delivery')}
@@ -505,7 +618,15 @@ export default function CheckoutScreen() {
 
             {selectedPaymentContext && (
               <View style={styles.paymentMethodsContainer}>
-                {getAvailablePaymentMethods().map((method) => (
+                {getAvailablePaymentMethods().length === 0 ? (
+                  <View style={[styles.emptyPaymentMethods, { backgroundColor: paperTheme.colors.surfaceVariant }]}>
+                    <Ionicons name="alert-circle-outline" size={ICON_SIZES.xl} color={paperTheme.colors.outline} />
+                    <Text style={[styles.emptyPaymentMethodsText, { color: paperTheme.colors.onSurface }]}>
+                      Nenhuma forma de pagamento disponível para este mercado
+                    </Text>
+                  </View>
+                ) : (
+                  getAvailablePaymentMethods().map((method) => (
                   <TouchableOpacity
                     key={method.id}
                     onPress={() => {
@@ -551,7 +672,8 @@ export default function CheckoutScreen() {
                       <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={paperTheme.colors.onSurfaceVariant} />
                     )}
                   </TouchableOpacity>
-                ))}
+                  ))
+                )}
               </View>
             )}
 
@@ -608,7 +730,7 @@ export default function CheckoutScreen() {
               position: "left",
             }}
             loading={creatingOrder}
-            disabled={creatingOrder || !selectedAddress || !selectedPaymentContext || (canFinalizeOrder() && !selectedPaymentMethod)}
+            disabled={creatingOrder || !selectedAddress || !selectedPaymentContext || (canFinalizeOrder() && !selectedPaymentMethod) || !marketStatus.isOpen}
             fullWidth
           />
         </View>
@@ -830,5 +952,30 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     fontSize: FONT_SIZE.md,
+  },
+  emptyPaymentMethods: {
+    padding: SPACING.xlBase,
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.lg,
+    marginTop: SPACING.md,
+  },
+  emptyPaymentMethodsText: {
+    marginTop: SPACING.md,
+    fontSize: FONT_SIZE.md,
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  marketClosedWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.lg,
+  },
+  marketClosedText: {
+    flex: 1,
+    marginLeft: SPACING.sm,
+    fontSize: FONT_SIZE.md,
+    fontWeight: '500',
   },
 });

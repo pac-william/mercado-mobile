@@ -1,14 +1,2 @@
-
-const getApiBaseUrl = (): string => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-
-  const DEV_IP = "10.0.0.174";
-  
-  return __DEV__ 
-    ? `http://${DEV_IP}:8080`
-    : "http://localhost:8080";
-};
-
-export const apiBaseUrl = getApiBaseUrl();
+// export const apiBaseUrl = "https://api.smart-market.store";
+export const apiBaseUrl = "http://10.0.0.180:8080";

@@ -4,7 +4,9 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Searchbar, useTheme } from 'react-native-paper';
-import { getMarketById } from '../../services/marketService';
+import { getMarketById, getMarketOpeningHours, MarketOperatingHoursResponse } from '../../services/marketService';
+import { formatOpeningHours, calculateMarketStatus } from '../../utils/format';
+import OpeningHoursModal from '../../components/ui/OpeningHoursModal';
 import { getProducts } from '../../services/productService';
 import { getCategories } from '../../services/categoryService';
 import ProductCard from '../../components/ui/ProductCard';
@@ -48,6 +50,8 @@ export default function MarketDetailsScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [openingHours, setOpeningHours] = useState<MarketOperatingHoursResponse | null>(null);
+  const [showHoursModal, setShowHoursModal] = useState(false);
 
   const { loading, execute } = useLoading({ initialValue: true });
   const [offline, setOffline] = useState(false);
@@ -66,6 +70,9 @@ export default function MarketDetailsScreen() {
 
         const categoriesResponse = await getCategories(1, 100);
         setCategories(categoriesResponse?.category ?? []);
+
+        const hoursResponse = await getMarketOpeningHours(marketId);
+        setOpeningHours(hoursResponse);
         setOffline(false);
       } catch (error: unknown) {
         console.error('Erro ao buscar dados do mercado:', error);
@@ -215,6 +222,50 @@ export default function MarketDetailsScreen() {
             <Text style={[styles.marketAddress, { color: paperTheme.colors.onSurfaceVariant }]}>
               {market.address}
             </Text>
+            <TouchableOpacity
+              onPress={() => setShowHoursModal(true)}
+              style={[styles.marketHoursButton, { 
+                backgroundColor: (() => {
+                  const status = calculateMarketStatus(openingHours);
+                  return status.isOpen 
+                    ? paperTheme.colors.primaryContainer 
+                    : paperTheme.colors.surfaceVariant;
+                })()
+              }]}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name="time-outline" 
+                size={ICON_SIZES.md} 
+                color={(() => {
+                  const status = calculateMarketStatus(openingHours);
+                  return status.isOpen ? paperTheme.colors.primary : paperTheme.colors.onSurfaceVariant;
+                })()} 
+              />
+              <View style={styles.marketHoursTextContainer}>
+                <Text style={[styles.marketHoursStatus, { 
+                  color: (() => {
+                    const status = calculateMarketStatus(openingHours);
+                    return status.isOpen ? paperTheme.colors.primary : openingHours ? paperTheme.colors.error : paperTheme.colors.onSurfaceVariant;
+                  })()
+                }]}>
+                  {(() => {
+                    const status = calculateMarketStatus(openingHours);
+                    return status.statusText;
+                  })()}
+                </Text>
+                {openingHours?.hours && (
+                  <Text style={[styles.marketHoursText, { color: paperTheme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                    {formatOpeningHours(openingHours.hours)}
+                  </Text>
+                )}
+              </View>
+              <Ionicons 
+                name="chevron-forward" 
+                size={ICON_SIZES.md} 
+                color={paperTheme.colors.onSurfaceVariant} 
+              />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -306,6 +357,15 @@ export default function MarketDetailsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {market && (
+        <OpeningHoursModal
+          visible={showHoursModal}
+          onClose={() => setShowHoursModal(false)}
+          marketName={market.name}
+          openingHours={openingHours}
+        />
+      )}
     </View>
   );
 }
@@ -362,6 +422,27 @@ const styles = StyleSheet.create({
   marketAddress: {
     fontSize: FONT_SIZE.md,
     lineHeight: SPACING.xlBase,
+    marginBottom: SPACING.xs,
+  },
+  marketHoursButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SPACING.md,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    gap: SPACING.sm,
+  },
+  marketHoursTextContainer: {
+    flex: 1,
+  },
+  marketHoursStatus: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    marginBottom: SPACING.xs,
+  },
+  marketHoursText: {
+    fontSize: FONT_SIZE.sm,
+    lineHeight: SPACING.lg,
   },
   categoryContainer: {
     marginBottom: SPACING.xxl,
